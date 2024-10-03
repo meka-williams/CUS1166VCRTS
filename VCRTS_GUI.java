@@ -27,17 +27,30 @@ public class VCRTS_GUI extends JFrame {
 	private JButton submitButton;
 	private ButtonGroup roleGroup;
 
+
+
+
+
+
 	public VCRTS_GUI() {
 		setTitle("Vehicular Cloud Real Time System (VCRTS)");
 		setSize(400, 300);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLayout(new BorderLayout());
 
+		ImageIcon logo = new ImageIcon("src/VCRTS_logo.png");
+		setIconImage(logo.getImage());
+
 		// Panel for choosing role (Client or Owner)
 		JPanel rolePanel = new JPanel();
+
 		rolePanel.setLayout(new FlowLayout());
 		clientButton = new JRadioButton("Client");
 		ownerButton = new JRadioButton("Owner");
+
+		clientButton.setFocusPainted(false);
+		ownerButton.setFocusPainted(false);
+
 		roleGroup = new ButtonGroup();
 		roleGroup.add(clientButton);
 		roleGroup.add(ownerButton);
@@ -45,9 +58,11 @@ public class VCRTS_GUI extends JFrame {
 		rolePanel.add(ownerButton);
 		add(rolePanel, BorderLayout.NORTH);
 
+
 		// CardLayout for switching between Client and Owner panels
 		cardLayout = new CardLayout();
 		mainPanel = new JPanel(cardLayout);
+
 
 		// Client Input Panel
 		clientPanel = new JPanel();
@@ -75,18 +90,34 @@ public class VCRTS_GUI extends JFrame {
 		residencyTimeField = new JTextField();
 		ownerPanel.add(residencyTimeField);
 
+		// Add bottom panel, submit button, and bottom border layout
+		JPanel bottomPanel = new JPanel(new BorderLayout());
+		submitButton = new JButton("Submit");
+		submitButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+
+		JPanel greyPanel = new JPanel();
+		greyPanel.setBackground(new Color(236, 236, 237));
+		greyPanel.setPreferredSize(new Dimension(400,10));
+
+		bottomPanel.add(submitButton, BorderLayout.NORTH);
+		bottomPanel.add(greyPanel,BorderLayout.SOUTH);
+
+
 		// Add both panels to the CardLayout mainPanel
 		mainPanel.add(clientPanel, "Client");
 		mainPanel.add(ownerPanel, "Owner");
 		add(mainPanel, BorderLayout.CENTER);
+		add(bottomPanel, BorderLayout.SOUTH);
 
-		
-		submitButton = new JButton("Submit");
-		add(submitButton, BorderLayout.SOUTH);
+
+
 
 		// Action listeners for role selection
 		clientButton.addActionListener(e -> cardLayout.show(mainPanel, "Client"));
+		clientButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		ownerButton.addActionListener(e -> cardLayout.show(mainPanel, "Owner"));
+		ownerButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
 		// Action listener for submit button
 		submitButton.addActionListener(new ActionListener() {
