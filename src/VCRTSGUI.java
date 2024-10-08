@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Dialog.ModalityType;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -79,6 +80,9 @@ public class VCRTSGUI {
         frame.setResizable(false);
         frame.setLocation(250, 100);
         frame.getContentPane().setBackground(Color.WHITE);
+
+        // ImageIcon logo = new ImageIcon("src/VCRTS_logo.png");
+        // setIconImage(logo.getImage());
 
         infoBoxMessage.setHorizontalAlignment(JLabel.CENTER);
 
@@ -332,6 +336,20 @@ public class VCRTSGUI {
         //Add frame and screen to lists
         frame.add(signUpPanel, SIGN_UP_PAGE);
         screens.add(SIGN_UP_PAGE);
+    }
+
+    /**
+     * Allows users to add job requests to use computation power
+     */
+    public void createJobRequestPage() {
+
+    }
+    
+    /**
+     * Allows users to add their cars to the system to be rented
+     */
+    public void createCarRentalPage() {
+
     }
 
     interface FieldClearer {
