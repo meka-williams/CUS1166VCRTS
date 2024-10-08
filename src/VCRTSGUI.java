@@ -39,7 +39,7 @@ public class VCRTSGUI {
     //Pages for the GUI
     private final String LOGIN_PAGE = "Login Page";
     private final String SIGN_UP_PAGE = "Sign Up Page";
-    private final String MAIN_PAGE_NAME = "Main Page";
+    private final String MAIN_PAGE = "Main Page";
     private final String CREATE_JOB_REQUEST_PAGE = "Create Job Request Page";
     private final String CREATE_CAR_RENTAL_PAGE = "Car Rental Page";
 
@@ -112,8 +112,9 @@ public class VCRTSGUI {
      * Creates the various screens of the GUI that the user can navigate to
      */
     public void startApp() {
-        createLoginScreen();
-        createSignUpScreen();
+        // createLoginScreen();
+        // createSignUpScreen();
+        createMainPage();
     }
 
     /**
@@ -338,6 +339,80 @@ public class VCRTSGUI {
         screens.add(SIGN_UP_PAGE);
     }
 
+    public void createMainPage(){
+        //Create panels for the page
+        JPanel mainPanel = new JPanel();
+        JPanel idPanel = new JPanel();
+        JPanel mainPageContentPanel = new JPanel();
+        JPanel headerSubPanel = new JPanel();
+
+        //Messages to the users
+        JLabel header1 = new JLabel("Would you like to rent our your car as a car owner or");
+        JLabel header2 = new JLabel("Submit a job request as client");
+        
+        //Buttons to direct to the request a job and rent a car pages
+        JButton carRental = new JButton("Rent Car");
+        JButton requestJob = new JButton("Request a Job");
+        JButton logOut = new JButton("Log Out");
+
+        header2.setHorizontalAlignment(JLabel.CENTER);
+
+        //Switches to request job page when clicked
+        requestJob.setName(CREATE_JOB_REQUEST_PAGE);
+        requestJob.addActionListener(pageSwitcher);
+        pageSwitchButtons.add(requestJob);
+
+        //Switches to car rental page when clicked
+        carRental.setName(CREATE_CAR_RENTAL_PAGE);
+        carRental.addActionListener(pageSwitcher);
+        pageSwitchButtons.add(carRental);
+
+        //Signs the user out and returns to login page
+        logOut.setName(LOGIN_PAGE);
+        logOut.addActionListener(pageSwitcher);
+        pageSwitchButtons.add(logOut);
+        
+        //Set up background & font for buttons
+        requestJob.setBackground(buttonColor);
+        requestJob.setForeground(textColor);
+        requestJob.setFont(requestJob.getFont().deriveFont(buttonSize));
+
+        carRental.setBackground(buttonColor);
+        carRental.setForeground(textColor);
+        carRental.setFont(carRental.getFont().deriveFont(buttonSize));
+
+        logOut.setBackground(buttonColor);
+        logOut.setForeground(textColor);
+        logOut.setFont(logOut.getFont().deriveFont(buttonSize));
+
+        //Set the layout for the page
+        idPanel.setLayout(new BorderLayout());
+        idPanel.add(currentUserID, BorderLayout.WEST);
+
+        headerSubPanel.setLayout(new BorderLayout());
+        headerSubPanel.setBackground(backgroundColor);
+        headerSubPanel.add(header1, BorderLayout.NORTH);
+        headerSubPanel.add(header2, BorderLayout.SOUTH);
+
+        //Set font size for components
+        header1.setFont(header1.getFont().deriveFont(textSize));
+        header2.setFont(header2.getFont().deriveFont(textSize));
+
+        //Add the sub panels to the main page panel
+        mainPageContentPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 150, 75));
+        mainPageContentPanel.setBackground(backgroundColor);
+        mainPageContentPanel.add(headerSubPanel);
+        mainPageContentPanel.add(carRental);
+        mainPageContentPanel.add(requestJob);
+        mainPageContentPanel.add(logOut);
+
+        //Add the main page to the list of screens
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.add(idPanel, BorderLayout.NORTH);
+        mainPanel.add(mainPageContentPanel, BorderLayout.CENTER);
+        frame.add(mainPanel, MAIN_PAGE);
+        screens.add(MAIN_PAGE);
+    }
     /**
      * Allows users to add job requests to use computation power
      */
@@ -408,7 +483,7 @@ public class VCRTSGUI {
         }
 
         public void showMainPage(){
-            ((CardLayout)frame.getContentPane().getLayout()).show(frame.getContentPane(), MAIN_PAGE_NAME);
+            ((CardLayout)frame.getContentPane().getLayout()).show(frame.getContentPane(), MAIN_PAGE);
         }
 
         @Override
