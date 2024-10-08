@@ -10,8 +10,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-import com.toedter.calendar.JDateChooser;
-import com.toedter.calendar.JTextFieldDateEditor;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 
@@ -205,8 +203,9 @@ public class VCRTSGUI {
         //Create panel & label for date of birth
         JPanel dateOfBirthSubPanel = new JPanel();
         JLabel dateOfBirthLabel = new JLabel("Date of Birth: ");
-        JDateChooser dateOfBirth = new JDateChooser();
-        dateOfBirth.setLocale(Locale.US);
+        JTextField dateOfBirth = new JTextField(20);
+        // JDateChooser dateOfBirth = new JDateChooser();
+        // dateOfBirth.setLocale(Locale.US);
 
         //Create panel & label for password
         JPanel passwordSubPanel = new JPanel();
@@ -285,6 +284,7 @@ public class VCRTSGUI {
         lNameLabel.setFont(lNameLabel.getFont().deriveFont(textSize));
         usernameLabel.setFont(usernameLabel.getFont().deriveFont(textSize));
         emailAddressLabel.setFont(emailAddressLabel.getFont().deriveFont(textSize));
+        dateOfBirthLabel.setFont(dateOfBirthLabel.getFont().deriveFont(textSize));
         passwordLabel.setFont(passwordLabel.getFont().deriveFont(textSize));
         passwordConfirmLabel.setFont(passwordLabel.getFont().deriveFont(textSize));
 
@@ -294,6 +294,7 @@ public class VCRTSGUI {
         signUpPanel.add(lNameSubPanel);
         signUpPanel.add(usernameSubPanel);
         signUpPanel.add(emailAddressSubPanel);
+        signUpPanel.add(dateOfBirthSubPanel);
         signUpPanel.add(passwordSubPanel);
         signUpPanel.add(passwordConfirmSubPanel);
         signUpPanel.add(signUpButton);
