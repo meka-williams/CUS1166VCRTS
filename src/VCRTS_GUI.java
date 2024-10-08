@@ -1,4 +1,4 @@
-//package vcrts_gui;
+package vcrts_gui;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,30 +27,18 @@ public class VCRTS_GUI extends JFrame {
 	private JButton submitButton;
 	private ButtonGroup roleGroup;
 
-
-
-
-
-
 	public VCRTS_GUI() {
 		setTitle("Vehicular Cloud Real Time System (VCRTS)");
 		setSize(400, 300);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLayout(new BorderLayout());
-
 		ImageIcon logo = new ImageIcon("src/VCRTS_logo.png");
 		setIconImage(logo.getImage());
-
 		// Panel for choosing role (Client or Owner)
 		JPanel rolePanel = new JPanel();
-
 		rolePanel.setLayout(new FlowLayout());
 		clientButton = new JRadioButton("Client");
 		ownerButton = new JRadioButton("Owner");
-
-		clientButton.setFocusPainted(false);
-		ownerButton.setFocusPainted(false);
-
 		roleGroup = new ButtonGroup();
 		roleGroup.add(clientButton);
 		roleGroup.add(ownerButton);
@@ -58,11 +46,9 @@ public class VCRTS_GUI extends JFrame {
 		rolePanel.add(ownerButton);
 		add(rolePanel, BorderLayout.NORTH);
 
-
 		// CardLayout for switching between Client and Owner panels
 		cardLayout = new CardLayout();
 		mainPanel = new JPanel(cardLayout);
-
 
 		// Client Input Panel
 		clientPanel = new JPanel();
@@ -90,34 +76,18 @@ public class VCRTS_GUI extends JFrame {
 		residencyTimeField = new JTextField();
 		ownerPanel.add(residencyTimeField);
 
-		// Add bottom panel, submit button, and bottom border layout
-		JPanel bottomPanel = new JPanel(new BorderLayout());
-		submitButton = new JButton("Submit");
-		submitButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
-
-		JPanel greyPanel = new JPanel();
-		greyPanel.setBackground(new Color(236, 236, 237));
-		greyPanel.setPreferredSize(new Dimension(400,10));
-
-		bottomPanel.add(submitButton, BorderLayout.NORTH);
-		bottomPanel.add(greyPanel,BorderLayout.SOUTH);
-
-
 		// Add both panels to the CardLayout mainPanel
 		mainPanel.add(clientPanel, "Client");
 		mainPanel.add(ownerPanel, "Owner");
 		add(mainPanel, BorderLayout.CENTER);
-		add(bottomPanel, BorderLayout.SOUTH);
 
-
-
+		
+		submitButton = new JButton("Submit");
+		add(submitButton, BorderLayout.SOUTH);
 
 		// Action listeners for role selection
 		clientButton.addActionListener(e -> cardLayout.show(mainPanel, "Client"));
-		clientButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		ownerButton.addActionListener(e -> cardLayout.show(mainPanel, "Owner"));
-		ownerButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
 		// Action listener for submit button
 		submitButton.addActionListener(new ActionListener() {
@@ -139,47 +109,72 @@ public class VCRTS_GUI extends JFrame {
 	}
 
 	private void handleClientSubmission() {
-		String clientId = clientIdField.getText();
-		String jobDuration = jobDurationField.getText();
-		String jobDeadline = jobDeadlineField.getText();
-		LocalDateTime timestamp = LocalDateTime.now();
-		String formattedTimestamp = timestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-
-		if (!clientId.isEmpty() && !jobDuration.isEmpty() && !jobDeadline.isEmpty()) {
-			String data = "Client ID: " + clientId + ", Job Duration: " + jobDuration + ", Job Deadline: " + jobDeadline
-					+ ", Timestamp: " + formattedTimestamp + "\n";
-			saveToFile(data);
-			JOptionPane.showMessageDialog(null, "Client data submitted!");
-			clearFields();
-		} else {
-			JOptionPane.showMessageDialog(null, "Please fill in all the fields.");
-		}
+	    String clientId = clientIdField.getText();
+	    String jobDuration = jobDurationField.getText();
+	    String jobDeadline = jobDeadlineField.getText();
+	    LocalDateTime timestamp = LocalDateTime.now();
+	    String formattedTimestamp = timestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+	    
+	    if (!clientId.isEmpty() && !jobDuration.isEmpty() && !jobDeadline.isEmpty()) {
+	        String data = clientId + "," + jobDuration + "," + jobDeadline + "," + formattedTimestamp;
+	        saveToFile(data);  
+	        JOptionPane.showMessageDialog(null, "Client data submitted!");
+	        clearFields();
+	    } else {
+	        JOptionPane.showMessageDialog(null, "Please fill in all the fields.");
+	    }
 	}
 
 	private void handleOwnerSubmission() {
-		String ownerId = ownerIdField.getText();
-		String vehicleInfo = vehicleInfoField.getText();
-		String residencyTime = residencyTimeField.getText();
-		LocalDateTime timestamp = LocalDateTime.now();
-		String formattedTimestamp = timestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+	    String ownerId = ownerIdField.getText();
+	    String vehicleInfo = vehicleInfoField.getText();
+	    String residencyTime = residencyTimeField.getText();
+	    LocalDateTime timestamp = LocalDateTime.now();
+	    String formattedTimestamp = timestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-		if (!ownerId.isEmpty() && !vehicleInfo.isEmpty() && !residencyTime.isEmpty()) {
-			String data = "Owner ID: " + ownerId + ", Vehicle Info: " + vehicleInfo + ", Residency Time: "
-					+ residencyTime + ", Timestamp: " + formattedTimestamp + "\n";
-			saveToFile(data);
-			JOptionPane.showMessageDialog(null, "Owner data submitted!");
-			clearFields();
-		} else {
-			JOptionPane.showMessageDialog(null, "Please fill in all the fields.");
-		}
+	    if (!ownerId.isEmpty() && !vehicleInfo.isEmpty() && !residencyTime.isEmpty()) {
+	        String data = ownerId + "," + vehicleInfo + "," + residencyTime + "," + formattedTimestamp;
+	        saveToFile(data); 
+	        JOptionPane.showMessageDialog(null, "Owner data submitted!");
+	        clearFields();
+	    } else {
+	        JOptionPane.showMessageDialog(null, "Please fill in all the fields.");
+	    }
 	}
 
 	private void saveToFile(String data) {
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter("vcrts_data.txt", true))) {
-			writer.write(data);
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, "Error saving data to file.");
-		}
+	    String fileName;
+	    String header;
+
+	    // Determine which file to write based on the selected panel
+	    if (clientButton.isSelected()) {
+	        fileName = "vcrts_data_client.csv";
+	        header = "Client ID,Job Duration,Job Deadline,Timestamp";
+	    } else if (ownerButton.isSelected()) {
+	        fileName = "vcrts_data_owner.csv";
+	        header = "Owner ID,Vehicle Info,Residency Time,Timestamp";
+	    } else {
+	        JOptionPane.showMessageDialog(null, "Please select a role: Client or Owner.");
+	        return;
+	    }
+
+	    // Check if the file already exists
+	    boolean fileExists = new java.io.File(fileName).exists();
+
+	    try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
+	        // If the file does not exist, write the headers
+	        if (!fileExists) {
+	            writer.write(header);
+	            writer.newLine();
+	        }
+	        
+	        // Write the data
+	        writer.write(data);
+	        writer.newLine();
+	        
+	    } catch (IOException e) {
+	        JOptionPane.showMessageDialog(null, "Error saving data to CSV file.");
+	    }
 	}
 
 	private void clearFields() {
