@@ -1,5 +1,4 @@
 public class User {
-    private long userID;
     private String username;
     private String password;
     private String fname;
@@ -24,22 +23,6 @@ public class User {
     public User() {
         username = "";
         password = "";
-    }
-
-    
-
-    /**
-     * @return long return the userID
-     */
-    public long getUserID() {
-        return userID;
-    }
-
-    /**
-     * @param userID the userID to set
-     */
-    public void setUserID(long userID) {
-        this.userID = userID;
     }
 
     /**

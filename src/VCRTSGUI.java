@@ -45,6 +45,8 @@ public class VCRTSGUI {
 
     //fields to store user information
     private JLabel currentUserID = new JLabel("");
+    private JLabel currentClientID = new JLabel();
+    private JLabel currentCarOwnerID = new JLabel();
 
     //To store the names of the screens of GUI
     private ArrayList<String> screens = new ArrayList<String>();
@@ -112,9 +114,9 @@ public class VCRTSGUI {
      * Creates the various screens of the GUI that the user can navigate to
      */
     public void startApp() {
-        // createLoginScreen();
-        // createSignUpScreen();
         createMainPage();
+        createLoginScreen();
+        createSignUpScreen();
     }
 
     /**
@@ -431,25 +433,41 @@ public class VCRTSGUI {
         public void clearFields();
     }
 
+    /**
+     * Switches to the selected page
+     */
     class PageSwitcher implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             String requestedPage = "";
 
-            for(int i = 0; i < pageSwitchButtons.size(); i++){
+            for(int i = 0; i < pageSwitchButtons.size(); i++) {
                 if(e.getSource().equals(pageSwitchButtons.get(i))) {
                     requestedPage = pageSwitchButtons.get(i).getName();
                 }
             }
 
-            for(int i = 0; i < screens.size(); i++){
-                if(requestedPage.equals(screens.get(i))) {
+            for(int i = 0; i < screens.size(); i++) {
+                if(requestedPage.equals(screens.get(i))){
+                    if(requestedPage.equals(CREATE_JOB_REQUEST_PAGE)) {
+                        currentClientID.setText("\t Client ID: " + currentUser.getUsername());
+                        //jobRequestListener.clearFields();
+                    }
+    
+                    if(requestedPage.equals(CREATE_CAR_RENTAL_PAGE)) {
+                        currentCarOwnerID.setText("\t Car Owner ID: " + currentUser.getUsername());
+                        //rentalCarRequestListener.clearFields();
+                    }
+    
                     ((CardLayout)frame.getContentPane().getLayout()).show(frame.getContentPane(), screens.get(i));
+                    userVerifier.clearFields();
                 }
             }
         }
     }
-
+    /**
+     * Verifies the inputted information from the user
+     */
     class UserVerifier extends User implements ActionListener, KeyListener, FieldClearer {
         private JTextField usernameField;
         private JPasswordField passwordField;
@@ -470,7 +488,7 @@ public class VCRTSGUI {
                     currentUserID.setText("\t UserID: " + currentUser.getUsername());
                     showMainPage();
                 }
-                else {
+                else {;
                     System.out.println("An error occurred, please try again");
                     infoBoxMessage.setText("An error occurred. Please try again");
                     infoBox.setVisible(true);
@@ -482,6 +500,9 @@ public class VCRTSGUI {
             }
         }
 
+        /**
+         * Shows the main page of the system
+         */
         public void showMainPage(){
             ((CardLayout)frame.getContentPane().getLayout()).show(frame.getContentPane(), MAIN_PAGE);
         }
