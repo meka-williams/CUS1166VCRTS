@@ -3,6 +3,7 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Dialog.ModalityType;
+
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -13,8 +14,11 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
-import java.util.Locale;
 
 /**
  * Project:     Vehicular Cloud Real Time System
@@ -27,15 +31,19 @@ public class VCRTSGUI {
     //Set up necessary components for GUI
     private JFrame frame = new JFrame();
     private JDialog infoBox = new JDialog();
-    private JLabel infoBoxheader = new JLabel("");
+    private JLabel infoBoxMessage = new JLabel("");
     private final int APP_WIDTH = 480;
     private final int APP_HEIGHT = 600;
 
     //Pages for the GUI
     private final String LOGIN_PAGE = "Login Page";
     private final String SIGN_UP_PAGE = "Sign Up Page";
+    private final String MAIN_PAGE_NAME = "Main Page";
     private final String CREATE_JOB_REQUEST_PAGE = "Create Job Request Page";
     private final String CREATE_CAR_RENTAL_PAGE = "Car Rental Page";
+
+    //fields to store user information
+    private JLabel currentUserID = new JLabel("");
 
     //To store the names of the screens of GUI
     private ArrayList<String> screens = new ArrayList<String>();
@@ -53,6 +61,13 @@ public class VCRTSGUI {
     private float buttonSize = 15;
     private float textSize = 19;
 
+    private PageSwitcher pageSwitcher = new PageSwitcher();
+    private UserVerifier userVerifier = new UserVerifier();
+    // private JobRequestListener JobRequestListener = new JobRequestListener();
+    // private CarRentalListener CarRentalListener = new CarRentalListener();
+
+    private User currentUser;
+
     /**
      * 
      */
@@ -65,14 +80,14 @@ public class VCRTSGUI {
         frame.setLocation(250, 100);
         frame.getContentPane().setBackground(Color.WHITE);
 
-        infoBoxheader.setHorizontalAlignment(JLabel.CENTER);
+        infoBoxMessage.setHorizontalAlignment(JLabel.CENTER);
 
         infoBox.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         infoBox.setLayout(new BorderLayout());
         infoBox.setSize(300, 200);
         infoBox.setResizable(false);
         infoBox.setModalityType(ModalityType.APPLICATION_MODAL);
-        infoBox.add(infoBoxheader, BorderLayout.CENTER);
+        infoBox.add(infoBoxMessage, BorderLayout.CENTER);
         
         //Setting colors for attributes (background, button, & text)
         backgroundColor = new Color(192, 222, 229);
@@ -93,7 +108,7 @@ public class VCRTSGUI {
      * Creates the various screens of the GUI that the user can navigate to
      */
     public void startApp() {
-        //createLoginScreen();
+        createLoginScreen();
         createSignUpScreen();
     }
 
@@ -140,16 +155,23 @@ public class VCRTSGUI {
         passwordSubPanel.add(passwordLabel, BorderLayout.WEST);
         passwordSubPanel.add(password, BorderLayout.EAST);
         
+        //Verification for user information
+        loginButton.addActionListener(userVerifier);
+        //password.addKeyListener(userVerifier);
+
+        //Switches to sign up page
+        signUpButton.setName(SIGN_UP_PAGE);
+        signUpButton.addActionListener(pageSwitcher);
+        pageSwitchButtons.add(signUpButton);
+
         //Set color and font of login button
         loginButton.setBackground(buttonColor);
         loginButton.setForeground(textColor);
         loginButton.setFont(loginButton.getFont().deriveFont(buttonSize));
 
         //Set color and font register button
-        signUpButton.setName(LOGIN_PAGE);
         signUpButton.setBackground(buttonColor);
         signUpButton.setForeground(textColor);
-        pageSwitchButtons.add(signUpButton);
         signUpButton.setFont(signUpButton.getFont().deriveFont(buttonSize));
 
         //Sets the font size for the labels
@@ -264,13 +286,20 @@ public class VCRTSGUI {
         passwordConfirmSubPanel.setBackground(backgroundColor);
         passwordConfirmSubPanel.add(passwordConfirmLabel, BorderLayout.WEST);
         passwordConfirmSubPanel.add(passwordConfirm, BorderLayout.EAST);
+        
+        //Verifies user information
+        signUpButton.addActionListener(userVerifier);
+
+        //Switch to the login page
+        loginButton.setName(LOGIN_PAGE);
+        loginButton.addActionListener(pageSwitcher);
+        pageSwitchButtons.add(loginButton);
 
         //Set up background & font for buttons
         signUpButton.setBackground(buttonColor);
         signUpButton.setForeground(textColor);
         signUpButton.setFont(signUpButton.getFont().deriveFont(buttonSize));
 
-        loginButton.setName(LOGIN_PAGE);
         loginButton.setBackground(buttonColor);
         loginButton.setForeground(textColor);
         loginButton.setFont(loginButton.getFont().deriveFont(buttonSize));
@@ -303,5 +332,99 @@ public class VCRTSGUI {
         //Add frame and screen to lists
         frame.add(signUpPanel, SIGN_UP_PAGE);
         screens.add(SIGN_UP_PAGE);
+    }
+
+    interface FieldClearer {
+        public void clearFields();
+    }
+
+    class PageSwitcher implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String requestedPage = "";
+
+            for(int i = 0; i < pageSwitchButtons.size(); i++){
+                if(e.getSource().equals(pageSwitchButtons.get(i))) {
+                    requestedPage = pageSwitchButtons.get(i).getName();
+                }
+            }
+
+            for(int i = 0; i < screens.size(); i++){
+                if(requestedPage.equals(screens.get(i))) {
+                    ((CardLayout)frame.getContentPane().getLayout()).show(frame.getContentPane(), screens.get(i));
+                }
+            }
+        }
+    }
+
+    class UserVerifier extends User implements ActionListener, KeyListener, FieldClearer {
+        private JTextField usernameField;
+        private JPasswordField passwordField;
+
+        public UserVerifier(){
+            super();
+            usernameField = new JTextField();
+            passwordField = new JPasswordField();
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(((JButton)e.getSource()).getText().equals("Sign Up Button")){
+                if(!this.getUsername().equals("") && !this.getPassword().equals("")) {
+                    currentUser = new User(this.getUsername(), this.getPassword());
+                    //Add code to add to .csv
+                    clearFields();
+                    currentUserID.setText("\t UserID: " + currentUser.getUsername());
+                    showMainPage();
+                }
+                else {
+                    System.out.println("An error occurred, please try again");
+                    infoBoxMessage.setText("An error occurred. Please try again");
+                    infoBox.setVisible(true);
+                }
+            }
+            //Login verification
+            else if(((JButton)e.getSource()).getText().equals("Login")) {
+                //Add code to check .csv
+            }
+        }
+
+        public void showMainPage(){
+            ((CardLayout)frame.getContentPane().getLayout()).show(frame.getContentPane(), MAIN_PAGE_NAME);
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            if(e.getSource().getClass().getSimpleName().equals("JTextField")){
+                usernameField = (JTextField)e.getSource();
+                this.setUsername(((JTextField)e.getSource()).getText());
+            }
+            if(e.getSource().getClass().getSimpleName().equals("JPasswordField")) {
+                passwordField = (JPasswordField)e.getSource();
+                this.setPassword(String.valueOf(((JPasswordField)e.getSource()).getPassword()));
+            }
+        }
+
+        @Override
+        public void clearFields() {
+            usernameField.setText("");
+            passwordField.setText("");
+
+            this.setUsername("");
+            this.setPassword("");
+        }
+
+        //These methods are not needed
+        @Override
+        public void keyTyped(KeyEvent e) {
+            // TODO Auto-generated method stub
+            throw new UnsupportedOperationException("Unimplemented method 'keyTyped'");
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            // TODO Auto-generated method stub
+            throw new UnsupportedOperationException("Unimplemented method 'keyPressed'");
+        }
     }
 }
