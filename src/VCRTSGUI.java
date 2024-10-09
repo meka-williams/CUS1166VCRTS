@@ -108,6 +108,7 @@ public class VCRTSGUI {
 
     public static void main(String[] args) {
         new VCRTSGUI();
+        
     }
 
     /**\
@@ -484,7 +485,10 @@ public class VCRTSGUI {
         @Override
         public void actionPerformed(ActionEvent e) {
             if(((JButton)e.getSource()).getText().equals("Sign Up")){
-                if(!this.getUsername().equals("") && !this.getPassword().equals("") && !server.isUser(this.getUsername())) {
+               
+                // Hide or close the current login frame
+                
+            	if(!this.getUsername().equals("") && !this.getPassword().equals("") && !server.isUser(this.getUsername())) {
                     currentUser = new User(this.getUsername(), this.getPassword());
                     server.addUser(currentUser);
                     server.updateServer("New Sign Up", currentUser);
@@ -500,14 +504,18 @@ public class VCRTSGUI {
             }
             //Login verification
             else if(((JButton)e.getSource()).getText().equals("Login")) {
+            	
                 if(server.accountFound(this.getUsername(), this.getPassword())) {
                     currentUser = server.getUser(this.getUsername());
                     server.updateServer("New Login", currentUser);
                     clearFields();
                     currentUserID.setText("\t User ID: " + currentUser.getUsername());
                     showMainPage();
+                    
+
                 }
                 else {
+                	
                     System.out.println("ACCOUNT NOT FOUND: Please try again or sign up...");
                     infoBoxMessage.setText("Account Not Found: Please try again or sign up...");
                     infoBox.setVisible(true);
