@@ -1,4 +1,4 @@
-package vcrts_gui;
+//package vcrts_gui;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,14 +22,19 @@ public class VCRTS_GUI extends JFrame {
 	private JTextField jobDurationField;
 	private JTextField jobDeadlineField;
 	private JTextField ownerIdField;
-	private JTextField vehicleInfoField;
+	//private JTextField vehicleInfoField;
+	private JTextField vehicleModelField;
+	private JTextField vehicleBrandField;
+	private JTextField plateNumberField;
+	private JTextField serialNumberField;
+	private JTextField vinNumberField;
 	private JTextField residencyTimeField;
 	private JButton submitButton;
 	private ButtonGroup roleGroup;
 
 	public VCRTS_GUI() {
 		setTitle("Vehicular Cloud Real Time System (VCRTS)");
-		setSize(400, 300);
+		setSize(400, 400);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLayout(new BorderLayout());
 		ImageIcon logo = new ImageIcon("src/VCRTS_logo.png");
@@ -65,13 +70,32 @@ public class VCRTS_GUI extends JFrame {
 
 		// Owner Input Panel
 		ownerPanel = new JPanel();
-		ownerPanel.setLayout(new GridLayout(4, 2));
+		ownerPanel.setLayout(new GridLayout(14, 2));
+
 		ownerPanel.add(new JLabel("Owner ID:"));
 		ownerIdField = new JTextField();
 		ownerPanel.add(ownerIdField);
-		ownerPanel.add(new JLabel("Vehicle Info:"));
-		vehicleInfoField = new JTextField();
-		ownerPanel.add(vehicleInfoField);
+
+		ownerPanel.add(new JLabel("Vehicle Model:"));
+		vehicleModelField = new JTextField();
+		ownerPanel.add(vehicleModelField);
+
+		ownerPanel.add(new JLabel("Vehicle Brand:"));
+		vehicleBrandField = new JTextField();
+		ownerPanel.add(vehicleBrandField);
+
+		ownerPanel.add(new JLabel("Plate Number:"));
+		plateNumberField = new JTextField();
+		ownerPanel.add(plateNumberField);
+
+		ownerPanel.add(new JLabel("Serial Number:"));
+		serialNumberField = new JTextField();
+		ownerPanel.add(serialNumberField);
+
+		ownerPanel.add(new JLabel("VIN Number:"));
+		vinNumberField = new JTextField();
+		ownerPanel.add(vinNumberField);
+
 		ownerPanel.add(new JLabel("Residency Time (hrs):"));
 		residencyTimeField = new JTextField();
 		ownerPanel.add(residencyTimeField);
@@ -127,13 +151,18 @@ public class VCRTS_GUI extends JFrame {
 
 	private void handleOwnerSubmission() {
 	    String ownerId = ownerIdField.getText();
-	    String vehicleInfo = vehicleInfoField.getText();
+	    //String vehicleInfo = vehicleInfoField.getText();
+		String vehicleModel = vehicleModelField.getText();
+		String vehicleBrand = vehicleBrandField.getText();
+		String plateNumber = plateNumberField.getText();
+		String serialNumber = serialNumberField.getText();
+		String vinNumber = vinNumberField.getText();
 	    String residencyTime = residencyTimeField.getText();
 	    LocalDateTime timestamp = LocalDateTime.now();
 	    String formattedTimestamp = timestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-	    if (!ownerId.isEmpty() && !vehicleInfo.isEmpty() && !residencyTime.isEmpty()) {
-	        String data = ownerId + "," + vehicleInfo + "," + residencyTime + "," + formattedTimestamp;
+	    if (!ownerId.isEmpty() && !vehicleModel.isEmpty() && !vehicleBrand.isEmpty() && !plateNumber.isEmpty() && !serialNumber.isEmpty() && !vinNumber.isEmpty() && !residencyTime.isEmpty()) {
+	        String data = ownerId + "," + vehicleModel + "," + vehicleBrand + "," + plateNumber + "," + serialNumber + "," + vinNumber + "," + residencyTime + "," + formattedTimestamp;
 	        saveToFile(data); 
 	        JOptionPane.showMessageDialog(null, "Owner data submitted!");
 	        clearFields();
@@ -182,7 +211,12 @@ public class VCRTS_GUI extends JFrame {
 		jobDurationField.setText("");
 		jobDeadlineField.setText("");
 		ownerIdField.setText("");
-		vehicleInfoField.setText("");
+		//vehicleInfoField.setText("");
+		vehicleModelField.setText("");
+		vehicleBrandField.setText("");
+		plateNumberField.setText("");
+		serialNumberField.setText("");
+		vinNumberField.setText("");
 		residencyTimeField.setText("");
 	}
 
