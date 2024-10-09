@@ -6,6 +6,7 @@ import java.awt.Dialog.ModalityType;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -138,6 +139,25 @@ public class VCRTSGUI {
         JPanel passwordSubPanel = new JPanel();
         JLabel passwordLabel = new JLabel("Password: ");
         JPasswordField password = new JPasswordField(20);
+
+        // Create "Show Password" box
+        JCheckBox showPassword = new JCheckBox("Show Password");
+        showPassword.setBackground(backgroundColor);
+    
+        showPassword.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) 
+            {
+                if (showPassword.isSelected()) 
+                {
+                    password.setEchoChar((char) 0);  
+                    } 
+                    else 
+                    {
+                        password.setEchoChar('*');
+                        }
+                    }
+                });
         
         //Create button for login confirmation
         JButton login = new JButton("Login");
@@ -162,6 +182,10 @@ public class VCRTSGUI {
         passwordSubPanel.setBackground(backgroundColor);
         passwordSubPanel.add(passwordLabel, BorderLayout.WEST);
         passwordSubPanel.add(password, BorderLayout.EAST);
+
+        // Add the "Show Password" checkbox below the password field
+        passwordSubPanel.add(showPassword, BorderLayout.SOUTH);
+
         
         //Verification for user information
         login.addActionListener(userVerifier);
@@ -247,6 +271,26 @@ public class VCRTSGUI {
         JLabel passwordConfirmLabel = new JLabel("Confirm Password: ");
         JPasswordField passwordConfirm = new JPasswordField(20);
 
+         // Create "Show Password" button
+         JCheckBox showPassword = new JCheckBox("Show Password");
+         showPassword.setBackground(backgroundColor);
+    
+         // Add ActionListener to toggle password visibility
+         showPassword.addActionListener(new ActionListener() 
+         {
+            @Override
+            public void actionPerformed(ActionEvent e) 
+            {
+                if (showPassword.isSelected()) 
+                {
+                    password.setEchoChar((char) 0);  // Show password
+                    } else 
+                    {
+                        password.setEchoChar('*');  // Hide password
+                        }
+                    }
+                });
+
         //Create button to sign up
         JButton signUp = new JButton("Sign Up");
         signUp.setBackground(buttonColor);
@@ -296,6 +340,10 @@ public class VCRTSGUI {
         passwordConfirmSubPanel.setBackground(backgroundColor);
         passwordConfirmSubPanel.add(passwordConfirmLabel, BorderLayout.WEST);
         passwordConfirmSubPanel.add(passwordConfirm, BorderLayout.EAST);
+
+        // Add the "Show Password" checkbox below the password field
+        passwordSubPanel.add(showPassword, BorderLayout.SOUTH);
+
 
         //Verifies user information
         signUp.setName(SIGN_UP_PAGE);
