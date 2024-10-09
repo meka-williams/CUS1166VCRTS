@@ -1,10 +1,10 @@
 public class User {
     private String username;
-    private String password;
     private String fname;
     private String lname;
     private String dateOfBirth;
     private String emailAddress;
+    private String password;
 
     public User(String username, String password){
         this.username = username;
@@ -111,6 +111,6 @@ public class User {
 
     @Override
     public String toString() {
-        return "Username: " + username;
+        return username + "," + fname + "," + lname + "," + dateOfBirth + "," + emailAddress +"," + password;
     }
 }

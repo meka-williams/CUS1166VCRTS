@@ -68,7 +68,7 @@ public class VCRTSGUI {
     private UserVerifier userVerifier = new UserVerifier();
     // private JobRequestListener JobRequestListener = new JobRequestListener();
     // private CarRentalListener CarRentalListener = new CarRentalListener();
-    private Server server = new Server();
+    //private Server server = new Server();
     private User currentUser;
 
     /**
@@ -473,46 +473,56 @@ public class VCRTSGUI {
      */
     class UserVerifier extends User implements ActionListener, KeyListener, FieldClearer {
         private JTextField usernameField;
+        private JTextField fNameField;
+        private JTextField lNameField;
+        private JTextField dateOfBirthField;
+        private JTextField emailAddressField;
         private JPasswordField passwordField;
 
         public UserVerifier(){
             super();
             usernameField = new JTextField();
+            fNameField = new JTextField();
+            lNameField = new JTextField();
+            dateOfBirthField = new JTextField();
+            emailAddressField = new JTextField();
             passwordField = new JPasswordField();
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if(((JButton)e.getSource()).getText().equals("Sign Up")){
-                if(!this.getUsername().equals("") && !this.getPassword().equals("") && !server.isUser(this.getUsername())) {
-                    currentUser = new User(this.getUsername(), this.getPassword());
-                    server.addUser(currentUser);
-                    server.updateServer("New Sign Up", currentUser);
-                    clearFields();
-                    currentUserID.setText("\t UserID: " + currentUser.getUsername());
-                    showMainPage();
-                }
-                else {;
-                    System.out.println("An error occurred, please try again");
-                    infoBoxMessage.setText("An error occurred. Please try again");
-                    infoBox.setVisible(true);
-                }
-            }
-            //Login verification
-            else if(((JButton)e.getSource()).getText().equals("Login")) {
-                if(server.accountFound(this.getUsername(), this.getPassword())) {
-                    currentUser = server.getUser(this.getUsername());
-                    server.updateServer("New Login", currentUser);
-                    clearFields();
-                    currentUserID.setText("\t User ID: " + currentUser.getUsername());
-                    showMainPage();
-                }
-                else {
-                    System.out.println("ACCOUNT NOT FOUND: Please try again or sign up...");
-                    infoBoxMessage.setText("Account Not Found: Please try again or sign up...");
-                    infoBox.setVisible(true);
-                }
-            }
+            showMainPage();
+            clearFields();
+            // // if(((JButton)e.getSource()).getText().equals("Sign Up")){
+            // //     if(!this.getUsername().equals("") && !this.getPassword().equals("") && !server.isUser(this.getUsername())) {
+            // //         currentUser = new User(this.getUsername(), this.getFname(), this.getLname(), this.getDateOfBirth(), this.getEmailAddress(), this.getPassword());
+            // //         server.addUser(currentUser);
+            // //         server.updateServer("New Sign Up", currentUser);
+            // //         clearFields();
+            // //         currentUserID.setText("\t UserID: " + currentUser.getUsername());
+            //         showMainPage();
+            // //     }
+            // //     else {;
+            // //         System.out.println("An error occurred, please try again");
+            // //         infoBoxMessage.setText("An error occurred. Please try again");
+            // //         infoBox.setVisible(true);
+            // //     }
+            // // }
+            // // //Login verification
+            // // else if(((JButton)e.getSource()).getText().equals("Login")) {
+            // //     if(server.accountFound(this.getUsername(), this.getPassword())) {
+            // //         currentUser = server.getUser(this.getUsername());
+            // //         server.updateServer("New Login", currentUser);
+            // //         clearFields();
+            // //         currentUserID.setText("\t User ID: " + currentUser.getUsername());
+            // //         showMainPage();
+            // //     }
+            // //     else {
+            // //         System.out.println("ACCOUNT NOT FOUND: Please try again or sign up...");
+            // //         infoBoxMessage.setText("Account Not Found: Please try again or sign up...");
+            // //         infoBox.setVisible(true);
+            // //     }
+            // // }
         }
 
         /**
@@ -535,8 +545,8 @@ public class VCRTSGUI {
         public void keyReleased(KeyEvent e) {
             if(e.getSource().getClass().getSimpleName().equals("JTextField")){
                 usernameField = (JTextField)e.getSource();
-                this.setUsername(((JTextField)e.getSource()).getText());
             }
+                this.setUsername(((JTextField)e.getSource()).getText());
             if(e.getSource().getClass().getSimpleName().equals("JPasswordField")) {
                 passwordField = (JPasswordField)e.getSource();
                 this.setPassword(String.valueOf(((JPasswordField)e.getSource()).getPassword()));

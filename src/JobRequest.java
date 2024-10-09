@@ -2,7 +2,6 @@ public class JobRequest {
     private boolean inProgress;
     private String title;
     private int durationTime;
-    private Client jobOwner;
 
     public JobRequest(){
         this.title = "";
@@ -57,19 +56,6 @@ public class JobRequest {
         this.durationTime = durationTime;
     }
 
-    /**
-     * @return Client return the jobOwner
-     */
-    public Client getJobOwner() {
-        return jobOwner;
-    }
-
-    /**
-     * @param jobOwner the jobOwner to set
-     */
-    public void setJobOwner(Client jobOwner) {
-        this.jobOwner = jobOwner;
-    }
 
     @Override
     public String toString() {
