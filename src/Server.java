@@ -8,8 +8,15 @@ import java.util.Scanner;
 public class Server {
     private File server = new File("src/Server.csv");
     private ArrayList<User> users;
+    private ArrayList<Client> clients;
+    private ArrayList<CarOwner> carOwners;
+    private String data;
 
     public Server() {
+        data = "";
+        users = new ArrayList<User>();
+        clients = new ArrayList<Client>();
+        carOwners = new ArrayList<CarOwner>();
         users = new ArrayList<>();
         loadUsersFromCSV();  // Load users from CSV on startup
     }
@@ -111,5 +118,36 @@ public class Server {
             }
         }
         return null;
+    }
+
+    public CarOwner getCarOwner(String username) {
+        for (CarOwner carOwner : carOwners) {
+            if (carOwner.getUsername().equals(username)) {
+                return carOwner;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Checks if a CarOwner exists with the provided username.
+     * @param username The username to check.
+     * @return True if the CarOwner exists, otherwise false.
+     */
+    public boolean isCarOwner(String username) {
+        for (CarOwner carOwner : carOwners) {
+            if (carOwner.getUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Adds a new CarOwner to the server's list of CarOwners.
+     * @param carOwner The CarOwner to add.
+     */
+    public void addCarOwner(CarOwner carOwner) {
+        carOwners.add(carOwner);
     }
 }
