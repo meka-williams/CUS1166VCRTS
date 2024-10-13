@@ -3,31 +3,103 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Scanner;
 
 public class Server {
     private File server = new File("src/Server.csv");
-    //private File carRegistrationServer = new File("src/CarRegistration.csv");
-    //private File jobRequestServer = new File("src/CarRegistration.csv");
-    private String data;
     private ArrayList<User> users;
     private ArrayList<Client> clients;
     private ArrayList<CarOwner> carOwners;
+    private String data;
 
-    public Server(){
+    public Server() {
         data = "";
         users = new ArrayList<User>();
         clients = new ArrayList<Client>();
         carOwners = new ArrayList<CarOwner>();
+        users = new ArrayList<>();
+        loadUsersFromCSV();  // Load users from CSV on startup
     }
 
     /**
-     * Validates if the user is client user
-     * @param username - the username of the user
-     * @return true if the user is a client user and false if not
+     * Loads users from the Server.csv file and populates the users list.
      */
-    public boolean isClient(String username){
-        for(Client client: clients){
-            if(client.getUsername().equals(username)) {
+    public void loadUsersFromCSV() {
+        try {
+            Scanner scanner = new Scanner(server);
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                String[] details = line.split(",");  // Assuming CSV format: action,username,password,date
+                if (details.length >= 3 && details[0].trim().equals("New Sign Up")) {
+                    String username = details[1].trim();
+                    String password = details[2].trim();
+                    System.out.println("Loading user from CSV: " + username + " with password: " + password);
+                    User user = new User(username, password);
+                    if (!isUser(username)) {
+                        users.add(user);
+                    }
+                }
+            }
+            scanner.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * Saves user registration and login actions to the Server.csv file.
+     * @param action The action to log (e.g., "New Sign Up", "New Login").
+     * @param user The user involved in the action.
+     */
+    public void updateServer(String action, User user) {
+        Date date = new Date();
+        String newData = action + "," + user.getUsername() + "," + user.getPassword() + "," + date + "\n";
+
+        try {
+            FileWriter writer = new FileWriter(server, true);  // Append mode
+            writer.write(newData);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Checks if a user exists with the provided username and password.
+     * @param username The username to check.
+     * @param password The password to check.
+     * @return True if the account is found, otherwise false.
+     */
+    public boolean accountFound(String username, String password) {
+        for (User user : users) {
+            System.out.println("Checking user: " + user.getUsername() + " with password: " + user.getPassword());
+            if (user.getUsername().equals(username) && user.getPassword().equals(password)) {
+                System.out.println("Account found for username: " + username);
+                return true;
+            }
+        }
+        System.out.println("Account not found for username: " + username);
+        return false;
+    }
+
+    /**
+     * Adds a new user to the server's list of users.
+     * @param user The user to add.
+     */
+    public void addUser(User user) {
+        users.add(user);
+        updateServer("New Sign Up", user);
+    }
+
+    /**
+     * Checks if a user exists with the provided username.
+     * @param username The username to check.
+     * @return True if the user exists, otherwise false.
+     */
+    public boolean isUser(String username) {
+        for (User user : users) {
+            if (user.getUsername().equals(username)) {
                 return true;
             }
         }
@@ -35,61 +107,22 @@ public class Server {
     }
 
     /**
-     * Returns the the Client information of the user using the username to find it
-     * @param username - the username of the user
-     * @return the Client information of the user; returns null if the user not found
+     * Retrieves a user by their username.
+     * @param username The username to search for.
+     * @return The User object if found, otherwise null.
      */
-    public Client getClient(String username) {
-        for(Client client: clients){
-            if(client.getUsername().equals(username)) {
-                return client;
+    public User getUser(String username) {
+        for (User user : users) {
+            if (user.getUsername().equals(username)) {
+                return user;
             }
         }
         return null;
     }
 
-    /**
-     * Adds a client user to the list of clients
-     * @param client - the new client
-     */
-    public void addClient(Client client) {
-        clients.add(client);
-    }
-
-    /**
-     * Returns the list of clients currently in the server
-     * @return the list of clients
-     */
-    public Client[] getClients(){
-        Client[] client = new Client[clients.size()];
-        for(int i = 0; i < client.length; i++){
-            client[i] = clients.get(i);
-        }
-        return client;
-    }
-
-    /**
-     * Validates if the user is a car owner user
-     * @param username - the username of the user
-     * @return true if the user is car owner and false otherwise
-     */
-    public boolean isCarOwner(String username){
-        for(CarOwner carOwner : carOwners){
-            if(carOwner.equals(username)){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 
-     * @param username
-     * @return
-     */
     public CarOwner getCarOwner(String username) {
-        for(CarOwner carOwner: carOwners){
-            if(carOwner.getUsername().equals(username)){
+        for (CarOwner carOwner : carOwners) {
+            if (carOwner.getUsername().equals(username)) {
                 return carOwner;
             }
         }
@@ -97,66 +130,24 @@ public class Server {
     }
 
     /**
-     * 
-     * @param carOwner
+     * Checks if a CarOwner exists with the provided username.
+     * @param username The username to check.
+     * @return True if the CarOwner exists, otherwise false.
      */
-    public void addCarOwner(CarOwner carOwner){
+    public boolean isCarOwner(String username) {
+        for (CarOwner carOwner : carOwners) {
+            if (carOwner.getUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Adds a new CarOwner to the server's list of CarOwners.
+     * @param carOwner The CarOwner to add.
+     */
+    public void addCarOwner(CarOwner carOwner) {
         carOwners.add(carOwner);
-    }
-
-    /**
-     * 
-     * @param username
-     * @return
-     */
-    public boolean isUser(String username) {
-        for(User user: users) {
-            if(user.getUsername().equals(username)){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 
-     * @param username
-     * @return
-     */
-    public User getUser(String username) {
-        for(User user: users) {
-            if(user.getUsername().equals(username)) {
-                return user;
-            }
-        }
-        return null;
-    }
-
-    public void addUser(User user){
-        users.add(user);
-    }
-
-    public boolean accountFound(String username, String password) {
-        for(User user: users){
-            if(user.getUsername().equals(username) && user.getPassword().equals(password)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void updateServer(String action, User user){
-        Date date = new Date();
-        String newData = action + "," + user + "," + date + "\n";
-        data = data.concat(newData);
-
-        try {
-            FileWriter writer = new FileWriter(server);
-            writer.write(data);
-            writer.close();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
