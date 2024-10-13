@@ -6,7 +6,6 @@ import java.awt.Dialog.ModalityType;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -36,7 +35,8 @@ public class VCRTSGUI {
     private JLabel infoBoxMessage = new JLabel("");
     private final int APP_WIDTH = 480;
     private final int APP_HEIGHT = 600;
-
+    private JTextField usernameField;
+    private JPasswordField passwordField;
     //Pages for the GUI
     private final String LOGIN_PAGE = "Login Page";
     private final String SIGN_UP_PAGE = "Sign Up Page";
@@ -48,7 +48,7 @@ public class VCRTSGUI {
     private JLabel currentUserID = new JLabel("");
     private JLabel currentClientID = new JLabel();
     private JLabel currentCarOwnerID = new JLabel();
-
+    
     //To store the names of the screens of GUI
     private ArrayList<String> screens = new ArrayList<String>();
     
@@ -76,6 +76,7 @@ public class VCRTSGUI {
      * 
      */
     public VCRTSGUI() {
+
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new CardLayout());
         frame.setTitle("Vehicular Cloud Real Time System");
@@ -83,7 +84,7 @@ public class VCRTSGUI {
         frame.setResizable(false);
         frame.setLocation(250, 100);
         frame.getContentPane().setBackground(Color.WHITE);
-
+        
         // ImageIcon logo = new ImageIcon("src/VCRTS_logo.png");
         // setIconImage(logo.getImage());
 
@@ -133,31 +134,12 @@ public class VCRTSGUI {
         //Create panel & label for username field
         JPanel usernameSubPanel = new JPanel();
         JLabel usernameLabel = new JLabel("Username: ");
-        JTextField username = new JTextField(20);
+        this.usernameField = new JTextField(20);
         
         //Create panel & label for password field
         JPanel passwordSubPanel = new JPanel();
         JLabel passwordLabel = new JLabel("Password: ");
-        JPasswordField password = new JPasswordField(20);
-
-        // Create "Show Password" box
-        JCheckBox showPassword = new JCheckBox("Show Password");
-        showPassword.setBackground(backgroundColor);
-    
-        showPassword.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) 
-            {
-                if (showPassword.isSelected()) 
-                {
-                    password.setEchoChar((char) 0);  
-                    } 
-                    else 
-                    {
-                        password.setEchoChar('*');
-                        }
-                    }
-                });
+        this.passwordField = new JPasswordField(20);
         
         //Create button for login confirmation
         JButton login = new JButton("Login");
@@ -175,17 +157,13 @@ public class VCRTSGUI {
         usernameSubPanel.setLayout(new BorderLayout(5,0));
         usernameSubPanel.setBackground(backgroundColor);
         usernameSubPanel.add(usernameLabel, BorderLayout.WEST);
-        usernameSubPanel.add(username, BorderLayout.EAST);
+        usernameSubPanel.add(usernameField, BorderLayout.EAST);
 
         //Set up layout for password sub-panel
         passwordSubPanel.setLayout(new BorderLayout(5, 0));
         passwordSubPanel.setBackground(backgroundColor);
         passwordSubPanel.add(passwordLabel, BorderLayout.WEST);
-        passwordSubPanel.add(password, BorderLayout.EAST);
-
-        // Add the "Show Password" checkbox below the password field
-        passwordSubPanel.add(showPassword, BorderLayout.SOUTH);
-
+        passwordSubPanel.add(passwordField, BorderLayout.EAST);
         
         //Verification for user information
         login.addActionListener(userVerifier);
@@ -271,26 +249,6 @@ public class VCRTSGUI {
         JLabel passwordConfirmLabel = new JLabel("Confirm Password: ");
         JPasswordField passwordConfirm = new JPasswordField(20);
 
-         // Create "Show Password" button
-         JCheckBox showPassword = new JCheckBox("Show Password");
-         showPassword.setBackground(backgroundColor);
-    
-         // Add ActionListener to toggle password visibility
-         showPassword.addActionListener(new ActionListener() 
-         {
-            @Override
-            public void actionPerformed(ActionEvent e) 
-            {
-                if (showPassword.isSelected()) 
-                {
-                    password.setEchoChar((char) 0);  // Show password
-                    } else 
-                    {
-                        password.setEchoChar('*');  // Hide password
-                        }
-                    }
-                });
-
         //Create button to sign up
         JButton signUp = new JButton("Sign Up");
         signUp.setBackground(buttonColor);
@@ -340,10 +298,6 @@ public class VCRTSGUI {
         passwordConfirmSubPanel.setBackground(backgroundColor);
         passwordConfirmSubPanel.add(passwordConfirmLabel, BorderLayout.WEST);
         passwordConfirmSubPanel.add(passwordConfirm, BorderLayout.EAST);
-
-        // Add the "Show Password" checkbox below the password field
-        passwordSubPanel.add(showPassword, BorderLayout.SOUTH);
-
 
         //Verifies user information
         signUp.setName(SIGN_UP_PAGE);
@@ -521,13 +475,12 @@ public class VCRTSGUI {
      * Verifies the inputted information from the user
      */
     class UserVerifier extends User implements ActionListener, KeyListener, FieldClearer {
-        private JTextField usernameField;
-        private JPasswordField passwordField;
+
 
         public UserVerifier(){
             super();
-            usernameField = new JTextField();
-            passwordField = new JPasswordField();
+          
+
         }
 
         @Override
@@ -552,20 +505,30 @@ public class VCRTSGUI {
             }
             //Login verification
             else if(((JButton)e.getSource()).getText().equals("Login")) {
-            	
-                if(server.accountFound(this.getUsername(), this.getPassword())) {
-                    currentUser = server.getUser(this.getUsername());
+            	String usernameInput = usernameField.getText();  // Capture username from JTextField
+                String passwordInput = new String(passwordField.getPassword());  // capture from pass field
+                System.out.println("Captured Username: '" + usernameInput + "'"); //debug statements
+                System.out.println("Captured Password: '" + passwordInput + "'"); //debug statements
+                if(server.accountFound(usernameInput, passwordInput)) {
+                    currentUser = server.getUser(usernameInput);
                     server.updateServer("New Login", currentUser);
                     clearFields();
                     currentUserID.setText("\t User ID: " + currentUser.getUsername());
                     showMainPage();
+                    SwingUtilities.invokeLater(() -> {
+                        VCRTS_GUI newGui = new VCRTS_GUI();
+                        newGui.setVisible(true);
+                    });
+
+                    // Hide or close the current login frame
+                    frame.dispose();
                     
 
                 }
                 else {
                 	
-                    System.out.println("ACCOUNT NOT FOUND: Please try again or sign up...");
-                    infoBoxMessage.setText("Account Not Found: Please try again or sign up...");
+                    System.out.println("ACCOUNT NOT FOUND OR INVALID PASSWORD: Please try again or sign up...");
+                    infoBoxMessage.setText("Account Not Found or invalid password: Please try again or sign up...");
                     infoBox.setVisible(true);
                 }
             }
