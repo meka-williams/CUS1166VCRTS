@@ -164,7 +164,10 @@ public class VCRTSGUI {
         passwordSubPanel.add(password, BorderLayout.EAST);
         
         //Verification for user information
-        login.addActionListener(userVerifier);
+        //login.addActionListener(userVerifier);
+        login.setName(MAIN_PAGE);
+        login.addActionListener(pageSwitcher);
+        pageSwitchButtons.add(login);
         //password.addKeyListener(userVerifier);
 
         //Switches to sign up page
