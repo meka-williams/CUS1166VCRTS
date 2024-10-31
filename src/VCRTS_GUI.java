@@ -56,49 +56,16 @@ public class VCRTS_GUI extends JFrame {
 		mainPanel = new JPanel(cardLayout);
 
 		// Client Input Panel
-		clientPanel = new JPanel();
-		clientPanel.setLayout(new GridLayout(4, 2));
-		clientPanel.add(new JLabel("Client ID:"));
-		clientIdField = new JTextField();
-		clientPanel.add(clientIdField);
-		clientPanel.add(new JLabel("Job Duration (hrs):"));
-		jobDurationField = new JTextField();
-		clientPanel.add(jobDurationField);
-		clientPanel.add(new JLabel("Job Deadline:"));
-		jobDeadlineField = new JTextField();
-		clientPanel.add(jobDeadlineField);
+		clientPanel = createInputPanel("Client ID:", "Job Duration (hrs):", "Job Deadline:");
+        clientIdField = (JTextField) ((JPanel)clientPanel.getComponent(1)).getComponent(1);
+        jobDurationField = (JTextField) ((JPanel)clientPanel.getComponent(3)).getComponent(1);
+        jobDeadlineField = (JTextField) ((JPanel)clientPanel.getComponent(5)).getComponent(1);
 
 		// Owner Input Panel
-		ownerPanel = new JPanel();
-		ownerPanel.setLayout(new GridLayout(14, 2));
-
-		ownerPanel.add(new JLabel("Owner ID:"));
-		ownerIdField = new JTextField();
-		ownerPanel.add(ownerIdField);
-
-		ownerPanel.add(new JLabel("Vehicle Model:"));
-		vehicleModelField = new JTextField();
-		ownerPanel.add(vehicleModelField);
-
-		ownerPanel.add(new JLabel("Vehicle Brand:"));
-		vehicleBrandField = new JTextField();
-		ownerPanel.add(vehicleBrandField);
-
-		ownerPanel.add(new JLabel("Plate Number:"));
-		plateNumberField = new JTextField();
-		ownerPanel.add(plateNumberField);
-
-		ownerPanel.add(new JLabel("Serial Number:"));
-		serialNumberField = new JTextField();
-		ownerPanel.add(serialNumberField);
-
-		ownerPanel.add(new JLabel("VIN Number:"));
-		vinNumberField = new JTextField();
-		ownerPanel.add(vinNumberField);
-
-		ownerPanel.add(new JLabel("Residency Time (hrs):"));
-		residencyTimeField = new JTextField();
-		ownerPanel.add(residencyTimeField);
+		ownerPanel = createInputPanel("Owner ID:", "Vehicle Info:", "Residency Time (hrs):");
+        ownerIdField = (JTextField) ((JPanel)ownerPanel.getComponent(1)).getComponent(1);
+        vehicleInfoField = (JTextField) ((JPanel)ownerPanel.getComponent(3)).getComponent(1);
+        residencyTimeField = (JTextField) ((JPanel)ownerPanel.getComponent(5)).getComponent(1);
 
 		// Add both panels to the CardLayout mainPanel
 		mainPanel.add(clientPanel, "Client");
@@ -130,6 +97,34 @@ public class VCRTS_GUI extends JFrame {
 		// Set default selection to Owner so it's visible initially or can be set to blank later
 		ownerButton.setSelected(true);
 		cardLayout.show(mainPanel, "Owner");
+	}
+	private JPanel createInputPanel(String label1, String label2, String label3) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        panel.add(Box.createVerticalStrut(20));
+        panel.add(createLabelFieldPanel(label1));
+        panel.add(Box.createVerticalStrut(10)); 
+        panel.add(createLabelFieldPanel(label2));
+        panel.add(Box.createVerticalStrut(10)); 
+        panel.add(createLabelFieldPanel(label3));
+        panel.add(Box.createVerticalStrut(20)); 
+
+        return panel;
+    }
+
+    private JPanel createLabelFieldPanel(String labelText) {
+        JPanel panel = new JPanel(new BorderLayout(10, 0));
+        JLabel label = new JLabel(labelText);
+        label.setPreferredSize(new Dimension(150, 25));
+        label.setHorizontalAlignment(JLabel.RIGHT);
+        panel.add(label, BorderLayout.WEST);
+        
+        JTextField field = new JTextField(20);
+        panel.add(field, BorderLayout.CENTER);
+        
+        panel.setMaximumSize(new Dimension(400, 30));
+        return panel;
 	}
 
 	private void handleClientSubmission() {
