@@ -1,577 +1,385 @@
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.Dialog.ModalityType;
-
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.border.Border;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.util.ArrayList;
-
-/**
- * Project:     Vehicular Cloud Real Time System
- * Class:       VCRTSGUI.java
- * Authors:     Shameka Williams, Farheen Mahmud, Jery Vizhnay, Bryan Benjamin, Hasan Mousa
- * Date:        October 7, 2024   
- * 
- */
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import org.jdatepicker.impl.JDatePanelImpl;
+import org.jdatepicker.impl.JDatePickerImpl;
+import org.jdatepicker.impl.UtilDateModel;
+import java.util.Properties;
 public class VCRTSGUI {
-    //Set up necessary components for GUI
-    private JFrame frame = new JFrame();
-    private JDialog infoBox = new JDialog();
-    private JLabel infoBoxMessage = new JLabel("");
-    private final int APP_WIDTH = 480;
-    private final int APP_HEIGHT = 600;
+	
+    private JFrame frame;
+    
     private JTextField usernameField;
     private JPasswordField passwordField;
-    //Pages for the GUI
-    private final String LOGIN_PAGE = "Login Page";
-    private final String SIGN_UP_PAGE = "Sign Up Page";
-    private final String MAIN_PAGE = "Main Page";
-    private final String CREATE_JOB_REQUEST_PAGE = "Create Job Request Page";
-    private final String CREATE_CAR_RENTAL_PAGE = "Car Rental Page";
-
-    //fields to store user information
-    private JLabel currentUserID = new JLabel("");
-    private JLabel currentClientID = new JLabel();
-    private JLabel currentCarOwnerID = new JLabel();
-    
-    //To store the names of the screens of GUI
-    private ArrayList<String> screens = new ArrayList<String>();
-    
-    //To store the buttons that switches screens
-    private ArrayList<JButton> pageSwitchButtons = new ArrayList<JButton>();
-
-    //Color Fields
-    private Color backgroundColor;
-    private Color buttonColor;
-    private Color buttonHoverColor;
-    private Color textColor;
-
-    //Size fields
-    private float buttonSize = 15;
-    private float textSize = 19;
-
-    private PageSwitcher pageSwitcher = new PageSwitcher();
-    private UserVerifier userVerifier = new UserVerifier();
-    // private JobRequestListener JobRequestListener = new JobRequestListener();
-    // private CarRentalListener CarRentalListener = new CarRentalListener();
-    private Server server = new Server();
+    private JRadioButton clientButton, ownerButton;
+    private JPanel mainPanel, clientPanel, ownerPanel;
+    private JTextField clientIdField, jobDurationField, jobDeadlineField;
+    private JTextField ownerIdField, vehicleInfoField, residencyTimeField;
+    private JButton submitButton;
     private User currentUser;
+    private Server server;
+    private CardLayout cardLayout;
 
-    /**
-     * 
-     */
     public VCRTSGUI() {
-
+        frame = new JFrame("Vehicular Cloud Real Time System (VCRTS)");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new CardLayout());
-        frame.setTitle("Vehicular Cloud Real Time System");
-        frame.setSize(APP_WIDTH, APP_HEIGHT);
+
+      
+
+        server = new Server();
+
+        createLoginScreen();
+        createSignUpScreen();
+        createMainPage();  // This will now display the main GUI page setup in VCRTS_GUI
+        
+        frame.setLocationRelativeTo(null); // Center the window on the screen
         frame.setResizable(false);
-        frame.setLocation(250, 100);
-        frame.getContentPane().setBackground(Color.WHITE);
-        
-        // ImageIcon logo = new ImageIcon("src/VCRTS_logo.png");
-        // setIconImage(logo.getImage());
-
-        infoBoxMessage.setHorizontalAlignment(JLabel.CENTER);
-
-        infoBox.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        infoBox.setLayout(new BorderLayout());
-        infoBox.setSize(300, 200);
-        infoBox.setResizable(false);
-        infoBox.setModalityType(ModalityType.APPLICATION_MODAL);
-        infoBox.add(infoBoxMessage, BorderLayout.CENTER);
-        
-        //Setting colors for attributes (background, button, & text)
-        backgroundColor = new Color(192, 222, 229);
-        buttonColor = new Color(97, 164, 173);
-        buttonHoverColor = new Color(0, 59, 70);
-        textColor = new Color(0, 0, 0);
-
-        startApp();
         frame.setVisible(true);
-        infoBox.setLocationRelativeTo(frame);
+
+
     }
 
     public static void main(String[] args) {
         new VCRTSGUI();
-        
     }
 
-    /**\
-     * Creates the various screens of the GUI that the user can navigate to
-     */
-    public void startApp() {
-        createLoginScreen();
-        createSignUpScreen();
-        createMainPage();
+    // Login Screen
+    private void createLoginScreen() {
+        JPanel loginPanel = new JPanel(new GridBagLayout());
+        // GBC for gui layout
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.insets = new Insets(5, 5, 5, 5); // Spacing between components
+
+        Dimension fieldSize = new Dimension(200, 25);
+        Dimension buttonSize = new Dimension(100, 25); 
+
+        JLabel usernameLabel = new JLabel("Username:");
+        usernameField = new JTextField();
+        usernameField.setPreferredSize(fieldSize);
+
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordField = new JPasswordField();
+        passwordField.setPreferredSize(fieldSize);
+
+        JButton loginButton = new JButton("Login");
+        loginButton.setPreferredSize(buttonSize);
+        loginButton.addActionListener(e -> loginUser());
+
+        JButton signUpButton = new JButton("Sign Up");
+        signUpButton.setPreferredSize(buttonSize);
+        signUpButton.addActionListener(e -> showSignUpScreen());
+
+        // Layout components in the login panel
+        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.LINE_END;
+        loginPanel.add(usernameLabel, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 0; gbc.anchor = GridBagConstraints.LINE_START;
+        loginPanel.add(usernameField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.LINE_END;
+        loginPanel.add(passwordLabel, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 1; gbc.anchor = GridBagConstraints.LINE_START;
+        loginPanel.add(passwordField, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_START;
+        loginPanel.add(loginButton, gbc);
+
+        gbc.insets = new Insets(5, 105, 5, 5); // Offset the Sign Up button to the right of Login
+        loginPanel.add(signUpButton, gbc);
+
+        frame.add(loginPanel, "Login");
+
+        // Set the exact size for the frame after adding the login panel
+        frame.setSize(409, 292);
+        frame.setResizable(false); // Lock the frame size
     }
 
-    /**
-     * Creates the login screen for the GUI
-     * Allows users to log into the system with an existing account
-     */
-    public void createLoginScreen() {
-        //Create panel for login screen
-        JPanel loginPanel = new JPanel();
-        JLabel header = new JLabel("Login");
 
-        //Create panel & label for username field
-        JPanel usernameSubPanel = new JPanel();
-        JLabel usernameLabel = new JLabel("Username: ");
-        this.usernameField = new JTextField(20);
-        
-        //Create panel & label for password field
-        JPanel passwordSubPanel = new JPanel();
-        JLabel passwordLabel = new JLabel("Password: ");
-        this.passwordField = new JPasswordField(20);
-        
-        //Create button for login confirmation
-        JButton login = new JButton("Login");
-        login.setBackground(buttonColor);
-        login.setBorderPainted(false);
-        login.setOpaque(true);
-        
-        //Create button for registration
-        JButton signUp = new JButton("Sign Up");
-        signUp.setBackground(buttonColor);
-        signUp.setBorderPainted(false);
-        signUp.setOpaque(true);
 
-        //Set up layout for username sub-panel
-        usernameSubPanel.setLayout(new BorderLayout(5,0));
-        usernameSubPanel.setBackground(backgroundColor);
-        usernameSubPanel.add(usernameLabel, BorderLayout.WEST);
-        usernameSubPanel.add(usernameField, BorderLayout.EAST);
 
-        //Set up layout for password sub-panel
-        passwordSubPanel.setLayout(new BorderLayout(5, 0));
-        passwordSubPanel.setBackground(backgroundColor);
-        passwordSubPanel.add(passwordLabel, BorderLayout.WEST);
-        passwordSubPanel.add(passwordField, BorderLayout.EAST);
-        
-        //Verification for user information
-        //login.addActionListener(userVerifier);
-        login.setName(MAIN_PAGE);
-        login.addActionListener(pageSwitcher);
-        pageSwitchButtons.add(login);
-        //password.addKeyListener(userVerifier);
 
-        //Switches to sign up page
-        signUp.setName(SIGN_UP_PAGE);
-        signUp.addActionListener(pageSwitcher);
-        pageSwitchButtons.add(signUp);
 
-        //Set color and font of login button
-        login.setBackground(buttonColor);
-        login.setForeground(textColor);
-        login.setFont(login.getFont().deriveFont(buttonSize));
+    // Sign-Up Screen
+    private void createSignUpScreen() {
+        JPanel signUpPanel = new JPanel(new GridBagLayout());
 
-        //Set color and font register button
-        signUp.setBackground(buttonColor);
-        signUp.setForeground(textColor);
-        signUp.setFont(signUp.getFont().deriveFont(buttonSize));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL; // Allow text fields to stretch horizontally
+        gbc.insets = new Insets(5, 5, 5, 5); // Spacing between components
 
-        //Sets the font size for the labels
-        header.setFont(header.getFont().deriveFont(textSize));
-        usernameLabel.setFont(usernameLabel.getFont().deriveFont(textSize));
-        passwordLabel.setFont(passwordLabel.getFont().deriveFont(textSize));
+        Dimension fieldSize = new Dimension(200, 25); // Set a fixed size for text fields
 
-        //Sets the layout and background of the panel
-        loginPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 100, 50));
-        loginPanel.setBackground(backgroundColor);
+        // First Name field
+        JLabel fNameLabel = new JLabel("First Name:");
+        JTextField fNameField = new JTextField();
+        fNameField.setPreferredSize(fieldSize);
 
-        //Adds the the components of the panel
-        loginPanel.add(header);
-        loginPanel.add(usernameSubPanel);
-        loginPanel.add(passwordSubPanel);
-        loginPanel.add(login);
-        loginPanel.add(signUp);
-        frame.add(loginPanel, LOGIN_PAGE);
-        screens.add(LOGIN_PAGE);
+        // Last Name field
+        JLabel lNameLabel = new JLabel("Last Name:");
+        JTextField lNameField = new JTextField();
+        lNameField.setPreferredSize(fieldSize);
+
+        // Username field
+        JLabel usernameLabel = new JLabel("Username:");
+        JTextField newUsernameField = new JTextField();
+        newUsernameField.setPreferredSize(fieldSize);
+
+        // Email field
+        JLabel emailLabel = new JLabel("Email Address:");
+        JTextField emailField = new JTextField();
+        emailField.setPreferredSize(fieldSize);
+
+        // Date of Birth field with JDatePicker
+        JLabel dobLabel = new JLabel("Date of Birth:");
+        UtilDateModel dateModel = new UtilDateModel();
+        Properties properties = new Properties();
+        properties.put("text.today", "Today");
+        properties.put("text.month", "Month");
+        properties.put("text.year", "Year");
+        JDatePanelImpl datePanel = new JDatePanelImpl(dateModel, properties);
+        JDatePickerImpl dobPicker = new JDatePickerImpl(datePanel, new org.jdatepicker.impl.DateComponentFormatter());
+
+        // Password field
+        JLabel passwordLabel = new JLabel("Password:");
+        JPasswordField newPasswordField = new JPasswordField();
+        newPasswordField.setPreferredSize(fieldSize);
+
+        // Confirm Password field make sure to actually add password confirmation
+        JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
+        JPasswordField confirmPasswordField = new JPasswordField();
+        confirmPasswordField.setPreferredSize(fieldSize);
+
+        // Register and Back buttons
+        JButton registerButton = new JButton("Register");
+        registerButton.addActionListener(e -> registerUser(newUsernameField.getText(), newPasswordField.getText()));
+        JButton backButton = new JButton("Back to Login");
+        backButton.addActionListener(e -> showLoginScreen());
+
+        // Layout components with GridBagConstraints
+        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.LINE_END;
+        signUpPanel.add(fNameLabel, gbc);
+        gbc.gridx = 1; gbc.gridy = 0; gbc.anchor = GridBagConstraints.LINE_START;
+        signUpPanel.add(fNameField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.LINE_END;
+        signUpPanel.add(lNameLabel, gbc);
+        gbc.gridx = 1; gbc.gridy = 1; gbc.anchor = GridBagConstraints.LINE_START;
+        signUpPanel.add(lNameField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_END;
+        signUpPanel.add(usernameLabel, gbc);
+        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_START;
+        signUpPanel.add(newUsernameField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_END;
+        signUpPanel.add(emailLabel, gbc);
+        gbc.gridx = 1; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_START;
+        signUpPanel.add(emailField, gbc);
+
+        // Add Date of Birth label and picker
+        gbc.gridx = 0; gbc.gridy = 4; gbc.anchor = GridBagConstraints.LINE_END;
+        signUpPanel.add(dobLabel, gbc);
+        gbc.gridx = 1; gbc.gridy = 4; gbc.anchor = GridBagConstraints.LINE_START;
+        signUpPanel.add(dobPicker, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 5; gbc.anchor = GridBagConstraints.LINE_END;
+        signUpPanel.add(passwordLabel, gbc);
+        gbc.gridx = 1; gbc.gridy = 5; gbc.anchor = GridBagConstraints.LINE_START;
+        signUpPanel.add(newPasswordField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 6; gbc.anchor = GridBagConstraints.LINE_END;
+        signUpPanel.add(confirmPasswordLabel, gbc);
+        gbc.gridx = 1; gbc.gridy = 6; gbc.anchor = GridBagConstraints.LINE_START;
+        signUpPanel.add(confirmPasswordField, gbc);
+
+        // Place Register and Back buttons side by side
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        buttonPanel.add(registerButton);
+        buttonPanel.add(backButton);
+
+        gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
+        signUpPanel.add(buttonPanel, gbc);
+
+        // Set the preferred size for the sign-up panel
+        signUpPanel.setPreferredSize(new Dimension(409, 292));
+        frame.add(signUpPanel, "SignUp");
     }
 
-    /**
-     * Creates a sign up screen for the GUI
-     * Allows users to create a new account by providing identifiable information
-     */
-    public void createSignUpScreen(){
-        //Create panel for sign up screen
-        JPanel signUpPanel = new JPanel();
-        JLabel header = new JLabel("Sign Up");
-        
-        //Create panel & label for first name
-        JPanel fNameSubPanel = new JPanel();
-        JLabel fNameLabel = new JLabel("First Name: ");
-        JTextField fName = new JTextField(20);
 
-        //Create panel & label for last name
-        JPanel lNameSubPanel = new JPanel();
-        JLabel lNameLabel = new JLabel("Last Name: ");
-        JTextField lName = new JTextField(20);
 
-        //Create panel & label for username
-        JPanel usernameSubPanel = new JPanel();
-        JLabel usernameLabel = new JLabel("Username: ");
-        JTextField username = new JTextField(20);
+    // Main GUI from VCRTS_GUI
+    private void createMainPage() {
+        JPanel mainPagePanel = new JPanel(new GridBagLayout()); // Main panel with GridBagLayout
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10); // Spacing around components
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        //Create panel & label for email address
-        JPanel emailAddressSubPanel = new JPanel();
-        JLabel emailAddressLabel = new JLabel("Email Address: ");
-        JTextField emailAddress = new JTextField(20);
+        // Role selection panel
+        JPanel rolePanel = new JPanel(new FlowLayout());
+        clientButton = new JRadioButton("Client");
+        ownerButton = new JRadioButton("Owner");
+        ButtonGroup roleGroup = new ButtonGroup();
+        roleGroup.add(clientButton);
+        roleGroup.add(ownerButton);
+        rolePanel.add(clientButton);
+        rolePanel.add(ownerButton);
 
-        //Create panel & label for date of birth
-        JPanel dateOfBirthSubPanel = new JPanel();
-        JLabel dateOfBirthLabel = new JLabel("Date of Birth: ");
-        JTextField dateOfBirth = new JTextField(20);
-        // JDateChooser dateOfBirth = new JDateChooser();
-        // dateOfBirth.setLocale(Locale.US);
+        // Main input panels for client and owner
+        cardLayout = new CardLayout();
+        mainPanel = new JPanel(cardLayout);
 
-        //Create panel & label for password
-        JPanel passwordSubPanel = new JPanel();
-        JLabel passwordLabel = new JLabel("Password: ");
-        JPasswordField password = new JPasswordField(20);
+        clientPanel = createInputPanel("Client ID:", "Job Duration (hrs):", "Job Deadline:");
+        ownerPanel = createInputPanel("Owner ID:", "Vehicle Info:", "Residency Time (hrs):");
 
-        //Create panel & label for password confirmation
-        JPanel passwordConfirmSubPanel = new JPanel();
-        JLabel passwordConfirmLabel = new JLabel("Confirm Password: ");
-        JPasswordField passwordConfirm = new JPasswordField(20);
+        mainPanel.add(clientPanel, "Client");
+        mainPanel.add(ownerPanel, "Owner");
 
-        //Create button to sign up
-        JButton signUp = new JButton("Sign Up");
-        signUp.setBackground(buttonColor);
-        signUp.setBorderPainted(false);
-        signUp.setOpaque(true);
+        // Submit button
+        submitButton = new JButton("Submit");
+        submitButton.addActionListener(e -> handleSubmission());
 
-        //Create button to return to the login screen
-        JButton login = new JButton("Login");
-        login.setBackground(buttonColor);
-        login.setBorderPainted(false);
-        login.setOpaque(true);
+        clientButton.addActionListener(e -> cardLayout.show(mainPanel, "Client"));
+        ownerButton.addActionListener(e -> cardLayout.show(mainPanel, "Owner"));
 
-        //Set layout and background of sub-panels
-        fNameSubPanel.setLayout(new BorderLayout(5, 0));
-        fNameSubPanel.setBackground(backgroundColor);
-        fNameSubPanel.add(fNameLabel, BorderLayout.WEST);
-        fNameSubPanel.add(fName, BorderLayout.EAST);
+        // Layout each component using GridBagConstraints
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 1.0; gbc.anchor = GridBagConstraints.CENTER;
+        mainPagePanel.add(rolePanel, gbc);
 
-        lNameSubPanel.setLayout(new BorderLayout(5, 0));
-        lNameSubPanel.setBackground(backgroundColor);
-        lNameSubPanel.add(lNameLabel, BorderLayout.WEST);
-        lNameSubPanel.add(lName, BorderLayout.EAST);
+        gbc.gridy = 1; gbc.fill = GridBagConstraints.BOTH; gbc.weighty = 1.0; // Fill remaining vertical space
+        mainPagePanel.add(mainPanel, gbc);
 
-        usernameSubPanel.setLayout(new BorderLayout(5,0));
-        usernameSubPanel.setBackground(backgroundColor);
-        usernameSubPanel.add(usernameLabel, BorderLayout.WEST);
-        usernameSubPanel.add(username, BorderLayout.EAST);
-        username.addKeyListener(userVerifier);
+        gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE; gbc.weighty = 0; // Reset weight for the button
+        mainPagePanel.add(submitButton, gbc);
 
-        emailAddressSubPanel.setLayout(new BorderLayout(5, 0));
-        emailAddressSubPanel.setBackground(backgroundColor);
-        emailAddressSubPanel.add(emailAddressLabel, BorderLayout.WEST);
-        emailAddressSubPanel.add(emailAddress, BorderLayout.EAST);
-
-        dateOfBirthSubPanel.setLayout(new BorderLayout(5, 0));
-        dateOfBirthSubPanel.setBackground(backgroundColor);
-        dateOfBirthSubPanel.add(dateOfBirthLabel, BorderLayout.WEST);
-        dateOfBirthSubPanel.add(dateOfBirth, BorderLayout.EAST);
-
-        passwordSubPanel.setLayout(new BorderLayout(5, 0));
-        passwordSubPanel.setBackground(backgroundColor);
-        passwordSubPanel.add(passwordLabel, BorderLayout.WEST);
-        passwordSubPanel.add(password, BorderLayout.EAST);
-        password.addKeyListener(userVerifier);
-
-        passwordConfirmSubPanel.setLayout(new BorderLayout(5, 0));
-        passwordConfirmSubPanel.setBackground(backgroundColor);
-        passwordConfirmSubPanel.add(passwordConfirmLabel, BorderLayout.WEST);
-        passwordConfirmSubPanel.add(passwordConfirm, BorderLayout.EAST);
-
-        //Verifies user information
-        signUp.setName(SIGN_UP_PAGE);
-        signUp.addActionListener(userVerifier);
-
-        //Switch to the login page
-        login.setName(LOGIN_PAGE);
-        login.addActionListener(pageSwitcher);
-        pageSwitchButtons.add(login);
-
-        //Set up background & font for buttons
-        signUp.setBackground(buttonColor);
-        signUp.setForeground(textColor);
-        signUp.setFont(signUp.getFont().deriveFont(buttonSize));
-
-        login.setBackground(buttonColor);
-        login.setForeground(textColor);
-        login.setFont(login.getFont().deriveFont(buttonSize));
-
-        signUpPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 100, 30));
-        signUpPanel.setBackground(backgroundColor);
-
-        //Set font size for components 
-        header.setFont(header.getFont().deriveFont(textSize));
-        fNameLabel.setFont(fNameLabel.getFont().deriveFont(textSize));
-        lNameLabel.setFont(lNameLabel.getFont().deriveFont(textSize));
-        usernameLabel.setFont(usernameLabel.getFont().deriveFont(textSize));
-        emailAddressLabel.setFont(emailAddressLabel.getFont().deriveFont(textSize));
-        dateOfBirthLabel.setFont(dateOfBirthLabel.getFont().deriveFont(textSize));
-        passwordLabel.setFont(passwordLabel.getFont().deriveFont(textSize));
-        passwordConfirmLabel.setFont(passwordLabel.getFont().deriveFont(textSize));
-
-        //Add the sub-panels and buttons 
-        signUpPanel.add(header);
-        signUpPanel.add(fNameSubPanel);
-        signUpPanel.add(lNameSubPanel);
-        signUpPanel.add(usernameSubPanel);
-        signUpPanel.add(emailAddressSubPanel);
-        signUpPanel.add(dateOfBirthSubPanel);
-        signUpPanel.add(passwordSubPanel);
-        signUpPanel.add(passwordConfirmSubPanel);
-        signUpPanel.add(signUp);
-        signUpPanel.add(login);
-
-        //Add frame and screen to lists
-        frame.add(signUpPanel, SIGN_UP_PAGE);
-        screens.add(SIGN_UP_PAGE);
+        // Add the main page panel to the frame
+        frame.add(mainPagePanel, "Main");
     }
 
-    public void createMainPage(){
-        //Create panels for the page
-        JPanel mainPanel = new JPanel();
-        JPanel idPanel = new JPanel();
-        JPanel mainPageContentPanel = new JPanel();
-        JPanel headerSubPanel = new JPanel();
 
-        //Messages to the users
-        JLabel header1 = new JLabel("Would you like to rent our your car as a car owner or");
-        JLabel header2 = new JLabel("Submit a job request as client");
-        
-        //Buttons to direct to the request a job and rent a car pages
-        JButton carRental = new JButton("Rent Car");
-        JButton requestJob = new JButton("Request a Job");
-        JButton logOut = new JButton("Log Out");
-
-        header2.setHorizontalAlignment(JLabel.CENTER);
-
-        //Switches to request job page when clicked
-        requestJob.setName(CREATE_JOB_REQUEST_PAGE);
-        requestJob.addActionListener(pageSwitcher);
-        pageSwitchButtons.add(requestJob);
-
-        //Switches to car rental page when clicked
-        carRental.setName(CREATE_CAR_RENTAL_PAGE);
-        carRental.addActionListener(pageSwitcher);
-        pageSwitchButtons.add(carRental);
-
-        //Signs the user out and returns to login page
-        logOut.setName(LOGIN_PAGE);
-        logOut.addActionListener(pageSwitcher);
-        pageSwitchButtons.add(logOut);
-        
-        //Set up background & font for buttons
-        requestJob.setBackground(buttonColor);
-        requestJob.setForeground(textColor);
-        requestJob.setFont(requestJob.getFont().deriveFont(buttonSize));
-
-        carRental.setBackground(buttonColor);
-        carRental.setForeground(textColor);
-        carRental.setFont(carRental.getFont().deriveFont(buttonSize));
-
-        logOut.setBackground(buttonColor);
-        logOut.setForeground(textColor);
-        logOut.setFont(logOut.getFont().deriveFont(buttonSize));
-
-        //Set the layout for the page
-        idPanel.setLayout(new BorderLayout());
-        idPanel.add(currentUserID, BorderLayout.WEST);
-
-        headerSubPanel.setLayout(new BorderLayout());
-        headerSubPanel.setBackground(backgroundColor);
-        headerSubPanel.add(header1, BorderLayout.NORTH);
-        headerSubPanel.add(header2, BorderLayout.SOUTH);
-
-        //Set font size for components
-        header1.setFont(header1.getFont().deriveFont(textSize));
-        header2.setFont(header2.getFont().deriveFont(textSize));
-
-        //Add the sub panels to the main page panel
-        mainPageContentPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 150, 75));
-        mainPageContentPanel.setBackground(backgroundColor);
-        mainPageContentPanel.add(headerSubPanel);
-        mainPageContentPanel.add(carRental);
-        mainPageContentPanel.add(requestJob);
-        mainPageContentPanel.add(logOut);
-
-        //Add the main page to the list of screens
-        mainPanel.setLayout(new BorderLayout());
-        mainPanel.add(idPanel, BorderLayout.NORTH);
-        mainPanel.add(mainPageContentPanel, BorderLayout.CENTER);
-        frame.add(mainPanel, MAIN_PAGE);
-        screens.add(MAIN_PAGE);
-    }
-    /**
-     * Allows users to add job requests to use computation power
-     */
-    public void createJobRequestPage() {
-
-    }
-    
-    /**
-     * Allows users to add their cars to the system to be rented
-     */
-    public void createCarRentalPage() {
-
+    private JPanel createInputPanel(String label1, String label2, String label3) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(Box.createVerticalStrut(20));
+        panel.add(createLabelFieldPanel(label1));
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(createLabelFieldPanel(label2));
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(createLabelFieldPanel(label3));
+        panel.add(Box.createVerticalStrut(20));
+        return panel;
     }
 
-    interface FieldClearer {
-        public void clearFields();
+    private JPanel createLabelFieldPanel(String labelText) {
+        JPanel panel = new JPanel(new BorderLayout(10, 0));
+        JLabel label = new JLabel(labelText);
+        label.setPreferredSize(new Dimension(150, 25));
+        label.setHorizontalAlignment(JLabel.RIGHT);
+        panel.add(label, BorderLayout.WEST);
+
+        JTextField field = new JTextField(20);
+        panel.add(field, BorderLayout.CENTER);
+
+        if (labelText.contains("Client")) clientIdField = field;
+        if (labelText.contains("Job Duration")) jobDurationField = field;
+        if (labelText.contains("Job Deadline")) jobDeadlineField = field;
+        if (labelText.contains("Owner")) ownerIdField = field;
+        if (labelText.contains("Vehicle Info")) vehicleInfoField = field;
+        if (labelText.contains("Residency Time")) residencyTimeField = field;
+
+        panel.setMaximumSize(new Dimension(400, 30));
+        return panel;
     }
 
-    /**
-     * Switches to the selected page
-     */
-    class PageSwitcher implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String requestedPage = "";
-
-            for(int i = 0; i < pageSwitchButtons.size(); i++) {
-                if(e.getSource().equals(pageSwitchButtons.get(i))) {
-                    requestedPage = pageSwitchButtons.get(i).getName();
-                }
-            }
-
-            for(int i = 0; i < screens.size(); i++) {
-                if(requestedPage.equals(screens.get(i))){
-                    if(requestedPage.equals(CREATE_JOB_REQUEST_PAGE)) {
-                        currentClientID.setText("\t Client ID: " + currentUser.getUsername());
-                        //jobRequestListener.clearFields();
-                    }
-    
-                    if(requestedPage.equals(CREATE_CAR_RENTAL_PAGE)) {
-                        currentCarOwnerID.setText("\t Car Owner ID: " + currentUser.getUsername());
-                        //rentalCarRequestListener.clearFields();
-                    }
-    
-                    ((CardLayout)frame.getContentPane().getLayout()).show(frame.getContentPane(), screens.get(i));
-                    userVerifier.clearFields();
-                }
-            }
+    private void handleSubmission() {
+        if (clientButton.isSelected()) {
+            handleClientSubmission();
+        } else if (ownerButton.isSelected()) {
+            handleOwnerSubmission();
+        } else {
+            JOptionPane.showMessageDialog(frame, "Please select a role: Client or Owner.");
         }
     }
-    /**
-     * Verifies the inputted information from the user
-     */
-    class UserVerifier extends User implements ActionListener, KeyListener, FieldClearer {
 
+    private void handleClientSubmission() {
+        String data = String.format("%s,%s,%s,%s", clientIdField.getText(),
+                                    jobDurationField.getText(),
+                                    jobDeadlineField.getText(),
+                                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        saveToFile(data, "vcrts_data_client.csv", "Client ID,Job Duration,Job Deadline,Timestamp");
+        clearFields();
+        JOptionPane.showMessageDialog(frame, "Client data submitted!");
+    }
 
-        public UserVerifier(){
-            super();
-          
+    private void handleOwnerSubmission() {
+        String data = String.format("%s,%s,%s,%s", ownerIdField.getText(),
+                                    vehicleInfoField.getText(),
+                                    residencyTimeField.getText(),
+                                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        saveToFile(data, "vcrts_data_owner.csv", "Owner ID,Vehicle Info,Residency Time,Timestamp");
+        clearFields();
+        JOptionPane.showMessageDialog(frame, "Owner data submitted!");
+    }
 
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if(((JButton)e.getSource()).getText().equals("Sign Up")){
-               
-                // Hide or close the current login frame
-                
-            	if(!this.getUsername().equals("") && !this.getPassword().equals("") && !server.isUser(this.getUsername())) {
-                    currentUser = new User(this.getUsername(), this.getPassword());
-                    server.addUser(currentUser);
-                    server.updateServer("New Sign Up", currentUser);
-                    clearFields();
-                    currentUserID.setText("\t UserID: " + currentUser.getUsername());
-                    showMainPage();
-                }
-                else {;
-                    System.out.println("An error occurred, please try again");
-                    infoBoxMessage.setText("An error occurred. Please try again");
-                    infoBox.setVisible(true);
-                }
+    private void saveToFile(String data, String fileName, String header) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
+            boolean fileExists = new java.io.File(fileName).exists();
+            if (!fileExists) {
+                writer.write(header);
+                writer.newLine();
             }
-            //Login verification
-            else if(((JButton)e.getSource()).getText().equals("Login")) {
-            	String usernameInput = usernameField.getText();  // Capture username from JTextField
-                String passwordInput = new String(passwordField.getPassword());  // capture from pass field
-                System.out.println("Captured Username: '" + usernameInput + "'"); //debug statements
-                System.out.println("Captured Password: '" + passwordInput + "'"); //debug statements
-                if(server.accountFound(usernameInput, passwordInput)) {
-                    currentUser = server.getUser(usernameInput);
-                    server.updateServer("New Login", currentUser);
-                    clearFields();
-                    currentUserID.setText("\t User ID: " + currentUser.getUsername());
-                    showMainPage();
-                    SwingUtilities.invokeLater(() -> {
-                        VCRTS_GUI newGui = new VCRTS_GUI();
-                        newGui.setVisible(true);
-                    });
-
-                    // Hide or close the current login frame
-                    frame.dispose();
-                    
-
-                }
-                else {
-                	
-                    System.out.println("ACCOUNT NOT FOUND OR INVALID PASSWORD: Please try again or sign up...");
-                    infoBoxMessage.setText("Account Not Found or invalid password: Please try again or sign up...");
-                    infoBox.setVisible(true);
-                }
-            }
+            writer.write(data);
+            writer.newLine();
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(frame, "Error saving data to CSV file.");
         }
+    }
 
-        /**
-         * Shows the main page of the system
-         */
-        public void showMainPage(){
-            ((CardLayout)frame.getContentPane().getLayout()).show(frame.getContentPane(), MAIN_PAGE);
+    private void clearFields() {
+        clientIdField.setText("");
+        jobDurationField.setText("");
+        jobDeadlineField.setText("");
+        ownerIdField.setText("");
+        vehicleInfoField.setText("");
+        residencyTimeField.setText("");
+    }
+
+    private void loginUser() {
+        if (server.accountFound(usernameField.getText(), new String(passwordField.getPassword()))) {
+            currentUser = server.getUser(usernameField.getText());
+            server.updateServer("Login", currentUser);
+            showMainPage();
+        } else {
+            JOptionPane.showMessageDialog(frame, "Invalid credentials. Please try again or sign up.");
         }
+    }
 
-         //These methods are not needed
-         @Override
-         public void keyTyped(KeyEvent e) {
-         }
- 
-         @Override
-         public void keyPressed(KeyEvent e) {
-         }
-
-        @Override
-        public void keyReleased(KeyEvent e) {
-            if(e.getSource().getClass().getSimpleName().equals("JTextField")){
-                usernameField = (JTextField)e.getSource();
-                this.setUsername(((JTextField)e.getSource()).getText());
-            }
-            if(e.getSource().getClass().getSimpleName().equals("JPasswordField")) {
-                passwordField = (JPasswordField)e.getSource();
-                this.setPassword(String.valueOf(((JPasswordField)e.getSource()).getPassword()));
-            }
+    private void registerUser(String username, String password) {
+        if (!username.isEmpty() && !password.isEmpty() && !server.isUser(username)) {
+            server.addUser(new User(username, password));
+            JOptionPane.showMessageDialog(frame, "Account created successfully. Please log in.");
+            showLoginScreen();
+        } else {
+            JOptionPane.showMessageDialog(frame, "Account creation failed. Try a different username.");
         }
+    }
 
-        @Override
-        public void clearFields() {
-            usernameField.setText("");
-            passwordField.setText("");
+    private void showLoginScreen() {
+        ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "Login");
+    }
 
-            this.setUsername("");
-            this.setPassword("");
-        }
+    private void showSignUpScreen() {
+        ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "SignUp");
+    }
+
+    private void showMainPage() {
+        ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "Main");
     }
 }
