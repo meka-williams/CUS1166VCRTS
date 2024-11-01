@@ -1,3 +1,10 @@
+/**
+ * Project:     Vehicular Cloud Real Time System
+ * Class:       VCRTSGUI.java
+ * Authors:     Shameka Williams, Farheen Mahmud, Jery Vizhnay, Bryan Benjamin, Hasan Mousa
+ * Date:        October 7, 2024   
+ * 
+ */
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -24,25 +31,18 @@ public class VCRTSGUI {
     private User currentUser;
     private Server server;
     private CardLayout cardLayout;
-
+  //Set up necessary components for GUI
     public VCRTSGUI() {
         frame = new JFrame("Vehicular Cloud Real Time System (VCRTS)");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new CardLayout());
-
-      
-
         server = new Server();
-
         createLoginScreen();
         createSignUpScreen();
         createMainPage();  // This will now display the main GUI page setup in VCRTS_GUI
-        
         frame.setLocationRelativeTo(null); // Center the window on the screen
         frame.setResizable(false);
         frame.setVisible(true);
-
-
     }
 
     public static void main(String[] args) {
@@ -76,7 +76,7 @@ public class VCRTSGUI {
         signUpButton.setPreferredSize(buttonSize);
         signUpButton.addActionListener(e -> showSignUpScreen());
 
-        // Layout components in the login panel
+        // Layout components in the login panel to make sure that our login page is aligned with each other
         gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.LINE_END;
         loginPanel.add(usernameLabel, gbc);
 
