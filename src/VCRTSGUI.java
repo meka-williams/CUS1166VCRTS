@@ -36,6 +36,8 @@ public class VCRTSGUI {
         frame = new JFrame("Vehicular Cloud Real Time System (VCRTS)");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new CardLayout());
+        ImageIcon logo = new ImageIcon("src/VCRTS_logo.png");
+        frame.setIconImage(logo.getImage());
         server = new Server();
         createLoginScreen();
         createSignUpScreen();
