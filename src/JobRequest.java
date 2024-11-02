@@ -3,6 +3,7 @@ public class JobRequest {
     private String title;
     private int durationTime;
     private Client jobOwner;
+    private int jobId;
 
     public JobRequest(){
         this.title = "";
@@ -71,6 +72,14 @@ public class JobRequest {
         this.jobOwner = jobOwner;
     }
 
+    public int getJobId(){
+        return jobId;
+    }
+
+    public void setJobId(int jobId){
+        this.jobId = jobId;
+    }
+    
     @Override
     public String toString() {
         // TODO Auto-generated method stub
