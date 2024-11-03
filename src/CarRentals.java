@@ -92,6 +92,13 @@ public class CarRentals {
         this.vinNumber = vinNumber;
     }
 
+    public int getVehicleID(){
+        return vehicleID;
+    }
+
+    public void setVehicleID() {
+        this.vehicleID = vehicleID;
+    }
     @Override
     public String toString() {
         return "Vehicle Model" + vehicleModel + "," + 
@@ -100,14 +107,6 @@ public class CarRentals {
         "Serial Number: " + serialNumber + "," +
         "VIN Number: " + vinNumber +
         "Vehicle ID: " + vehicleID;
-    }
-
-    public int getVehicleID(){
-        return vehicleID;
-    }
-
-    public void setVehicleID() {
-        this.vehicleID = vehicleID;
     }
 
 
