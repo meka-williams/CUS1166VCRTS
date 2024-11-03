@@ -1,3 +1,4 @@
+
 /**
  * Project:     Vehicular Cloud Real Time System
  * Class:       VCRTSGUI.java
@@ -5,10 +6,13 @@
  * Date:        October 7, 2024   
  * 
  */
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -17,10 +21,11 @@ import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
 import java.util.Properties;
+
 public class VCRTSGUI {
-	
+
     private JFrame frame;
-    
+
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JRadioButton clientButton, ownerButton;
@@ -31,24 +36,82 @@ public class VCRTSGUI {
     private User currentUser;
     private Server server;
     private CardLayout cardLayout;
-  //Set up necessary components for GUI
-    public VCRTSGUI() {
+
+    // Set up necessary components for GUI
+    public VCRTSGUI() throws IOException {
         frame = new JFrame("Vehicular Cloud Real Time System (VCRTS)");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new CardLayout());
         ImageIcon logo = new ImageIcon("src/VCRTS_logo.png");
         frame.setIconImage(logo.getImage());
         server = new Server();
+        createWelcomeScreen();
         createLoginScreen();
         createSignUpScreen();
-        createMainPage();  // This will now display the main GUI page setup in VCRTS_GUI
+        createMainPage(); // This will now display the main GUI page setup in VCRTS_GUI
         frame.setLocationRelativeTo(null); // Center the window on the screen
         frame.setResizable(false);
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         new VCRTSGUI();
+    }
+
+   // Welcome Screen
+    private void createWelcomeScreen() throws IOException {
+        JPanel welcomePanel = new JPanel(new GridBagLayout());
+
+        // GBC for GUI layout
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.insets = new Insets(5,5,5,5); //Spacing between components
+
+        Dimension fieldSize = new Dimension(200, 25);
+        Dimension buttonSize = new Dimension(100, 25);
+        
+        ImageIcon logoPicture = new ImageIcon("bin/VCRTS_logo.png");
+        JLabel logo = new JLabel(logoPicture);
+        logo.setSize(50, 50);
+
+        JLabel welcomeMessage = new JLabel("Welcome to the Vehicular Cloud Real Time!");
+
+        JLabel loginMessage = new JLabel("For Returning Users");
+
+        JLabel signUpMessage = new JLabel("For New Users");
+
+        JButton signUpButton = new JButton("Sign Up");
+        signUpButton.setPreferredSize(buttonSize);
+        signUpButton.addActionListener(e -> showSignUpScreen());
+
+        JButton loginButton = new JButton("Login");
+        loginButton.setPreferredSize(buttonSize);
+        loginButton.addActionListener(e -> showLoginScreen());
+
+        //Layout components in the welcome panel
+        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.LINE_END;
+        welcomePanel.add(welcomeMessage, gbc);
+
+        // gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.LINE_START;
+        // welcomePanel.add(logo, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_START;
+        welcomePanel.add(loginMessage, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_END;
+        welcomePanel.add(signUpMessage, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_START;
+        welcomePanel.add(loginButton, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_END;
+        welcomePanel.add(signUpButton, gbc);
+
+        frame.add(welcomePanel, "Welcome");
+
+        //Set the exact size for the fram after adding the login panel
+        frame.setSize(409, 292);
+        frame.setResizable(false);
     }
 
     // Login Screen
@@ -60,7 +123,7 @@ public class VCRTSGUI {
         gbc.insets = new Insets(5, 5, 5, 5); // Spacing between components
 
         Dimension fieldSize = new Dimension(200, 25);
-        Dimension buttonSize = new Dimension(100, 25); 
+        Dimension buttonSize = new Dimension(100, 25);
 
         JLabel usernameLabel = new JLabel("Username:");
         usernameField = new JTextField();
@@ -78,20 +141,31 @@ public class VCRTSGUI {
         signUpButton.setPreferredSize(buttonSize);
         signUpButton.addActionListener(e -> showSignUpScreen());
 
-        // Layout components in the login panel to make sure that our login page is aligned with each other
-        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.LINE_END;
+        // Layout components in the login panel to make sure that our login page is
+        // aligned with each other
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.LINE_END;
         loginPanel.add(usernameLabel, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 0; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.LINE_START;
         loginPanel.add(usernameField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.LINE_END;
         loginPanel.add(passwordLabel, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 1; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.LINE_START;
         loginPanel.add(passwordField, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.LINE_START;
         loginPanel.add(loginButton, gbc);
 
         gbc.insets = new Insets(5, 105, 5, 5); // Offset the Sign Up button to the right of Login
@@ -103,11 +177,6 @@ public class VCRTSGUI {
         frame.setSize(409, 292);
         frame.setResizable(false); // Lock the frame size
     }
-
-
-
-
-
 
     // Sign-Up Screen
     private void createSignUpScreen() {
@@ -166,40 +235,68 @@ public class VCRTSGUI {
         backButton.addActionListener(e -> showLoginScreen());
 
         // Layout components with GridBagConstraints
-        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(fNameLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 0; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(fNameField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(lNameLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 1; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(lNameField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(usernameLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(newUsernameField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(emailLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(emailField, gbc);
 
         // Add Date of Birth label and picker
-        gbc.gridx = 0; gbc.gridy = 4; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(dobLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 4; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(dobPicker, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 5; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(passwordLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 5; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1;
+        gbc.gridy = 5;
+        gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(newPasswordField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 6; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(confirmPasswordLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 6; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1;
+        gbc.gridy = 6;
+        gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(confirmPasswordField, gbc);
 
         // Place Register and Back buttons side by side
@@ -207,15 +304,16 @@ public class VCRTSGUI {
         buttonPanel.add(registerButton);
         buttonPanel.add(backButton);
 
-        gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
         signUpPanel.add(buttonPanel, gbc);
 
         // Set the preferred size for the sign-up panel
         signUpPanel.setPreferredSize(new Dimension(409, 292));
         frame.add(signUpPanel, "SignUp");
     }
-
-
 
     // Main GUI from VCRTS_GUI
     private void createMainPage() {
@@ -252,19 +350,25 @@ public class VCRTSGUI {
         ownerButton.addActionListener(e -> cardLayout.show(mainPanel, "Owner"));
 
         // Layout each component using GridBagConstraints
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 1.0; gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.anchor = GridBagConstraints.CENTER;
         mainPagePanel.add(rolePanel, gbc);
 
-        gbc.gridy = 1; gbc.fill = GridBagConstraints.BOTH; gbc.weighty = 1.0; // Fill remaining vertical space
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0; // Fill remaining vertical space
         mainPagePanel.add(mainPanel, gbc);
 
-        gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE; gbc.weighty = 0; // Reset weight for the button
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weighty = 0; // Reset weight for the button
         mainPagePanel.add(submitButton, gbc);
 
         // Add the main page panel to the frame
         frame.add(mainPagePanel, "Main");
     }
-
 
     private JPanel createInputPanel(String label1, String label2, String label3) {
         JPanel panel = new JPanel();
@@ -289,12 +393,18 @@ public class VCRTSGUI {
         JTextField field = new JTextField(20);
         panel.add(field, BorderLayout.CENTER);
 
-        if (labelText.contains("Client")) clientIdField = field;
-        if (labelText.contains("Job Duration")) jobDurationField = field;
-        if (labelText.contains("Job Deadline")) jobDeadlineField = field;
-        if (labelText.contains("Owner")) ownerIdField = field;
-        if (labelText.contains("Vehicle Info")) vehicleInfoField = field;
-        if (labelText.contains("Residency Time")) residencyTimeField = field;
+        if (labelText.contains("Client"))
+            clientIdField = field;
+        if (labelText.contains("Job Duration"))
+            jobDurationField = field;
+        if (labelText.contains("Job Deadline"))
+            jobDeadlineField = field;
+        if (labelText.contains("Owner"))
+            ownerIdField = field;
+        if (labelText.contains("Vehicle Info"))
+            vehicleInfoField = field;
+        if (labelText.contains("Residency Time"))
+            residencyTimeField = field;
 
         panel.setMaximumSize(new Dimension(400, 30));
         return panel;
@@ -312,9 +422,9 @@ public class VCRTSGUI {
 
     private void handleClientSubmission() {
         String data = String.format("%s,%s,%s,%s", clientIdField.getText(),
-                                    jobDurationField.getText(),
-                                    jobDeadlineField.getText(),
-                                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                jobDurationField.getText(),
+                jobDeadlineField.getText(),
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         saveToFile(data, "vcrts_data_client.csv", "Client ID,Job Duration,Job Deadline,Timestamp");
         clearFields();
         JOptionPane.showMessageDialog(frame, "Client data submitted!");
@@ -322,9 +432,9 @@ public class VCRTSGUI {
 
     private void handleOwnerSubmission() {
         String data = String.format("%s,%s,%s,%s", ownerIdField.getText(),
-                                    vehicleInfoField.getText(),
-                                    residencyTimeField.getText(),
-                                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                vehicleInfoField.getText(),
+                residencyTimeField.getText(),
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         saveToFile(data, "vcrts_data_owner.csv", "Owner ID,Vehicle Info,Residency Time,Timestamp");
         clearFields();
         JOptionPane.showMessageDialog(frame, "Owner data submitted!");
