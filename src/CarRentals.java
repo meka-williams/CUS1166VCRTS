@@ -4,10 +4,12 @@ public class CarRentals {
     private String plateNumber;
     private String serialNumber;
     private String vinNumber;
+    private int vehicleID;
 
     public CarRentals(){
         vehicleModel = "";
         plateNumber = "";
+        vehicleID = 0;
     }
 
     public CarRentals(String vehicleModel, String brand, String plateNumber, String serialNumber, String vinNumber){
@@ -16,6 +18,7 @@ public class CarRentals {
         this.plateNumber = plateNumber;
         this.serialNumber = serialNumber;
         this.vinNumber = vinNumber;
+        this.vehicleID = vehicleID;
     }
     
 
@@ -95,6 +98,18 @@ public class CarRentals {
         "Brand: " + brand + "," + 
         "Plate Number: " + plateNumber + "," +
         "Serial Number: " + serialNumber + "," +
-        "VIN Number: " + vinNumber;
+        "VIN Number: " + vinNumber +
+        "Vehicle ID: " + vehicleID;
     }
+
+    public int getVehicleID(){
+        return vehicleID;
+    }
+
+    public void setVehicleID() {
+        this.vehicleID = vehicleID;
+    }
+
+
+
 }
