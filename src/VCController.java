@@ -1,164 +1,121 @@
-
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class VCController {
-    private int controllerID;
-    private List<JobRequest> jobsQueue;
-    private List<CarRentals> vehiclesReady;
-    private int redundancyLevel;
-    private static VCController instance;
+    private int controllerID;                  // Identifier for the VCController
+    private List<JobRequest> jobsQueue;        // Queue of jobs waiting to be processed
+    private List<CarRentals> vehiclesReady;    // List of cars ready to process jobs
+    private int redundancyLevel;               // Number of cars each job should be assigned to
 
-    public VCController(int controllerID) {
+    // Constructor initializes lists and sets redundancy level
+    public VCController(int controllerID, int redundancyLevel) {
         this.controllerID = controllerID;
-        this.jobsQueue = new ArrayList<>();
+        this.redundancyLevel = redundancyLevel;
+        this.jobsQueue = new LinkedList<>();
         this.vehiclesReady = new ArrayList<>();
-        this.redundancyLevel = 1;
     }
 
-    public static VCController getInstance() {
-        if (instance == null) {
-            instance = new VCController(1);
-        }
-        return instance;
+    // Method to submit a job to the VCC
+    public void submitJob(JobRequest job) {
+        jobsQueue.add(job);          // Add job to queue
+        logJobRequest(job);          // Log job details to VC job file
+        assignJobToVehicles(job);    // Assign job to available vehicles with redundancy
     }
 
-    /**
-     * This assigns a job to available vehicles
-     * @param job The job to be assigned
-     */
-    public void assignJobToVehicles(JobRequest job) {
-        if (vehiclesReady.isEmpty()) {
-            // If No vehicles available, add to queue
-            jobsQueue.add(job);
-            return;
-        }
+    // Logs job details to a dedicated file for VC records
+    public void saveOwnerCarToFile(String ownerId, String vehicleInfo, int residencyTime) {
+        String fileName = "vcrts_data_owner.csv"; // Updated file name
+        String header = "Owner ID,Vehicle Info,Residency Time";
+        String data = String.format("%s,%s,%d", ownerId, vehicleInfo, residencyTime);
 
-        // This finds available vehicles and assign job
+        File file = new File(fileName);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
+            // Check if the file is new or empty, and write the header if necessary
+            if (!file.exists() || file.length() == 0) {
+                writer.write(header);
+                writer.newLine();
+            }
+            writer.write(data);
+            writer.newLine();
+        } catch (IOException e) {
+            System.err.println("Error saving owner car to file.");
+        }
+    
+    }
+
+    private void logJobRequest(JobRequest job) {
+        String fileName = "VC_jobs.csv";
+        String header = "Job ID,Client ID,Job Duration,Timestamp";
+        String data = String.format("%d,%s,%d,%s", job.getJobId(), job.getClientId(), job.getDuration(), job.getTimestamp());
+
+        File file = new File(fileName);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
+            // Check if file exists and is empty to write the header only once
+            if (!file.exists() || file.length() == 0) {
+                writer.write(header);
+                writer.newLine();
+            }
+            writer.write(data);
+            writer.newLine();
+        } catch (IOException e) {
+            System.err.println("Error saving job to VC job file.");
+        }
+    }
+
+    // Assigns a job to multiple vehicles based on redundancy level
+    private void assignJobToVehicles(JobRequest job) {
         int assignedCount = 0;
         for (CarRentals vehicle : vehiclesReady) {
             if (assignedCount < redundancyLevel) {
-                assignJob(vehicle, job);
+                vehicle.assignJob(job); // Assuming CarRentals has a method to assign a job
                 assignedCount++;
             } else {
                 break;
             }
         }
-    }
-
-    private void assignJob(CarRentals vehicle, JobRequest job) {
-        try {
-            // Validation
-            if (vehicle == null || job == null) {
-                System.out.println("Error: Vehicle or job is null");
-                return;
-            }
-    
-            // This checks if vehicle has required information
-            if (vehicle.getVehicleModel().isEmpty() || vehicle.getPlateNumber().isEmpty()) {
-                System.out.println("Error: Vehicle information is incomplete");
-                return;
-            }
-    
-            // This set's job as in progress
-            job.setInProgress(true);
-            
-            // This Log's the assignment
-            System.out.println("Job assigned successfully:");
-            System.out.println("Vehicle Model: " + vehicle.getVehicleModel());
-            System.out.println("Plate Number: " + vehicle.getPlateNumber());
-            System.out.println("Job Title: " + job.getTitle());
-            System.out.println("Duration: " + job.getDurationTime() + " hours");
-            
-        } catch (Exception e) {
-            System.out.println("Error assigning job: " + e.getMessage());
-            job.setInProgress(false);
+        if (assignedCount < redundancyLevel) {
+            System.out.println("Warning: Not enough vehicles to meet redundancy level for job ID " + job.getJobId());
         }
     }
 
-    /**
-     * Creates a checkpoint for a vehicle's current job state
-     * @param vehicle The vehicle to create checkpoint for
-     * @return Checkpoint object containing the job state
-     */
-    public Checkpoint triggerCheckpoint(CarRentals vehicle) {
-        if (vehicle == null) {
-            return null;
-        }
+    // Calculates cumulative completion times for each job in the queue
+    public String calculateCompletionTimes() {
+        StringBuilder completionTimes = new StringBuilder("Job Completion Times (VCC):\n");
+        int cumulativeTime = 0;
 
-        Checkpoint checkpoint = new Checkpoint(
-            generateCheckpointID(),
-            0, // You'll need to implement job ID tracking
-            Integer.parseInt(vehicle.getSerialNumber()) // Using serial number as vehicle ID
-        );
+        for (JobRequest job : jobsQueue) {
+            cumulativeTime += job.getDuration();
+            completionTimes.append(String.format("Job ID: %d - Completion Time: %d hours\n", job.getJobId(), cumulativeTime));
+        }
         
-        return checkpoint;
+        return completionTimes.toString();
     }
+    public String displayJobsAndCompletionTimes() {
+        StringBuilder jobInfo = new StringBuilder("Assigned Jobs and Completion Times:\n");
+        int cumulativeTime = 0;
 
-    /**
-     * Recruits a new vehicle into the system
-     * @return The newly recruited vehicle
-     */
-    public CarRentals recruitNewVehicle() {
-        CarRentals newVehicle = new CarRentals(); // Using default constructor
-        vehiclesReady.add(newVehicle);
-        return newVehicle;
-    }
-
-    /**
-     * Marks a job as complete and updates system state
-     * @param jobID The ID of the completed job
-     */
-    public void submitJobComplete(int jobID) {
-        // Remove job from queue if present
-        jobsQueue.removeIf(job -> job.getJobId() == jobID);
-    }
-
-    /**
-     * Removes a vehicle from the ready queue
-     * @param vehicle The vehicle to remove
-     * @return true if vehicle was removed, false otherwise
-     */
-    public boolean removeVehicleFromQueue(CarRentals vehicle) {
-        return vehiclesReady.remove(vehicle);
-    }
-
-    public CarRentals getVehicleById(int vehicleId) {
-        for (CarRentals vehicle : vehiclesReady) {
-            if (vehicle.getSerialNumber().equals(String.valueOf(vehicleId))) {
-                return vehicle;
-            }
+        for (JobRequest job : jobsQueue) {
+            cumulativeTime += job.getDuration();
+            jobInfo.append(String.format("Job ID: %d, Client ID: %s, Duration: %d hours, Completion Time: %d hours\n",
+                                         job.getJobId(), job.getClientId(), job.getDuration(), cumulativeTime));
         }
-        return null;
+
+        return jobInfo.length() > 0 ? jobInfo.toString() : "No jobs currently assigned.";
     }
 
-    // Helper methods
-    private int generateCheckpointID() {
-        return (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
-    }
 
-    // Getters and Setters
-    public int getControllerID() {
-        return controllerID;
-    }
-
-    public void setControllerID(int controllerID) {
-        this.controllerID = controllerID;
-    }
-
-    public List<JobRequest> getJobsQueue() {
-        return jobsQueue;
-    }
-
-    public List<CarRentals> getVehiclesReady() {
-        return vehiclesReady;
-    }
-
-    public int getRedundancyLevel() {
-        return redundancyLevel;
-    }
-
-    public void setRedundancyLevel(int redundancyLevel) {
-        this.redundancyLevel = redundancyLevel;
+    // Method to add a vehicle to the ready list
+    public void addVehicle(CarRentals vehicle) {
+        vehiclesReady.add(vehicle);
     }
 }

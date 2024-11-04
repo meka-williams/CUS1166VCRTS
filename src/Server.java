@@ -1,9 +1,10 @@
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.UUID;
 
 public class Server {
     private File server = new File("src/Server.csv");
@@ -11,7 +12,9 @@ public class Server {
     private ArrayList<Client> clients;
     private ArrayList<CarOwner> carOwners;
     private String data;
+    private Map<String, String> sessions = new HashMap<>(); // Stores active session tokens
 
+    // Constructor
     public Server() {
         data = "";
         users = new ArrayList<User>();
@@ -46,7 +49,6 @@ public class Server {
         }
     }
 
-
     /**
      * Saves user registration and login actions to the Server.csv file.
      * @param action The action to log (e.g., "New Sign Up", "New Login").
@@ -67,6 +69,23 @@ public class Server {
 
     /**
      * Checks if a user exists with the provided username and password.
+     * If successful, creates a session token for the user.
+     * @param username The username to check.
+     * @param password The password to check.
+     * @return The session token if authentication is successful, otherwise null.
+     */
+    public String authenticate(String username, String password) {
+        if (accountFound(username, password)) {
+            String sessionToken = UUID.randomUUID().toString(); // Generate a unique session token
+            sessions.put(username, sessionToken); // Store session token for the user
+            updateServer("New Login", new User(username, password)); // Log the login action
+            return sessionToken; // Return session token to client
+        }
+        return null; // Authentication failed
+    }
+
+    /**
+     * Checks if a user exists with the provided username and password.
      * @param username The username to check.
      * @param password The password to check.
      * @return True if the account is found, otherwise false.
@@ -81,6 +100,16 @@ public class Server {
         }
         System.out.println("Account not found for username: " + username);
         return false;
+    }
+
+    /**
+     * Verifies if a session token is valid for the given username.
+     * @param username The username to verify.
+     * @param sessionToken The session token to verify.
+     * @return True if the session is valid, otherwise false.
+     */
+    public boolean isSessionValid(String username, String sessionToken) {
+        return sessionToken != null && sessionToken.equals(sessions.get(username));
     }
 
     /**

@@ -1,114 +1,131 @@
+import java.util.ArrayList;
+import java.util.List;
+
 public class CarRentals {
-    private String vehicleModel;
+    private int vehicleID;
+    private String status;
+    private int ownerID;
+    private String model;
     private String brand;
     private String plateNumber;
     private String serialNumber;
-    private String vinNumber;
-    private int vehicleID;
+    private String vinNum;
+    private int residencyTime;
 
-    public CarRentals(){
-        vehicleModel = "";
-        plateNumber = "";
-        vehicleID = 0;
-    }
+    private List<JobRequest> assignedJobs; // List to track jobs assigned to this car
 
-    public CarRentals(String vehicleModel, String brand, String plateNumber, String serialNumber, String vinNumber){
-        this.vehicleModel = vehicleModel;
+    // Constructor
+    public CarRentals(int vehicleID, String status, int ownerID, String model, String brand,
+                      String plateNumber, String serialNumber, String vinNum, int residencyTime) {
+        this.vehicleID = vehicleID;
+        this.status = status;
+        this.ownerID = ownerID;
+        this.model = model;
         this.brand = brand;
         this.plateNumber = plateNumber;
         this.serialNumber = serialNumber;
-        this.vinNumber = vinNumber;
+        this.vinNum = vinNum;
+        this.residencyTime = residencyTime;
+        this.assignedJobs = new ArrayList<>(); // Initialize list for assigned jobs
+    }
+
+    // Method to assign a job to this vehicle
+    public void assignJob(JobRequest job) {
+        assignedJobs.add(job); // Add the job to the assigned jobs list
+    }
+
+    // Optional: Method to get all assigned jobs for logging or debugging
+    public List<JobRequest> getAssignedJobs() {
+        return assignedJobs;
+    }
+
+    // Getters and setters for other attributes
+    public int getVehicleID() {
+        return vehicleID;
+    }
+
+    public void setVehicleID(int vehicleID) {
         this.vehicleID = vehicleID;
     }
-    
 
-    /**
-     * @return String return the vehicleModel
-     */
-    public String getVehicleModel() {
-        return vehicleModel;
+    public String getStatus() {
+        return status;
     }
 
-    /**
-     * @param vehicleModel the vehicleModel to set
-     */
-    public void setVehicleModel(String vehicleModel) {
-        this.vehicleModel = vehicleModel;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
-    /**
-     * @return String return the brand
-     */
+    public int getOwnerID() {
+        return ownerID;
+    }
+
+    public void setOwnerID(int ownerID) {
+        this.ownerID = ownerID;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
     public String getBrand() {
         return brand;
     }
 
-    /**
-     * @param brand the brand to set
-     */
     public void setBrand(String brand) {
         this.brand = brand;
     }
 
-    /**
-     * @return String return the plateNumber
-     */
     public String getPlateNumber() {
         return plateNumber;
     }
 
-    /**
-     * @param plateNumber the plateNumber to set
-     */
     public void setPlateNumber(String plateNumber) {
         this.plateNumber = plateNumber;
     }
 
-    /**
-     * @return String return the serialNumber
-     */
     public String getSerialNumber() {
         return serialNumber;
     }
 
-    /**
-     * @param serialNumber the serialNumber to set
-     */
     public void setSerialNumber(String serialNumber) {
         this.serialNumber = serialNumber;
     }
 
-    /**
-     * @return String return the vinNumber
-     */
-    public String getVinNumber() {
-        return vinNumber;
+    public String getVinNum() {
+        return vinNum;
     }
 
-    /**
-     * @param vinNumber the vinNumber to set
-     */
-    public void setVinNumber(String vinNumber) {
-        this.vinNumber = vinNumber;
+    public void setVinNum(String vinNum) {
+        this.vinNum = vinNum;
     }
 
-    public int getVehicleID(){
-        return vehicleID;
+    public int getResidencyTime() {
+        return residencyTime;
     }
 
-    public void setVehicleID() {
-        this.vehicleID = vehicleID;
+    public void setResidencyTime(int residencyTime) {
+        this.residencyTime = residencyTime;
     }
+
+    // Optional: toString method for debugging purposes
     @Override
     public String toString() {
-        return "Vehicle Model" + vehicleModel + "," + 
-        "Brand: " + brand + "," + 
-        "Plate Number: " + plateNumber + "," +
-        "Serial Number: " + serialNumber + "," +
-        "VIN Number: " + vinNumber +
-        "Vehicle ID: " + vehicleID;
+        return "CarRentals{" +
+                "vehicleID=" + vehicleID +
+                ", status='" + status + '\'' +
+                ", ownerID=" + ownerID +
+                ", model='" + model + '\'' +
+                ", brand='" + brand + '\'' +
+                ", plateNumber='" + plateNumber + '\'' +
+                ", serialNumber='" + serialNumber + '\'' +
+                ", vinNum='" + vinNum + '\'' +
+                ", residencyTime=" + residencyTime +
+                ", assignedJobs=" + assignedJobs +
+                '}';
     }
-
-
-
 }

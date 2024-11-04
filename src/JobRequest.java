@@ -1,89 +1,48 @@
+import java.time.LocalDateTime;
+
 public class JobRequest {
-    private boolean inProgress;
-    private String title;
-    private int durationTime;
-    private Client jobOwner;
-    private int jobId;
+    private static int jobCounter = 0; // Unique ID counter for job requests
+    private final int jobId;           // Unique ID for each job request
+    private final String clientId;      // ID of the client submitting the job
+    private final int duration;         // Duration of the job in hours
+    private final LocalDateTime timestamp; // Timestamp for when the job was submitted
 
-    public JobRequest(){
-        this.title = "";
-        this.durationTime = -1;
+    // Constructor to initialize a job request with client ID and duration
+    public JobRequest(String clientId, int duration) {
+        this.jobId = ++jobCounter;       // Increment job counter for a unique job ID
+        this.clientId = clientId;
+        this.duration = duration;
+        this.timestamp = LocalDateTime.now(); // Capture the current time as submission time
     }
 
-    public JobRequest(String title, int durationTime){
-        this.title = title;
-        this.durationTime = durationTime;
-    }
-
-
-    /**
-     * @return boolean return the inProgress
-     */
-    public boolean isInProgress() {
-        return inProgress;
-    }
-
-    /**
-     * @param inProgress the inProgress to set
-     */
-    public void setInProgress(boolean inProgress) {
-        this.inProgress = inProgress;
-    }
-
-    /**
-     * @return String return the title
-     */
-    public String getTitle() {
-        return title;
-    }
-
-    /**
-     * @param title the title to set
-     */
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    /**
-     * @return int return the durationTime
-     */
-    public int getDurationTime() {
-        return durationTime;
-    }
-
-    /**
-     * @param durationTime the durationTime to set
-     */
-    public void setDurationTime(int durationTime) {
-        this.durationTime = durationTime;
-    }
-
-    /**
-     * @return Client return the jobOwner
-     */
-    public Client getJobOwner() {
-        return jobOwner;
-    }
-
-    /**
-     * @param jobOwner the jobOwner to set
-     */
-    public void setJobOwner(Client jobOwner) {
-        this.jobOwner = jobOwner;
-    }
-
-    public int getJobId(){
+    // Getter for job ID
+    public int getJobId() {
         return jobId;
     }
 
-    public void setJobId(int jobId){
-        this.jobId = jobId;
-    }
-    
-    @Override
-    public String toString() {
-        // TODO Auto-generated method stub
-        return super.toString();
+    // Getter for client ID
+    public String getClientId() {
+        return clientId;
     }
 
+    // Getter for job duration
+    public int getDuration() {
+        return duration;
+    }
+
+    // Getter for submission timestamp
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    // String representation of the job request for easy logging or debugging
+    @Override
+    public String toString() {
+        return "JobRequest{" +
+                "jobId=" + jobId +
+                ", clientId='" + clientId + '\'' +
+                ", duration=" + duration +
+                ", timestamp=" + timestamp +
+                '}';
+    }
 }
