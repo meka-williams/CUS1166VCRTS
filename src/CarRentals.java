@@ -39,7 +39,7 @@ public class CarRentals {
         return assignedJobs;
     }
 
-    // Getters and setters for other attributes
+    
     public int getVehicleID() {
         return vehicleID;
     }
@@ -112,7 +112,7 @@ public class CarRentals {
         this.residencyTime = residencyTime;
     }
 
-    // Optional: toString method for debugging purposes
+
     @Override
     public String toString() {
         return "CarRentals{" +

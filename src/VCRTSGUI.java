@@ -2,7 +2,7 @@
  * Project:     Vehicular Cloud Real Time System
  * Class:       VCRTSGUI.java
  * Authors:     Shameka Williams, Farheen Mahmud, Jery Vizhnay, Bryan Benjamin, Hasan Mousa
- * Date:        October 7, 2024   
+ * Date:        November 4, 2024   
  */
 import javax.imageio.ImageIO;
 import javax.swing.*;

@@ -22,22 +22,15 @@ public class Checkpoint {
         return new Object();
     }
 
-    /*
-     * This copies the checkpoint data to a new vehicle
-     * Vehicle class NEEDS TO BE IMPLEMENTED for this to work
-     */
     public void copyToNewVehicle(Vehicle vehicle){
         vehicle.setLastCheckpointID(this.checkpointID);
     }
     
-    /*
-     * This retarts the job from this checkpoint
-     */
     public void restartJob(){
         this.percentLeft = 100.0f;
     }
     
-    //Getters and Setters
+
     public int getCheckpointID(){
         return checkpointID;
     }
