@@ -15,7 +15,7 @@ public class VCController {
     private List<CarRentals> vehiclesReady;    // List of cars ready to process jobs
     private int redundancyLevel;               // Number of cars each job should be assigned to
 
-    // Constructor initializes lists and sets redundancy level
+    
     public VCController(int controllerID, int redundancyLevel) {
         this.controllerID = controllerID;
         this.redundancyLevel = redundancyLevel;
@@ -23,14 +23,14 @@ public class VCController {
         this.vehiclesReady = new ArrayList<>();
     }
 
-    // Method to submit a job to the VCC
+    
     public void submitJob(JobRequest job) {
         jobsQueue.add(job);          // Add job to queue
         logJobRequest(job);          // Log job details to VC job file
         assignJobToVehicles(job);    // Assign job to available vehicles with redundancy
     }
 
-    // Logs job details to a dedicated file for VC records
+    
     public void saveOwnerCarToFile(String ownerId, String vehicleInfo, int residencyTime) {
         String fileName = "vcrts_data_owner.csv"; // Updated file name
         String header = "Owner ID,Vehicle Info,Residency Time";
@@ -39,7 +39,6 @@ public class VCController {
         File file = new File(fileName);
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
-            // Check if the file is new or empty, and write the header if necessary
             if (!file.exists() || file.length() == 0) {
                 writer.write(header);
                 writer.newLine();
@@ -60,7 +59,6 @@ public class VCController {
         File file = new File(fileName);
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
-            // Check if file exists and is empty to write the header only once
             if (!file.exists() || file.length() == 0) {
                 writer.write(header);
                 writer.newLine();
@@ -72,7 +70,7 @@ public class VCController {
         }
     }
 
-    // Assigns a job to multiple vehicles based on redundancy level
+    
     private void assignJobToVehicles(JobRequest job) {
         int assignedCount = 0;
         for (CarRentals vehicle : vehiclesReady) {
@@ -114,7 +112,7 @@ public class VCController {
     }
 
 
-    // Method to add a vehicle to the ready list
+    
     public void addVehicle(CarRentals vehicle) {
         vehiclesReady.add(vehicle);
     }
