@@ -31,10 +31,10 @@ public class VCController {
     }
 
     // Logs job details to a dedicated file for VC records
-    public void saveOwnerCarToFile(String ownerId, String vehicleInfo, int residencyTime) {
+    public void saveOwnerCarToFile(String ownerId, String vehicleBrand, String vehicleModel, String plateNumber, String serialNumber, String vinNumber, int residencyTime) {
         String fileName = "vcrts_data_owner.csv"; // Updated file name
         String header = "Owner ID,Vehicle Info,Residency Time";
-        String data = String.format("%s,%s,%d", ownerId, vehicleInfo, residencyTime);
+        String data = String.format("%s,%s,%d", ownerId, vehicleBrand, vehicleModel, plateNumber, serialNumber, vinNumber, residencyTime);
 
         File file = new File(fileName);
 
