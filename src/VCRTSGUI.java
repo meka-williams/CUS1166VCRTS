@@ -38,9 +38,9 @@ public class VCRTSGUI {
     private GridBagConstraints gbc;
 
     //Customizations fields for GUI
-    private Dimension windowSize;
-    private Color backgroundColor;
-    private Color buttonColor;
+    private Dimension windowSize = new Dimension(800, 600);
+    private Color backgroundColor = new Color(255, 255, 255);;
+    private Color buttonColor = new Color(139, 189, 189);;
 
     private float headerSize = 20;
     private float textSize = 14;
@@ -50,15 +50,11 @@ public class VCRTSGUI {
         frame = new JFrame("Vehicular Cloud Real Time System (VCRTS)");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new CardLayout());
+        frame.setSize(windowSize);
         ImageIcon logo = new ImageIcon("src/VCRTS_logo.png");
         frame.setIconImage(logo.getImage());
         server = new Server();
         vcc = new VCController(1, 2); // Initialize VCController with example ID=1 and redundancy level=2
-
-        //Customizations for GUI
-        windowSize = new Dimension(1100, 1100);
-        backgroundColor = new Color(255, 255, 255);
-        buttonColor = new Color(139, 189, 189);
 
         createWelcomeScreen();
         createLoginScreen();
@@ -91,12 +87,6 @@ public class VCRTSGUI {
         Image image = bufferedImage.getScaledInstance(100, 100, Image.SCALE_DEFAULT);
         logoImage.setIcon(new ImageIcon(image));
 
-        JLabel loginMessage = new JLabel("For Returning Users");
-        loginMessage.setFont(loginMessage.getFont().deriveFont(textSize));
-
-        JLabel signUpMessage = new JLabel("For New Users");
-        signUpMessage.setFont(signUpMessage.getFont().deriveFont(textSize));
-
         JButton signUpButton = new JButton("Sign Up");
         signUpButton.setBackground(buttonColor);
         signUpButton.setBorderPainted(false);
@@ -113,6 +103,11 @@ public class VCRTSGUI {
         loginButton.setFont(loginButton.getFont().deriveFont(textSize));
         loginButton.addActionListener(e -> showLoginScreen());
 
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 150, 10));
+        buttonPanel.setBackground(backgroundColor);
+        buttonPanel.add(loginButton);
+        buttonPanel.add(signUpButton);
+
         // Center the welcome message across both columns
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.gridwidth = 2;  //centering
@@ -123,29 +118,28 @@ public class VCRTSGUI {
         gbc.anchor = GridBagConstraints.CENTER;
         welcomePanel.add(logoImage, gbc);
 
-        gbc.gridwidth = 1; // Reset gridwidth back to 1 for remaining components
-        gbc.gridx = 0; gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.LINE_START;
-        welcomePanel.add(loginMessage, gbc);
-    
-        gbc.gridx = 1; gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.LINE_END;
-        welcomePanel.add(signUpMessage, gbc);
+        gbc.gridx = 0; gbc.gridy = 2; 
+        gbc.anchor = GridBagConstraints.CENTER;
+        welcomePanel.add(new JLabel(), gbc);
 
         gbc.gridx = 0; gbc.gridy = 3;
-        gbc.anchor = GridBagConstraints.LINE_START;
-        welcomePanel.add(loginButton, gbc);
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        welcomePanel.add(buttonPanel, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 3;
-        gbc.anchor = GridBagConstraints.LINE_END;
-        welcomePanel.add(signUpButton, gbc);
+        // gbc.gridx = 0; gbc.gridy = 4;
+        // gbc.anchor = GridBagConstraints.LINE_START;
+        // welcomePanel.add(loginButton, gbc);
+
+        // gbc.gridx = 1; gbc.gridy = 4;
+        // gbc.anchor = GridBagConstraints.LINE_END;
+        // welcomePanel.add(signUpButton, gbc);
     
         frame.add(welcomePanel, "Welcome");
-        frame.setSize(windowSize);
         frame.setResizable(false);
     }
 
-    private void createLoginScreen() {
+    private void createLoginScreen() throws IOException {
         JPanel loginPanel = new JPanel(new GridBagLayout());
         loginPanel.setBackground(backgroundColor);
 
@@ -156,18 +150,26 @@ public class VCRTSGUI {
         Dimension fieldSize = new Dimension(200, 25);
         Dimension buttonSize = new Dimension(100, 25);
 
+        JButton backHome;
+        BufferedImage bufferedImage = ImageIO.read(this.getClass().getResource("backButton.png"));
+        Image image = bufferedImage.getScaledInstance(50, 50, Image.SCALE_DEFAULT);
+        backHome = new JButton(new ImageIcon(image));
+        backHome.setPreferredSize(new Dimension(30, 30));
+        backHome.addActionListener(e -> showWelcomeScreen());
+
         JLabel header = new JLabel("Login");
         header.setFont(header.getFont().deriveFont(headerSize));
 
         JLabel usernameLabel = new JLabel("Username:");
         usernameLabel.setFont(usernameLabel.getFont().deriveFont(textSize));
         usernameField = new JTextField();
-        //usernameField.setBackground(buttonColor);
+        usernameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         usernameField.setPreferredSize(fieldSize);
 
         JLabel passwordLabel = new JLabel("Password:");
         passwordLabel.setFont(passwordLabel.getFont().deriveFont(textSize));
         passwordField = new JPasswordField();
+        passwordField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         passwordField.setPreferredSize(fieldSize);
 
         JButton loginButton = new JButton("Login");
@@ -183,24 +185,28 @@ public class VCRTSGUI {
         signUpButton.addActionListener(e -> showSignUpScreen());
 
         gbc.gridx = 0; gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.LINE_START;
+        loginPanel.add(backHome, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1;
         gbc.gridwidth = 2; //centering
         gbc.anchor = GridBagConstraints.CENTER;
         loginPanel.add(header, gbc);
 
         gbc.gridwidth = 1; //reset gridwidth back to 1 for remaining components
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0; gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.LINE_END;
         loginPanel.add(usernameLabel, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 1;
+        gbc.gridx = 1; gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.LINE_START;
         loginPanel.add(usernameField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0; gbc.gridy = 3;
         gbc.anchor = GridBagConstraints.LINE_END;
         loginPanel.add(passwordLabel, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 2;
+        gbc.gridx = 1; gbc.gridy = 3;
         gbc.anchor = GridBagConstraints.LINE_START;
         loginPanel.add(passwordField, gbc);
 
@@ -209,7 +215,7 @@ public class VCRTSGUI {
         buttonPanel.add(loginButton);
         buttonPanel.add(signUpButton);
        
-        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.gridx = 0; gbc.gridy = 4;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         loginPanel.add(buttonPanel, gbc);
@@ -217,11 +223,10 @@ public class VCRTSGUI {
         gbc.insets = new Insets(5, 105, 5, 5);
 
         frame.add(loginPanel, "Login");
-        frame.setSize(409, 292);
         frame.setResizable(false);
     }
 
-    private void createSignUpScreen() {
+    private void createSignUpScreen() throws IOException {
     	JLabel dobLabel = new JLabel("Date of Birth:");
     	UtilDateModel dateModel = new UtilDateModel();
     	Properties properties = new Properties();
@@ -230,46 +235,60 @@ public class VCRTSGUI {
     	properties.put("text.year", "Year");
     	JDatePanelImpl datePanel = new JDatePanelImpl(dateModel, properties);
     	JDatePickerImpl dobPicker = new JDatePickerImpl(datePanel, new org.jdatepicker.impl.DateComponentFormatter());
+        dobLabel.setFont(dobLabel.getFont().deriveFont(textSize));
 
     	JPanel signUpPanel = new JPanel(new GridBagLayout());
         signUpPanel.setBackground(backgroundColor);
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.fill = GridBagConstraints.NONE;
         gbc.insets = new Insets(5, 5, 5, 5);
 
         Dimension fieldSize = new Dimension(200, 25);
 
+        JButton backHome;
+        BufferedImage bufferedImage = ImageIO.read(this.getClass().getResource("backButton.png"));
+        Image image = bufferedImage.getScaledInstance(50, 50, Image.SCALE_DEFAULT);
+        backHome = new JButton(new ImageIcon(image));
+        backHome.setPreferredSize(new Dimension(30, 30));
+        backHome.addActionListener(e -> showWelcomeScreen());
+        
         JLabel header = new JLabel("Sign Up");
         header.setFont(header.getFont().deriveFont(headerSize));
         
         JLabel fNameLabel = new JLabel("First Name:");
         JTextField fNameField = new JTextField();
-        fNameField.setFont(fNameField.getFont().deriveFont(textSize));
+        fNameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        fNameLabel.setFont(fNameLabel.getFont().deriveFont(textSize));
         fNameField.setPreferredSize(fieldSize);
 
         JLabel lNameLabel = new JLabel("Last Name:");
         JTextField lNameField = new JTextField();
-        lNameField.setFont(lNameField.getFont().deriveFont(textSize));
+        lNameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        lNameLabel.setFont(lNameLabel.getFont().deriveFont(textSize));
         lNameField.setPreferredSize(fieldSize);
 
         JLabel usernameLabel = new JLabel("Username:");
         JTextField newUsernameField = new JTextField();
+        newUsernameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         usernameLabel.setFont(usernameLabel.getFont().deriveFont(textSize));
         newUsernameField.setPreferredSize(fieldSize);
 
         JLabel emailLabel = new JLabel("Email Address:");
         JTextField emailField = new JTextField();
+        emailField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         emailLabel.setFont(emailLabel.getFont().deriveFont(textSize));
         emailField.setPreferredSize(fieldSize);
 
         JLabel passwordLabel = new JLabel("Password:");
         JPasswordField newPasswordField = new JPasswordField();
+        newPasswordField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         passwordLabel.setFont(passwordLabel.getFont().deriveFont(textSize));
         newPasswordField.setPreferredSize(fieldSize);
 
         JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
         JPasswordField confirmPasswordField = new JPasswordField();
+        confirmPasswordField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         confirmPasswordLabel.setFont(confirmPasswordLabel.getFont().deriveFont(textSize));
         confirmPasswordField.setPreferredSize(fieldSize);
 
@@ -283,45 +302,49 @@ public class VCRTSGUI {
         backButton.setBackground(buttonColor);
         backButton.addActionListener(e -> showLoginScreen());
 
-        gbc.gridx = 0; gbc.gridy = 0; 
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.LINE_START;
+        signUpPanel.add(backHome, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1; 
         gbc.gridwidth = 2; //center
         gbc.anchor = GridBagConstraints.CENTER;
         signUpPanel.add(header, gbc);
 
         gbc.gridwidth = 1;
-        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(fNameLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 1; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(fNameField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(lNameLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(lNameField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0; gbc.gridy = 4; gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(usernameLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1; gbc.gridy = 4; gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(newUsernameField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 4; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0; gbc.gridy = 5; gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(emailLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 4; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1; gbc.gridy = 5; gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(emailField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 5; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0; gbc.gridy = 6; gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(dobLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 5; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1; gbc.gridy = 6; gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(dobPicker, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 6; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0; gbc.gridy = 7; gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(passwordLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 6; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1; gbc.gridy = 7; gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(newPasswordField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 7; gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 0; gbc.gridy = 8; gbc.anchor = GridBagConstraints.LINE_END;
         signUpPanel.add(confirmPasswordLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 7; gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridx = 1; gbc.gridy = 8; gbc.anchor = GridBagConstraints.LINE_START;
         signUpPanel.add(confirmPasswordField, gbc);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
@@ -329,7 +352,7 @@ public class VCRTSGUI {
         buttonPanel.add(registerButton);
         buttonPanel.add(backButton);
 
-        gbc.gridx = 0; gbc.gridy = 8;
+        gbc.gridx = 0; gbc.gridy = 9;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         signUpPanel.add(buttonPanel, gbc);
@@ -345,11 +368,12 @@ public class VCRTSGUI {
 
     private void createMainPage() {
         // Set frame size and layout
-        frame.setSize(600, 500);
         mainPagePanel = new JPanel(new GridBagLayout());
         mainPagePanel.setBackground(backgroundColor);
 
         Dimension fieldSize = new Dimension(200, 25);
+        Dimension buttonSize = new Dimension(100, 25);
+
         gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -358,10 +382,19 @@ public class VCRTSGUI {
         JPanel rolePanel = new JPanel(new FlowLayout());
         rolePanel.setBackground(backgroundColor);
 
+        JButton signOutButton = new JButton("Sign Out");
+        signOutButton.setPreferredSize(buttonSize);
+        signOutButton.setBackground(Color.RED);
+        signOutButton.setBorderPainted(false);
+        signOutButton.setFont(signOutButton.getFont().deriveFont(textSize));
+        signOutButton.addActionListener(e -> showWelcomeScreen());
+
         clientButton = new JRadioButton("Submit a Job");
+        clientButton.setBackground(backgroundColor);
         clientButton.setFont(clientButton.getFont().deriveFont(textSize));
 
         ownerButton = new JRadioButton("Register a Vehicle");
+        ownerButton.setBackground(backgroundColor);
         ownerButton.setFont(ownerButton.getFont().deriveFont(textSize));
 
         ButtonGroup roleGroup = new ButtonGroup();
@@ -374,32 +407,27 @@ public class VCRTSGUI {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        // clientPanel = createInputPanel("Client ID:", "Job Duration (hrs):", "Job Deadline:");
-        // clientPanel.setBackground(backgroundColor);
-
-        // //ownerPanel = createInputPanel("Owner ID:", "Vehicle Model:", "Brand", "Plate Number:", "Serial Number", "VIN"  "Residency Time (hrs):");
-        // ownerPanel = createInputPanel("Owner ID:", "Vehicle Information:", "Residency Time (hrs)");
-        // ownerPanel.setBackground(backgroundColor);
-
         clientPanel = new JPanel(new GridLayout(10, 2));
 
         clientPanel.setBackground(backgroundColor);
 
         clientPanel.add(new JLabel("Client ID:"));
         clientIdField = new JTextField();
+        clientIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         clientButton.setPreferredSize(fieldSize);
         clientPanel.add(clientIdField);
         
         clientPanel.add(new JLabel("Job Duration (hrs):"));
         jobDeadlineField = new JTextField();
+        jobDeadlineField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         jobDeadlineField.setPreferredSize(fieldSize);
         clientPanel.add(jobDeadlineField);
 
         clientPanel.add(new JLabel("Job Deadline:"));
         jobDeadlineField = new JTextField();
+        jobDeadlineField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         jobDeadlineField.setPreferredSize(fieldSize);
         clientPanel.add(jobDeadlineField);
-
 
         ownerPanel = new JPanel();
         ownerPanel.setLayout(new GridLayout(14, 2));
@@ -407,52 +435,62 @@ public class VCRTSGUI {
 
         ownerPanel.add(new JLabel("Owner ID:"));
         ownerIdField = new JTextField();
+        ownerIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         ownerIdField.setPreferredSize(fieldSize);
         ownerPanel.add(ownerIdField);
 
         ownerPanel.add(new JLabel("Vehicle Model:"));
 		vehicleModelField = new JTextField();
+        vehicleModelField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         vehicleModelField.setPreferredSize(fieldSize);
 		ownerPanel.add(vehicleModelField);
 
 		ownerPanel.add(new JLabel("Vehicle Brand:"));
 		vehicleBrandField = new JTextField();
+        vehicleBrandField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         vehicleBrandField.setPreferredSize(fieldSize);
 		ownerPanel.add(vehicleBrandField);
 
 		ownerPanel.add(new JLabel("Plate Number:"));
 		plateNumberField = new JTextField();
+        plateNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         plateNumberField.setPreferredSize(fieldSize);
 		ownerPanel.add(plateNumberField);
 
 		ownerPanel.add(new JLabel("Serial Number:"));
 		serialNumberField = new JTextField();
+        serialNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         serialNumberField.setPreferredSize(fieldSize);
 		ownerPanel.add(serialNumberField);
 
 		ownerPanel.add(new JLabel("VIN Number:"));
 		vinNumberField = new JTextField();
+        vinNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         vinNumberField.setPreferredSize(fieldSize);
 		ownerPanel.add(vinNumberField);
 
 		ownerPanel.add(new JLabel("Residency Time (hrs):"));
 		residencyTimeField = new JTextField();
+        residencyTimeField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         residencyTimeField.setPreferredSize(fieldSize);
 		ownerPanel.add(residencyTimeField);
         
-
         mainPanel.add(clientPanel, "Client");
         mainPanel.add(ownerPanel, "Owner");
 
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.LINE_START;
+        mainPagePanel.add(signOutButton, gbc);
+
         // Set up role selection panel at the top
         gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         gbc.gridwidth = 2;  // Span across both columns
         gbc.anchor = GridBagConstraints.CENTER;
         mainPagePanel.add(rolePanel, gbc);
 
         // Set up client/owner input panels
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 1.0;
         mainPagePanel.add(mainPanel, gbc);
@@ -464,7 +502,7 @@ public class VCRTSGUI {
         submitButton.setBorderPainted(false);
         submitButton.addActionListener(e -> handleSubmissionWithVCCDisplay());
 
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weighty = 0;
         gbc.gridwidth = 2; // Span across both columns to center the button
@@ -478,7 +516,7 @@ public class VCRTSGUI {
         testVCCButton.setBorderPainted(false);
 
         testVCCButton.addActionListener(e -> displayVCCJobsAndTimes());
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         mainPagePanel.add(testVCCButton, gbc);
 
         // Add main page panel to the frame
@@ -629,6 +667,10 @@ public class VCRTSGUI {
 
     private void showSignUpScreen() {
         ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "SignUp");
+    }
+
+    private void showWelcomeScreen(){
+        ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "Welcome");
     }
 
     private void registerUser(String username, String password) {
