@@ -105,7 +105,7 @@ public class VCController {
         for (JobRequest job : jobsQueue) {
             cumulativeTime += job.getDuration();
             jobInfo.append(String.format("Job ID: %d, Client ID: %s, Duration: %d hours, Completion Time: %d hours\n",
-                                         job.getJobId(), job.getClientId(), job.getDuration(), cumulativeTime));
+                            job.getJobId(), job.getClientId(), job.getDuration(), cumulativeTime));
         }
 
         return jobInfo.length() > 0 ? jobInfo.toString() : "No jobs currently assigned.";

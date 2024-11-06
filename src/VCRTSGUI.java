@@ -392,6 +392,7 @@ public class VCRTSGUI {
         clientButton = new JRadioButton("Submit a Job");
         clientButton.setBackground(backgroundColor);
         clientButton.setFont(clientButton.getFont().deriveFont(textSize));
+        clientButton.setSelected(true);
 
         ownerButton = new JRadioButton("Register a Vehicle");
         ownerButton.setBackground(backgroundColor);
@@ -418,10 +419,10 @@ public class VCRTSGUI {
         clientPanel.add(clientIdField);
         
         clientPanel.add(new JLabel("Job Duration (hrs):"));
-        jobDeadlineField = new JTextField();
-        jobDeadlineField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        jobDeadlineField.setPreferredSize(fieldSize);
-        clientPanel.add(jobDeadlineField);
+        jobDurationField = new JTextField();
+        jobDurationField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        jobDurationField.setPreferredSize(fieldSize);
+        clientPanel.add(jobDurationField);
 
         clientPanel.add(new JLabel("Job Deadline:"));
         jobDeadlineField = new JTextField();
@@ -602,8 +603,8 @@ public class VCRTSGUI {
 
                 // Submit job to VCController and display job info and completion times
                 vcc.submitJob(job);
-                String jobInfo = vcc.displayJobsAndCompletionTimes();
-                JOptionPane.showMessageDialog(frame, jobInfo, "VCC Job Queue and Completion Times", JOptionPane.INFORMATION_MESSAGE);
+                // String jobInfo = vcc.displayJobsAndCompletionTimes();
+                // JOptionPane.showMessageDialog(frame, jobInfo, "VCC Job Queue and Completion Times", JOptionPane.INFORMATION_MESSAGE);
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(frame, "Job Duration must be a valid integer.", "Input Error", JOptionPane.ERROR_MESSAGE);
             }
