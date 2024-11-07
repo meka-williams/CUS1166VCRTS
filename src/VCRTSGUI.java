@@ -7,19 +7,12 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
-import java.util.List;
 public class VCRTSGUI {
     private JFrame frame;
     private JTextField usernameField;
@@ -126,14 +119,6 @@ public class VCRTSGUI {
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         welcomePanel.add(buttonPanel, gbc);
-
-        // gbc.gridx = 0; gbc.gridy = 4;
-        // gbc.anchor = GridBagConstraints.LINE_START;
-        // welcomePanel.add(loginButton, gbc);
-
-        // gbc.gridx = 1; gbc.gridy = 4;
-        // gbc.anchor = GridBagConstraints.LINE_END;
-        // welcomePanel.add(signUpButton, gbc);
     
         frame.add(welcomePanel, "Welcome");
         frame.setResizable(false);

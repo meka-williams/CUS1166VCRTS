@@ -6,3 +6,7 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+#Ignores all the .class files
+/*.class
+#Ignore all the .iml files
+/*iml

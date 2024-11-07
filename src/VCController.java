@@ -2,12 +2,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 public class VCController {
     private int controllerID;                  // Identifier for the VCController
@@ -32,12 +29,12 @@ public class VCController {
 
 // Logs job details to a dedicated file for VC records
 public void saveOwnerCarToFile(String ownerId, String vehicleBrand, String vehicleModel, String plateNumber, String serialNumber, String vinNumber, int residencyTime) {
-    String fileName = "vcrts_data_owner.csv";
-    String header = "Owner ID,Vehicle Info,Residency Time";
+    String fileName = "database/CarRegistration.csv";
+    String header = "Owner ID,Vehicle Model, Vehicle Brand, Plate Number, Serial Number, VIN Number, Residency Time, Timestamp";
     // Combine all vehicle info into one field
     String vehicleInfo = String.format("%s %s (Plate: %s, Serial: %s, VIN: %s)", 
         vehicleBrand, vehicleModel, plateNumber, serialNumber, vinNumber);
-    String data = String.format("%s,%s,%d", ownerId, vehicleInfo, residencyTime);
+    String data = String.format("%s,%s,%d, ", ownerId, vehicleInfo, residencyTime);
 
     File file = new File(fileName);
 
@@ -54,7 +51,7 @@ public void saveOwnerCarToFile(String ownerId, String vehicleBrand, String vehic
 }
 
     private void logJobRequest(JobRequest job) {
-        String fileName = "VC_jobs.csv";
+        String fileName = "database/JobRequests.csv";
         String header = "Job ID,Client ID,Job Duration,Timestamp";
         String data = String.format("%d,%s,%d,%s", job.getJobId(), job.getClientId(), job.getDuration(), job.getTimestamp());
 
