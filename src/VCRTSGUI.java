@@ -124,6 +124,10 @@ public class VCRTSGUI {
         frame.setResizable(false);
     }
 
+    private void userSelectionScreen(){
+        JPanel userSelectionPanel = new JPane
+    }
+    
     private void createLoginScreen() throws IOException {
         JPanel loginPanel = new JPanel(new GridBagLayout());
         loginPanel.setBackground(backgroundColor);

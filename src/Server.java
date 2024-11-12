@@ -56,7 +56,7 @@ public class Server {
      */
     public void updateServer(String action, User user) {
         Date date = new Date();
-        String newData = action + "," + user.getUsername() + "," + user.getPassword() + "," + date + "\n";
+        String newData = action + "," + user.getUsername() + "," + date + "\n";
 
         try {
             FileWriter writer = new FileWriter(server, true);  // Append mode
