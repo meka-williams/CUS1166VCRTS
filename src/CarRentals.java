@@ -1,131 +1,65 @@
+// CarRentals.java
 import java.util.ArrayList;
 import java.util.List;
 
 public class CarRentals {
-    private int vehicleID;
-    private String status;
-    private int ownerID;
+    private String ownerId;
     private String model;
     private String brand;
     private String plateNumber;
     private String serialNumber;
     private String vinNum;
-    private int residencyTime;
-
-    private List<JobRequest> assignedJobs; // List to track jobs assigned to this car
+    private String residencyTime;
+    private List<JobRequest> assignedJobs;
 
     // Constructor
-    public CarRentals(int vehicleID, String status, int ownerID, String model, String brand,
-                      String plateNumber, String serialNumber, String vinNum, int residencyTime) {
-        this.vehicleID = vehicleID;
-        this.status = status;
-        this.ownerID = ownerID;
+    public CarRentals(String ownerId, String model, String brand, String plateNumber, String serialNumber, String vinNum, String residencyTime) {
+        this.ownerId = ownerId;
         this.model = model;
         this.brand = brand;
         this.plateNumber = plateNumber;
         this.serialNumber = serialNumber;
         this.vinNum = vinNum;
         this.residencyTime = residencyTime;
-        this.assignedJobs = new ArrayList<>(); // Initialize list for assigned jobs
+        this.assignedJobs = new ArrayList<>();
     }
 
-    // Method to assign a job to this vehicle
-    public void assignJob(JobRequest job) {
-        assignedJobs.add(job); // Add the job to the assigned jobs list
+    // Getter methods
+    public String getOwnerId() {
+        return ownerId;
     }
 
-    // Optional: Method to get all assigned jobs for logging or debugging
-    public List<JobRequest> getAssignedJobs() {
-        return assignedJobs;
-    }
-
-    
-    public int getVehicleID() {
-        return vehicleID;
-    }
-
-    public void setVehicleID(int vehicleID) {
-        this.vehicleID = vehicleID;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public int getOwnerID() {
-        return ownerID;
-    }
-
-    public void setOwnerID(int ownerID) {
-        this.ownerID = ownerID;
-    }
-
-    public String getModel() {
+    public String getVehicleModel() {
         return model;
     }
 
-    public void setModel(String model) {
-        this.model = model;
-    }
-
-    public String getBrand() {
+    public String getVehicleBrand() {
         return brand;
-    }
-
-    public void setBrand(String brand) {
-        this.brand = brand;
     }
 
     public String getPlateNumber() {
         return plateNumber;
     }
 
-    public void setPlateNumber(String plateNumber) {
-        this.plateNumber = plateNumber;
-    }
-
     public String getSerialNumber() {
         return serialNumber;
     }
 
-    public void setSerialNumber(String serialNumber) {
-        this.serialNumber = serialNumber;
-    }
-
-    public String getVinNum() {
+    public String getVinNumber() {
         return vinNum;
     }
 
-    public void setVinNum(String vinNum) {
-        this.vinNum = vinNum;
-    }
-
-    public int getResidencyTime() {
+    public String getResidencyTime() {
         return residencyTime;
     }
 
-    public void setResidencyTime(int residencyTime) {
-        this.residencyTime = residencyTime;
+    // Method to assign a job to this vehicle
+    public void assignJob(JobRequest job) {
+        assignedJobs.add(job);
     }
 
-
-    @Override
-    public String toString() {
-        return "CarRentals{" +
-                "vehicleID=" + vehicleID +
-                ", status='" + status + '\'' +
-                ", ownerID=" + ownerID +
-                ", model='" + model + '\'' +
-                ", brand='" + brand + '\'' +
-                ", plateNumber='" + plateNumber + '\'' +
-                ", serialNumber='" + serialNumber + '\'' +
-                ", vinNum='" + vinNum + '\'' +
-                ", residencyTime=" + residencyTime +
-                ", assignedJobs=" + assignedJobs +
-                '}';
+    // Optional: Method to get all assigned jobs for logging or debugging
+    public List<JobRequest> getAssignedJobs() {
+        return assignedJobs;
     }
 }
