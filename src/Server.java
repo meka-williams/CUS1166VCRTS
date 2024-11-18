@@ -1,182 +1,160 @@
+// Server.java
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.*;
 import java.util.Scanner;
-import java.util.UUID;
 
 public class Server {
-    private File server = new File("src/Server.csv");
-    private ArrayList<User> users;
-    private ArrayList<Client> clients;
-    private ArrayList<CarOwner> carOwners;
-    private String data;
-    private Map<String, String> sessions = new HashMap<>(); // Stores active session tokens
+    private static final int PORT = 12345;  // Port number for the server to listen on
+    private ServerSocket serverSocket;      // Server socket for accepting client connections
+    private UserManager userManager;        // Manages user registration and login
+    private VCController vcController;      // Manages job and car readiness data
 
-    // Constructor
+    // Constructor - Initializes the server, user manager, and VCC controller
     public Server() {
-        data = "";
-        users = new ArrayList<User>();
-        clients = new ArrayList<Client>();
-        carOwners = new ArrayList<CarOwner>();
-        users = new ArrayList<>();
-        loadUsersFromCSV();  // Load users from CSV on startup
+        try {
+            serverSocket = new ServerSocket(PORT);
+            userManager = new UserManager();
+            vcController = new VCController();
+            System.out.println("Server is running on port " + PORT);
+        } catch (IOException e) {
+            System.err.println("Could not start server: " + e.getMessage());
+        }
     }
 
-    /**
-     * Loads users from the Server.csv file and populates the users list.
-     */
-    public void loadUsersFromCSV() {
-        try {
-            Scanner scanner = new Scanner(server);
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                String[] details = line.split(",");  // Assuming CSV format: action,username,password,date
-                if (details.length >= 3 && details[0].trim().equals("New Sign Up")) {
-                    String username = details[1].trim();
-                    String password = details[2].trim();
-                    System.out.println("Loading user from CSV: " + username + " with password: " + password);
-                    User user = new User(username, password);
-                    if (!isUser(username)) {
-                        users.add(user);
-                    }
+    // Start the server - Continuously accepts new client connections and handles each client in a new thread
+    public void start() {
+        while (true) {
+            try {
+                Socket clientSocket = serverSocket.accept();  // Accept client connection
+                new Thread(() -> handleClient(clientSocket)).start();  // Handle each client in a new thread
+            } catch (IOException e) {
+                System.err.println("Connection error: " + e.getMessage());
+            }
+        }
+    }
+
+    // Handles communication with a connected client
+    private void handleClient(Socket clientSocket) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+
+            String clientMessage;
+            while ((clientMessage = in.readLine()) != null) {
+                System.out.println("Received: " + clientMessage);
+                String response;
+
+                if (clientMessage.startsWith("REGISTER")) {
+                    response = handleRegistration(clientMessage);
+                } else if (clientMessage.startsWith("LOGIN")) {
+                    response = userManager.loginUser(clientMessage);
+                } else if (clientMessage.startsWith("JOB_SUBMIT")) {
+                    response = promptAndHandleJobSubmission(clientMessage);
+                } else if (clientMessage.startsWith("CAR_READY")) {
+                    response = promptAndHandleCarReady(clientMessage);
+                } else if (clientMessage.startsWith("DISPLAY_JOB_TIMES")) {
+                    response = handleDisplayJobTimes(clientMessage);
+                } else if (clientMessage.equals("GET_ALL_JOBS")) {
+                    response = vcController.getAllJobs();
+                } else if (clientMessage.startsWith("MARK_COMPLETE")) {
+                    response = vcController.markJobComplete(clientMessage);
+                } else {
+                    response = "Invalid request";
                 }
+
+                // Send the response back to the client
+                out.println(response);
+                out.println(); // Indicate the end of the response
+                out.flush();
+
+                // Log any remaining data in the buffer
+                logRemainingBuffer(in);
             }
-            scanner.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error handling client: " + e.getMessage());
         }
     }
 
-    /**
-     * Saves user registration and login actions to the Server.csv file.
-     * @param action The action to log (e.g., "New Sign Up", "New Login").
-     * @param user The user involved in the action.
-     */
-    public void updateServer(String action, User user) {
-        Date date = new Date();
-        String newData = action + "," + user.getUsername() + "," + user.getPassword() + "," + date + "\n";
-
+    // Helper method to log the remaining buffer contents
+    private void logRemainingBuffer(BufferedReader in) {
         try {
-            FileWriter writer = new FileWriter(server, true);  // Append mode
-            writer.write(newData);
-            writer.close();
+            if (in.ready()) { // Check if there is more data in the buffer
+                System.out.println("Remaining buffer contents:");
+                while (in.ready()) { // While more data is available in the buffer
+                    System.out.println(in.readLine());
+                }
+            } else {
+                System.out.println("Buffer post response is empty.");
+            }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error reading buffer: " + e.getMessage());
         }
     }
 
-    /**
-     * Checks if a user exists with the provided username and password.
-     * If successful, creates a session token for the user.
-     * @param username The username to check.
-     * @param password The password to check.
-     * @return The session token if authentication is successful, otherwise null.
-     */
-    public String authenticate(String username, String password) {
-        if (accountFound(username, password)) {
-            String sessionToken = UUID.randomUUID().toString(); // Generate a unique session token
-            sessions.put(username, sessionToken); // Store session token for the user
-            updateServer("New Login", new User(username, password)); // Log the login action
-            return sessionToken; // Return session token to client
+    // Handle registration requests, with special handling for VCCController registration
+    private String handleRegistration(String message) {
+        String[] parts = message.split(" ");
+        String accountType = parts[7];  // Account type is expected to be the last part of the message
+
+        // Prompt for confirmation if the account type is "VCCController"
+        if (accountType.equals("VCCController")) {
+            return promptAndHandleVCCControllerRegistration(message);
+        } else {
+            // Regular registration process for non-VCCController accounts
+            return userManager.registerUser(message);
         }
-        return null; // Authentication failed
     }
 
-    /**
-     * Checks if a user exists with the provided username and password.
-     * @param username The username to check.
-     * @param password The password to check.
-     * @return True if the account is found, otherwise false.
-     */
-    public boolean accountFound(String username, String password) {
-        for (User user : users) {
-            System.out.println("Checking user: " + user.getUsername() + " with password: " + user.getPassword());
-            if (user.getUsername().equals(username) && user.getPassword().equals(password)) {
-                System.out.println("Account found for username: " + username);
-                return true;
-            }
+    // Prompt to approve or deny a VCCController registration request
+    private String promptAndHandleVCCControllerRegistration(String message) {
+        System.out.print("Approve VCC Controller registration request? (Y/N): ");
+        if (promptForConfirmation()) {
+            return userManager.registerUser(message);  // Register the user if approved
+        } else {
+            return "VCC Controller registration declined.";  // Notify the client of declined registration
         }
-        System.out.println("Account not found for username: " + username);
-        return false;
     }
 
-    /**
-     * Verifies if a session token is valid for the given username.
-     * @param username The username to verify.
-     * @param sessionToken The session token to verify.
-     * @return True if the session is valid, otherwise false.
-     */
-    public boolean isSessionValid(String username, String sessionToken) {
-        return sessionToken != null && sessionToken.equals(sessions.get(username));
-    }
-
-    /**
-     * Adds a new user to the server's list of users.
-     * @param user The user to add.
-     */
-    public void addUser(User user) {
-        users.add(user);
-        updateServer("New Sign Up", user);
-    }
-
-    /**
-     * Checks if a user exists with the provided username.
-     * @param username The username to check.
-     * @return True if the user exists, otherwise false.
-     */
-    public boolean isUser(String username) {
-        for (User user : users) {
-            if (user.getUsername().equals(username)) {
-                return true;
-            }
+    // Handle job submission requests with server-side approval prompt
+    private String promptAndHandleJobSubmission(String message) {
+        System.out.print("Accept job submission request? (Y/N): ");
+        if (promptForConfirmation()) {
+            String response = vcController.handleJobSubmission(message);
+            System.out.println("Job submission response: " + response);  // Debugging output for job submission
+            return response;
+        } else {
+            return "Job submission declined.";
         }
-        return false;
     }
 
-    /**
-     * Retrieves a user by their username.
-     * @param username The username to search for.
-     * @return The User object if found, otherwise null.
-     */
-    public User getUser(String username) {
-        for (User user : users) {
-            if (user.getUsername().equals(username)) {
-                return user;
-            }
+    // Handle car readiness notifications with server-side approval prompt
+    private String promptAndHandleCarReady(String message) {
+        System.out.print("Accept car ready notification? (Y/N): ");
+        if (promptForConfirmation()) {
+            return vcController.handleCarReady(message);
+        } else {
+            return "Car readiness declined.";
         }
-        return null;
     }
 
-    public CarOwner getCarOwner(String username) {
-        for (CarOwner carOwner : carOwners) {
-            if (carOwner.getUsername().equals(username)) {
-                return carOwner;
-            }
-        }
-        return null;
+    // Handles the request to display jobs and their completion times for a specific client
+    private String handleDisplayJobTimes(String message) {
+        String[] parts = message.split(" ");
+        String clientId = parts[1];
+        String role = parts.length > 2 ? parts[2] : ""; // Get role if provided
+
+        return vcController.displayJobsAndCompletionTimes(clientId, role);
     }
 
-    /**
-     * Checks if a CarOwner exists with the provided username.
-     * @param username The username to check.
-     * @return True if the CarOwner exists, otherwise false.
-     */
-    public boolean isCarOwner(String username) {
-        for (CarOwner carOwner : carOwners) {
-            if (carOwner.getUsername().equals(username)) {
-                return true;
-            }
-        }
-        return false;
+    // Prompt for server administrator confirmation (Y/N) - returns true if 'Y' is entered
+    private boolean promptForConfirmation() {
+        Scanner scanner = new Scanner(System.in);
+        String input = scanner.nextLine().trim().toUpperCase();
+        return input.equals("Y");
     }
 
-    /**
-     * Adds a new CarOwner to the server's list of CarOwners.
-     * @param carOwner The CarOwner to add.
-     */
-    public void addCarOwner(CarOwner carOwner) {
-        carOwners.add(carOwner);
+    // Main method - Starts the server
+    public static void main(String[] args) {
+        Server server = new Server();
+        server.start();
     }
 }

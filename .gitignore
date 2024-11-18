@@ -9,4 +9,4 @@
 #Ignores all the .class files
 /*.class
 #Ignore all the .iml files
-/*iml
+/.iml
