@@ -22,6 +22,7 @@ public class Client {
             System.err.println("Could not connect to server: " + e.getMessage());
         }
     }
+
     public void clearBuffer() {
         try {
             while (in.ready()) {
@@ -32,7 +33,6 @@ public class Client {
             System.err.println("Error clearing buffer: " + e.getMessage());
         }
     }
-
 
     // Sends a request to the server and returns the server's response
     public String sendRequest(String request) {
@@ -63,12 +63,9 @@ public class Client {
         }
     }
 
-
-
-
-
     // Registers a user with the specified details, including account type
-    public String register(String firstName, String lastName, String username, String email, String dob, String password, String accountType) {
+    public String register(String firstName, String lastName, String username, String email, String dob,
+            String password, String accountType) {
         String formattedDob;
         try {
             LocalDate parsedDate = LocalDate.parse(dob, DateTimeFormatter.ofPattern("MMM d, yyyy"));
@@ -77,17 +74,17 @@ public class Client {
             return "Error: Invalid date format. Please use 'MMM d, yyyy' (e.g., Nov 5, 2024)";
         }
 
-        String request = String.format("REGISTER %s %s %s %s %s %s %s", 
-                                       firstName.trim(), 
-                                       lastName.trim(), 
-                                       username.trim(), 
-                                       email.trim(), 
-                                       formattedDob, 
-                                       password.trim(), 
-                                       accountType.trim());
+        String request = String.format("REGISTER %s %s %s %s %s %s %s",
+                firstName.trim(),
+                lastName.trim(),
+                username.trim(),
+                email.trim(),
+                formattedDob,
+                password.trim(),
+                accountType.trim());
 
         System.out.println("Sending registration command: " + request); // Debugging output
-        return sendRequest(request);  // Send the request to the server
+        return sendRequest(request); // Send the request to the server
     }
 
     // Logs in the user and identifies if they are a VCCController
@@ -95,7 +92,7 @@ public class Client {
         String request = String.format("LOGIN %s %s", username.trim(), password.trim());
         System.out.println("Sending login command: " + request); // Debugging output
         String response = sendRequest(request);
-        System.out.println("Reponse from Login command is:"+ response);
+        System.out.println("Response from Login command is:" + response);
         return response;
     }
 
@@ -113,10 +110,9 @@ public class Client {
         return "No jobs available."; // Default message if no valid response
     }
 
-
-
     // Submits a job with the given details to the server
-    public String submitJob(String clientId, String jobDescription, int duration, int redundancyLevel, String jobDeadline) {
+    public String submitJob(String clientId, String jobDescription, int duration, int redundancyLevel,
+            String jobDeadline) {
         String formattedDeadline;
         try {
             // Parse the date assuming the input might be in "MMM d, yyyy" format
@@ -128,17 +124,17 @@ public class Client {
         }
 
         // Enclose jobDescription in quotes to handle spaces
-        String request = String.format("JOB_SUBMIT %s \"%s\" %d %d %s", clientId, jobDescription, duration, redundancyLevel, formattedDeadline);
+        String request = String.format("JOB_SUBMIT %s \"%s\" %d %d %s", clientId, jobDescription, duration,
+                redundancyLevel, formattedDeadline);
         return sendRequest(request);
     }
 
-
-
     // Sends a notification to the server indicating a car is ready
-    public String notifyCarReady(String ownerId, String vehicleModel, String vehicleBrand, String plateNumber, String serialNumber, String vinNumber, String residencyTime) {
-        String request = String.format("CAR_READY %s %s %s %s %s %s %s", 
-            ownerId.trim(), vehicleModel.trim(), vehicleBrand.trim(), plateNumber.trim(), 
-            serialNumber.trim(), vinNumber.trim(), residencyTime.trim());
+    public String notifyCarReady(String ownerId, String vehicleModel, String vehicleBrand, String plateNumber,
+            String serialNumber, String vinNumber, String residencyTime) {
+        String request = String.format("CAR_READY %s %s %s %s %s %s %s",
+                ownerId.trim(), vehicleModel.trim(), vehicleBrand.trim(), plateNumber.trim(),
+                serialNumber.trim(), vinNumber.trim(), residencyTime.trim());
         return sendRequest(request);
     }
 
@@ -146,18 +142,20 @@ public class Client {
     public String requestVCCJobTimes(String clientId, String role) {
         String request = "DISPLAY_JOB_TIMES " + clientId + " " + role;
         System.out.println("Sending job times request to server: " + request);
-        String response = sendRequest(request);  // Get full response from server
-        System.out.println("Received job times response from server: \n" + response);  // Confirm full response received
+        String response = sendRequest(request); // Get full response from server
+        System.out.println("Received job times response from server: \n" + response); // Confirm full response received
         return response;
     }
-
 
     // Closes the client socket and associated streams
     public void close() {
         try {
-            if (socket != null) socket.close();
-            if (in != null) in.close();
-            if (out != null) out.close();
+            if (socket != null)
+                socket.close();
+            if (in != null)
+                in.close();
+            if (out != null)
+                out.close();
         } catch (IOException e) {
             System.err.println("Error closing client: " + e.getMessage());
         }
