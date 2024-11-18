@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class UserManager {
-    private static final String USER_DATA_FILE = "users.csv";
+    private static final String USER_DATA_FILE = "UserInformation.csv";
     private Map<String, String[]> users;
 
     public UserManager() {
