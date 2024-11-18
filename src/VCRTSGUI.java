@@ -1,4 +1,6 @@
 // VCRTSGUI.java
+
+
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
@@ -309,12 +311,12 @@ public class VCRTSGUI extends JFrame {
         JLabel accountTypeLabel = new JLabel("Account Type:");
         JRadioButton carOwnerButton = new JRadioButton("Car Owner");
         JRadioButton jobSubmitterButton = new JRadioButton("Job Submitter");
-        JRadioButton vccControllerButton = new JRadioButton("VCC Controller");  // New option for VCC Controller
+        
 
         ButtonGroup accountTypeGroup = new ButtonGroup();
         accountTypeGroup.add(carOwnerButton);
         accountTypeGroup.add(jobSubmitterButton);
-        accountTypeGroup.add(vccControllerButton);  // Include VCC Controller in group
+        
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -365,7 +367,6 @@ public class VCRTSGUI extends JFrame {
         JPanel accountTypePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         accountTypePanel.add(carOwnerButton);
         accountTypePanel.add(jobSubmitterButton);
-        accountTypePanel.add(vccControllerButton);  // Add VCC Controller button to panel
         signupPanel.add(accountTypePanel, gbc);
 
         JButton signupButton = createStyledButton("Register");
@@ -383,8 +384,6 @@ public class VCRTSGUI extends JFrame {
                 accountType = "CarOwner";
             } else if (jobSubmitterButton.isSelected()) {
                 accountType = "JobSubmitter";
-            } else if (vccControllerButton.isSelected()) {
-                accountType = "VCCController";
             } else {
                 JOptionPane.showMessageDialog(this, "Please select an account type.");
                 return;

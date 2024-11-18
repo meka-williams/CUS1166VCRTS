@@ -1,10 +1,12 @@
 // UserManager.java
+package vcrts_server;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
 public class UserManager {
-    private static final String USER_DATA_FILE = "UserInformation.csv";
+	 private static final String USER_DATA_FILE = "UserInformation.csv";
     private Map<String, String[]> users;
 
     public UserManager() {
@@ -72,6 +74,13 @@ public class UserManager {
 
         System.out.printf("Attempting login: Username=%s, Password=%s\n", username, password);
 
+        // Hardcoded credentials for "vcc"
+        if (username.equals("vcc") && password.equals("vccadmin")) {
+            System.out.println("Hardcoded VCC login successful");
+            return "Login successful,VCCController";
+        }
+
+        // Check against stored users map
         if (!users.containsKey(username)) {
             System.out.println("Error: Username not found in users map");
             return "Error: Username not found";
@@ -90,6 +99,7 @@ public class UserManager {
 
         return "Login successful," + accountType;
     }
+
 
 
     private void saveUserToCSV(String firstName, String lastName, String username, String email, String dob, String password, String accountType) {
