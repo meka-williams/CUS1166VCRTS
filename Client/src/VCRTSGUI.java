@@ -8,6 +8,8 @@ import org.jdatepicker.impl.DateComponentFormatter;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.Border;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -38,7 +40,7 @@ public class VCRTSGUI extends JFrame {
         client = new Client();
         setTitle("Vehicular Cloud Real Time System (VCRTS)");
         setSize(800, 500);
-        ImageIcon logo = new ImageIcon("VCRTS Logo.png");
+        ImageIcon logo = new ImageIcon("bin/VCRTS Logo.png");
         
         setIconImage(logo.getImage());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -190,7 +192,6 @@ public class VCRTSGUI extends JFrame {
     // Helper method to send a completion request to the server
 
 
-
     private void createWelcomePanel() throws IOException {
         JPanel welcomePanel = new JPanel();
         welcomePanel.setBackground(backgroundColor);
@@ -199,7 +200,7 @@ public class VCRTSGUI extends JFrame {
 
         JLabel logoImage = new JLabel("");
         BufferedImage bufferedImage = ImageIO.read(this.getClass().getResource("VCRTS Logo.png"));
-        Image image = bufferedImage.getScaledInstance(150, 150, Image.SCALE_DEFAULT);
+        Image image = bufferedImage.getScaledInstance(200, 200, Image.SCALE_DEFAULT);
         logoImage.setIcon(new ImageIcon(image));
         logoImage.setAlignmentX(Component.CENTER_ALIGNMENT);
         logoImage.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
@@ -225,23 +226,12 @@ public class VCRTSGUI extends JFrame {
         JLabel signUpText = new JLabel("New Users");
 
         JButton loginButton = createStyledButton("Login");
-        loginButton.setPreferredSize(new Dimension(150, 50));
-        loginButton.setFont(new Font("Arial", Font.BOLD, 20));
-        loginButton.setBackground(buttonColor);
-        loginButton.setForeground(Color.WHITE);
-        loginButton.setBorderPainted(false);
 
         loginButton.addActionListener(e -> cardLayout.show(mainPanel, "Login")); //resizeForPanel
         loginButton.addActionListener(e -> resizeForPanel("Login"));
 
 
         JButton signupButton = createStyledButton("Sign Up");
-        signupButton.setPreferredSize(new Dimension(150, 50));
-        signupButton.setFont(new Font("Arial", Font.BOLD, 20));
-        signupButton.setBackground(buttonColor);
-        signupButton.setForeground(Color.WHITE);
-        signupButton.setBorderPainted(false);
-
 
         signupButton.addActionListener(e -> cardLayout.show(mainPanel, "Signup"));
         signupButton.addActionListener(e -> resizeForPanel("Signup"));
@@ -267,21 +257,11 @@ public class VCRTSGUI extends JFrame {
         mainPanel.add(welcomePanel, "Welcome");
     }
 
-
-
-    private JButton createStyledButton(String text) {
-        JButton button = new JButton(text);
-        button.setPreferredSize(new Dimension(100, 35));
-        button.setFont(new Font("Arial", Font.BOLD, 14));
-        button.setFocusPainted(false);
-        return button;
-    }
-
     private void createLoginPanel() {
         loginPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(2, 2, 2, 2); // Minimal spacing
+        //gbc.insets = new Insets(2, 2, 2, 2); // Minimal spacing
 
         // Remove unnecessary borders
         loginPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0)); 
@@ -753,6 +733,41 @@ public class VCRTSGUI extends JFrame {
         //String clientId = clientIdField.getText();  // Retrieve the current client ID from the text field
         String response = client.requestAllJobs();  // Send both clientId and role to server
         JOptionPane.showMessageDialog(this, response);  // Display server response in a message dialog
+    }
+
+    private static class RoundedBorder implements Border {
+        private int radius;
+
+        RoundedBorder(int radius) {
+            this.radius = radius;
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c){
+            return new Insets(this.radius + 1, this.radius + 1, this.radius + 2, this.radius);
+        }
+
+        @Override
+        public boolean isBorderOpaque(){
+            return true;
+        }
+
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            g.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+        }
+    }
+
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        //button.setPreferredSize(new Dimension(150, 50));
+        button.setFont(new Font("Arial", Font.BOLD, 20));
+        button.setForeground(Color.WHITE);
+        button.setBackground(buttonColor);
+        button.setFocusPainted(false);
+        button.setBounds(500, 500, 100, 25);
+        //button.setBorder(new RoundedBorder(30));
+        return button;
     }
 
     public static void main(String[] args) throws IOException {
