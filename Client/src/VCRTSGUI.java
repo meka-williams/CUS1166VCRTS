@@ -6,8 +6,11 @@ import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
 import org.jdatepicker.impl.DateComponentFormatter;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -27,19 +30,30 @@ public class VCRTSGUI extends JFrame {
     private String accountType;
     private String currentClientId;
 
+    private Color buttonColor;
+    private Color backgroundColor;
+    private Color textColor;
+
     public VCRTSGUI() throws IOException {
         client = new Client();
         setTitle("Vehicular Cloud Real Time System (VCRTS)");
-        setSize(800, 250);
+        setSize(800, 500);
+        ImageIcon logo = new ImageIcon("VCRTS Logo.png");
+        
+        setIconImage(logo.getImage());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+
+        buttonColor = new Color(44, 118, 220);
+        backgroundColor = new Color(240, 250, 255);
+        textColor = new Color(29, 42, 59);
 
         setupPanels();
         createMainPage();
         setVisible(true);
     }
 
-    private void setupPanels() {
+    private void setupPanels() throws IOException {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
@@ -150,7 +164,7 @@ public class VCRTSGUI extends JFrame {
     private void resizeForPanel(String panelName) {
         switch (panelName) {
             case "Welcome":
-                setSize(800, 250); // Smaller window for welcome page
+                setSize(500, 250); // Smaller window for welcome page
                 break;
             case "Login":
                 setSize(300, 250); // Smaller window for login screen
@@ -168,7 +182,7 @@ public class VCRTSGUI extends JFrame {
                 setSize(700, 300); // Larger window for other panels
                 break;
             default:
-                setSize(800, 600); // Default size
+                setSize(300, 250); // Default size
         }
         setLocationRelativeTo(null); // Re-center the window after resizing
     }
@@ -177,27 +191,58 @@ public class VCRTSGUI extends JFrame {
 
 
 
-    private void createWelcomePanel() {
+    private void createWelcomePanel() throws IOException {
         JPanel welcomePanel = new JPanel();
+        welcomePanel.setBackground(backgroundColor);
         welcomePanel.setLayout(new BoxLayout(welcomePanel, BoxLayout.Y_AXIS));
         welcomePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JLabel titleLabel = new JLabel("Welcome to the Vehicular Cloud Real-Time System (VCRTS)", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 20));
+        JLabel logoImage = new JLabel("");
+        BufferedImage bufferedImage = ImageIO.read(this.getClass().getResource("VCRTS Logo.png"));
+        Image image = bufferedImage.getScaledInstance(150, 150, Image.SCALE_DEFAULT);
+        logoImage.setIcon(new ImageIcon(image));
+        logoImage.setAlignmentX(Component.CENTER_ALIGNMENT);
+        logoImage.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+        
+        JLabel titleLabel = new JLabel("<html><div style='text-align:center'>Welcome to the Vehicular Cloud Real-Time System </div></html>", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 45));
+        titleLabel.setForeground(textColor);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
 
-        JLabel infoLabel = new JLabel("<html><div style='text-align:center;'>VCRTS connects car owners willing to share computing power with clients who submit jobs to utilize this power.<br>Join as a Job Submitter or Car Owner to participate!</div></html>");
-        infoLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        JLabel infoLabel = new JLabel("<html><div style='text-align:center'>This system allow car owners to share their computation power with clients to complete their jobs.<br>Join as a Job Submitter or Car Owner to participate!</div></html>", SwingConstants.CENTER);
+        infoLabel.setFont(new Font("Serif", Font.PLAIN, 20));
+        infoLabel.setForeground(textColor);
         infoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 20));
+        buttonPanel.setBackground(backgroundColor);
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 20));
+
+        JLabel loginText = new JLabel("Returning Users");
+        loginText.setFont(new Font("Serif", Font.BOLD, 20));
+
+        JLabel signUpText = new JLabel("New Users");
 
         JButton loginButton = createStyledButton("Login");
+        loginButton.setPreferredSize(new Dimension(150, 50));
+        loginButton.setFont(new Font("Arial", Font.BOLD, 20));
+        loginButton.setBackground(buttonColor);
+        loginButton.setForeground(Color.WHITE);
+        loginButton.setBorderPainted(false);
+
         loginButton.addActionListener(e -> cardLayout.show(mainPanel, "Login")); //resizeForPanel
         loginButton.addActionListener(e -> resizeForPanel("Login"));
+
+
         JButton signupButton = createStyledButton("Sign Up");
+        signupButton.setPreferredSize(new Dimension(150, 50));
+        signupButton.setFont(new Font("Arial", Font.BOLD, 20));
+        signupButton.setBackground(buttonColor);
+        signupButton.setForeground(Color.WHITE);
+        signupButton.setBorderPainted(false);
+
+
         signupButton.addActionListener(e -> cardLayout.show(mainPanel, "Signup"));
         signupButton.addActionListener(e -> resizeForPanel("Signup"));
         buttonPanel.add(loginButton);
@@ -205,14 +250,16 @@ public class VCRTSGUI extends JFrame {
 
         // Footer component
         JLabel footerLabel = new JLabel("© 2024 Vehicular Cloud Real-Time System");
-        footerLabel.setFont(new Font("Arial", Font.ITALIC, 12));
+        footerLabel.setFont(new Font("Serif", Font.ITALIC, 12));
         footerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        footerLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        footerLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
         // Add components to the welcome panel with balanced spacing
+        welcomePanel.add(logoImage);
         welcomePanel.add(titleLabel);
+        welcomePanel.add(Box.createVerticalStrut(50));
         welcomePanel.add(infoLabel);
-        welcomePanel.add(Box.createVerticalStrut(15)); // Space between info text and buttons
+        welcomePanel.add(Box.createVerticalStrut(50)); // Space between info text and buttons
         welcomePanel.add(buttonPanel);
         welcomePanel.add(Box.createVerticalGlue()); // Dynamic space between buttons and footer
         welcomePanel.add(footerLabel);
