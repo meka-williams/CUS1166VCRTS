@@ -477,11 +477,10 @@ public class VCRTSGUI {
         jobDeadlineField.setPreferredSize(fieldSize);
         clientPanel.add(jobDeadlineField);
 
-        ownerPanel = new JPanel(new BorderLayout());
+        ownerPanel = new JPanel(new GridBagLayout());
         ownerPanel.setBackground(backgroundColor);
 
-        JPanel ownerDetailsPanel = new JPanel();
-        ownerDetailsPanel.setLayout(new GridLayout(14, 2));
+        JPanel ownerDetailsPanel = new JPanel(new GridLayout(14, 2, 10, 5));
         ownerDetailsPanel.setBackground(backgroundColor);
 
         ownerDetailsPanel.add(new JLabel("Owner ID:"));
@@ -529,9 +528,22 @@ public class VCRTSGUI {
         // Create right panel for registered vehicles
         vehiclesPanel = new RegisteredVehiclesPanel(); // Using the class field
 
-        // Add both panels to ownerPanel
-        ownerPanel.add(ownerDetailsPanel, BorderLayout.WEST);
-        ownerPanel.add(vehiclesPanel, BorderLayout.EAST);
+        // Configure layout for owner panel
+        GridBagConstraints ownerGbc = new GridBagConstraints();
+
+        // Configure and add left panel (owner details)
+        ownerGbc.gridx = 0;
+        ownerGbc.gridy = 0;
+        ownerGbc.weightx = 0.6;
+        ownerGbc.weighty = 1.0;
+        ownerGbc.fill = GridBagConstraints.BOTH;
+        ownerGbc.insets = new Insets(10, 10, 10, 5);
+        ownerPanel.add(ownerDetailsPanel, ownerGbc);
+
+        ownerGbc.gridx = 1;
+        ownerGbc.weightx = 0.4;
+        ownerGbc.insets = new Insets(10, 5, 10, 10);
+        ownerPanel.add(vehiclesPanel, ownerGbc);
 
         mainPanel.add(clientPanel, "Client");
         mainPanel.add(ownerPanel, "Owner");
@@ -676,67 +688,71 @@ public class VCRTSGUI {
 
     private void handleOwnerSubmission() {
         try {
-            // Get all the field values
-            String ownerIdText = ownerIdField.getText().trim();
-            String vehicleModel = vehicleModelField.getText().trim();
-            String vehicleBrand = vehicleBrandField.getText().trim();
-            String plateNumber = plateNumberField.getText().trim();
-            String serialNumber = serialNumberField.getText().trim();
-            String vinNumber = vinNumberField.getText().trim();
-            String residencyTimeText = residencyTimeField.getText().trim();
-
-            // Validate all fields are filled
-            if (ownerIdText.isEmpty() || vehicleModel.isEmpty() || vehicleBrand.isEmpty() ||
-                    plateNumber.isEmpty() || serialNumber.isEmpty() || vinNumber.isEmpty() ||
-                    residencyTimeText.isEmpty()) {
-
-                JOptionPane.showMessageDialog(frame,
-                        "Please fill in all fields for Owner submission.",
-                        "Input Error",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
+                    // Get all the field values
+                    String ownerIdText = ownerIdField.getText().trim();
+                    String vehicleModel = vehicleModelField.getText().trim();
+                    String vehicleBrand = vehicleBrandField.getText().trim();
+                    String plateNumber = plateNumberField.getText().trim();
+                    String serialNumber = serialNumberField.getText().trim();
+                    String vinNumber = vinNumberField.getText().trim();
+                    String residencyTimeText = residencyTimeField.getText().trim();
+            
+                    // Validate all fields are filled
+                    if (ownerIdText.isEmpty() || vehicleModel.isEmpty() || vehicleBrand.isEmpty() ||
+                            plateNumber.isEmpty() || serialNumber.isEmpty() || vinNumber.isEmpty() ||
+                            residencyTimeText.isEmpty()) {
+            
+                        JOptionPane.showMessageDialog(frame,
+                                "Please fill in all fields for Owner submission.",
+                                "Input Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+            
+                    // Parse numeric values
+                    int ownerId = Integer.parseInt(ownerIdText);
+                    int residencyTime = Integer.parseInt(residencyTimeText);
+                    int vehicleId = (int) (Math.random() * 10000);
+            
+                    // Check if vehicle with this VIN already exists
+                    if (!vehiclesPanel.vehicleExists(vinNumber)) {
+                        // Create new Vehicle object
+                        Vehicle newVehicle = new Vehicle(
+                            vehicleId,      // vehicleID
+                            "Available",    // initial status
+                            ownerId,       // ownerID
+                            vehicleModel,  // model
+                            vehicleBrand,  // brand
+                            plateNumber,   // plateNumber
+                            serialNumber,  // serialNumber
+                            vinNumber,     // vinNum
+                            residencyTime // residencyTime
+                        );
+            
+                        // Save to file through VCController
+                        vcc.saveOwnerCarToFile(String.valueOf(ownerId), vehicleBrand, vehicleModel,
+                                plateNumber, serialNumber, vinNumber, residencyTime);
+            
+                        // Add to the vehicles panel
+                        if (vehiclesPanel != null) {
+                            vehiclesPanel.addVehicle(newVehicle);
+                            JOptionPane.showMessageDialog(frame, "Vehicle registered successfully!");
+                            clearFields();
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(frame, 
+                            "A vehicle with this VIN already exists.", 
+                            "Duplicate Vehicle", 
+                            JOptionPane.WARNING_MESSAGE);
+                    }
+            
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(frame,
+                            "Owner ID and Residency Time must be valid integers.",
+                            "Input Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
-
-            // Parse numeric values
-            int ownerId = Integer.parseInt(ownerIdText);
-            int residencyTime = Integer.parseInt(residencyTimeText);
-
-            // Generate a vehicle ID (you might want to implement a better way to generate
-            // this)
-            int vehicleId = (int) (Math.random() * 10000);
-
-            // Create new Vehicle object
-            Vehicle newVehicle = new Vehicle(
-                    vehicleId, // vehicleID
-                    "Available", // initial status
-                    ownerId, // ownerID
-                    vehicleModel, // model
-                    vehicleBrand, // brand
-                    plateNumber, // plateNumber
-                    serialNumber, // serialNumber
-                    vinNumber, // vinNum
-                    residencyTime // residencyTime
-            );
-
-            // Save to file through VCController
-            vcc.saveOwnerCarToFile(String.valueOf(ownerId), vehicleBrand, vehicleModel,
-                    plateNumber, serialNumber, vinNumber, residencyTime);
-
-            // Add to the vehicles panel
-            if (vehiclesPanel != null) {
-                vehiclesPanel.addVehicle(newVehicle);
-            }
-
-            JOptionPane.showMessageDialog(frame, "Vehicle registered successfully!");
-            clearFields();
-
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(frame,
-                    "Owner ID and Residency Time must be valid integers.",
-                    "Input Error",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
 
     // Method to clear input fields after submission
     private void clearFields() {
