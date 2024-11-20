@@ -182,10 +182,10 @@ public class VCRTSGUI extends JFrame {
                 setSize(550, 600); // Medium window for login/signup
                 break;
             case "Client":
-            	setSize(500, 410);
+            	setSize(800, 600);
             	break;
             case "Owner":
-            	setSize(450, 410);
+            	setSize(500, 600);
             	break;
             case "VCCController":
                 setSize(700, 300); // Larger window for other panels
@@ -512,15 +512,38 @@ public class VCRTSGUI extends JFrame {
 
     private void createClientPanel() {
         clientPanel = new JPanel(new GridBagLayout());
+        clientPanel.setBackground(backgroundColor);
         clientPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Client ID (auto-populated and uneditable)
+        JButton logOutButton = createLogOutButton();
+        logOutButton.addActionListener(e -> cardLayout.show(mainPanel, "Login")); // Adjusted to go to Login screen
+        logOutButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
+
+        JPanel logOutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        logOutPanel.setBackground(backgroundColor);
+        logOutPanel.add(logOutButton);
+
+
+        JLabel welcomeMessage = createStyledHeader("Submit Job Request");
+
         gbc.gridx = 0;
         gbc.gridy = 0;
-        clientPanel.add(new JLabel("Client ID:"), gbc);
+        clientPanel.add(logOutPanel, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        clientPanel.add(welcomeMessage, gbc);
+
+        // Client ID (auto-populated and uneditable)
+        gbc.gridwidth = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        clientPanel.add(createStyledBody("Client ID:"), gbc);
 
         clientIdField = new JTextField(15);
         clientIdField.setEditable(false);
@@ -529,8 +552,8 @@ public class VCRTSGUI extends JFrame {
 
         // Job Description Field
         gbc.gridx = 0;
-        gbc.gridy = 1;
-        clientPanel.add(new JLabel("Job Description:"), gbc);
+        gbc.gridy = 3;
+        clientPanel.add(createStyledBody("Job Description:"), gbc);
 
         JTextField jobDescriptionField = new JTextField(15);
         gbc.gridx = 1;
@@ -538,8 +561,8 @@ public class VCRTSGUI extends JFrame {
 
         // Job Duration Field (in hours)
         gbc.gridx = 0;
-        gbc.gridy = 2;
-        clientPanel.add(new JLabel("Job Duration (hours):"), gbc);
+        gbc.gridy = 4;
+        clientPanel.add(createStyledBody("Job Duration (hours):"), gbc);
 
         jobDurationField = new JTextField(15);
         gbc.gridx = 1;
@@ -547,8 +570,8 @@ public class VCRTSGUI extends JFrame {
 
         // Job Deadline (date picker)
         gbc.gridx = 0;
-        gbc.gridy = 3;
-        clientPanel.add(new JLabel("Job Deadline:"), gbc);
+        gbc.gridy = 5;
+        clientPanel.add(createStyledBody("Job Deadline:"), gbc);
 
         UtilDateModel dateModel = new UtilDateModel();
         Properties properties = new Properties();
@@ -562,16 +585,19 @@ public class VCRTSGUI extends JFrame {
 
         // Redundancy Level Selection (Number of Cars)
         gbc.gridx = 0;
-        gbc.gridy = 4;
-        clientPanel.add(new JLabel("Redundancy Level (Number of Cars):"), gbc);
+        gbc.gridy = 6;
+        clientPanel.add(createStyledBody("Redundancy Level (Number of Cars):"), gbc);
 
         JComboBox<String> redundancyComboBox = new JComboBox<>(new String[] { "1", "2", "3", "4", "5" });
         gbc.gridx = 1;
         clientPanel.add(redundancyComboBox, gbc);
 
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        buttonPanel.setBackground(backgroundColor);
+
         // Submit Job Button
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 7;
         gbc.gridwidth = 2;
         JButton submitJobButton = createStyledButton("Submit Job");
         submitJobButton.addActionListener(e -> {
@@ -593,23 +619,12 @@ public class VCRTSGUI extends JFrame {
                 JOptionPane.showMessageDialog(this, "Please enter valid numbers for job duration and redundancy level.");
             }
         });
-        clientPanel.add(submitJobButton, gbc);
-
-        // Display Jobs & Completion Times Button
-        gbc.gridy = 6;
-        gbc.gridwidth = 1; // Reset to single column width
-        gbc.gridx = 0;
+        
         JButton displayJobsButton = createStyledButton("Display Jobs & Completion Times");
         displayJobsButton.addActionListener(e -> displayVCCJobsAndTimes());
-        clientPanel.add(displayJobsButton, gbc);
-
-        // Back Button
-        gbc.gridx = 1;
-        JButton backButton = createStyledButton("Back");
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Login")); // Adjusted to go to Login screen
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
-        
-        clientPanel.add(backButton, gbc);
+        buttonPanel.add(submitJobButton);
+        buttonPanel.add(displayJobsButton);
+        clientPanel.add(buttonPanel, gbc);
 
         mainPanel.add(clientPanel, "Client");
     }
@@ -619,6 +634,7 @@ public class VCRTSGUI extends JFrame {
 
     private void createOwnerPanel() {
         ownerPanel = new JPanel(new GridBagLayout());
+        ownerPanel.setBackground(backgroundColor);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -626,7 +642,7 @@ public class VCRTSGUI extends JFrame {
         // Owner ID (auto-populated and uneditable)
         gbc.gridx = 0;
         gbc.gridy = 0;
-        ownerPanel.add(new JLabel("Owner ID:"), gbc);
+        ownerPanel.add(createStyledBody("Owner ID:"), gbc);
         ownerIdField = new JTextField();
         ownerIdField.setEditable(false);
         gbc.gridx = 1;
@@ -635,7 +651,7 @@ public class VCRTSGUI extends JFrame {
         // Vehicle Model
         gbc.gridx = 0;
         gbc.gridy = 1;
-        ownerPanel.add(new JLabel("Vehicle Model:"), gbc);
+        ownerPanel.add(createStyledBody("Vehicle Model:"), gbc);
         vehicleModelField = new JTextField(15);
         gbc.gridx = 1;
         ownerPanel.add(vehicleModelField, gbc);
@@ -643,7 +659,7 @@ public class VCRTSGUI extends JFrame {
         // Vehicle Brand
         gbc.gridx = 0;
         gbc.gridy = 2;
-        ownerPanel.add(new JLabel("Vehicle Brand:"), gbc);
+        ownerPanel.add(createStyledBody("Vehicle Brand:"), gbc);
         vehicleBrandField = new JTextField(15);
         gbc.gridx = 1;
         ownerPanel.add(vehicleBrandField, gbc);
@@ -651,7 +667,7 @@ public class VCRTSGUI extends JFrame {
         // Plate Number
         gbc.gridx = 0;
         gbc.gridy = 3;
-        ownerPanel.add(new JLabel("Plate Number:"), gbc);
+        ownerPanel.add(createStyledBody("Plate Number:"), gbc);
         plateNumberField = new JTextField(15);
         gbc.gridx = 1;
         ownerPanel.add(plateNumberField, gbc);
@@ -659,7 +675,7 @@ public class VCRTSGUI extends JFrame {
         // Serial Number
         gbc.gridx = 0;
         gbc.gridy = 4;
-        ownerPanel.add(new JLabel("Serial Number:"), gbc);
+        ownerPanel.add(createStyledBody("Serial Number:"), gbc);
         serialNumberField = new JTextField(15);
         gbc.gridx = 1;
         ownerPanel.add(serialNumberField, gbc);
@@ -667,7 +683,7 @@ public class VCRTSGUI extends JFrame {
         // VIN Number
         gbc.gridx = 0;
         gbc.gridy = 5;
-        ownerPanel.add(new JLabel("VIN Number:"), gbc);
+        ownerPanel.add(createStyledBody("VIN Number:"), gbc);
         vinNumberField = new JTextField(15);
         gbc.gridx = 1;
         ownerPanel.add(vinNumberField, gbc);
@@ -675,7 +691,7 @@ public class VCRTSGUI extends JFrame {
         // Residency Date
         gbc.gridx = 0;
         gbc.gridy = 6;
-        ownerPanel.add(new JLabel("Residency Date:"), gbc);
+        ownerPanel.add(createStyledBody("Residency Date:"), gbc);
 
         UtilDateModel model = new UtilDateModel();
         Properties p = new Properties();
@@ -692,13 +708,13 @@ public class VCRTSGUI extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 7;
         gbc.gridwidth = 2;
-        JButton registerVehicleButton = new JButton("Register Vehicle");
+        JButton registerVehicleButton = createStyledButton("Register Vehicle");
         registerVehicleButton.addActionListener(e -> registerVehicle());
         ownerPanel.add(registerVehicleButton, gbc);
 
         // Back Button - now set to return to the Login panel
         gbc.gridy = 8;
-        JButton backButton = new JButton("Back");
+        JButton backButton = createStyledButton("Back");
         backButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
         backButton.addActionListener(e -> resizeForPanel("Login"));// Show Login screen
         
@@ -842,6 +858,7 @@ public class VCRTSGUI extends JFrame {
         header.setFont(new Font("Serif", Font.BOLD, 45));
         header.setForeground(textColor);
         header.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+        header.setHorizontalAlignment(SwingConstants.CENTER);
         return header;
     }
 
@@ -865,6 +882,17 @@ public class VCRTSGUI extends JFrame {
         button.setMargin(new Insets(0, 0, 0, 0));
         button.setBackground(backgroundColor);
         button.setBorder(null);
+
+        return button;
+    }
+
+    private JButton createLogOutButton() {
+        JButton button = new JButton("Log Out");
+        button.setBackground(Color.RED);
+        button.setFont(new Font("Arial", Font.BOLD, 20));
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        //button.setBounds(500, 500, 100, 25);
 
         return button;
     }
