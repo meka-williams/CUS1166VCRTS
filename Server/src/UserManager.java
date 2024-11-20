@@ -1,7 +1,12 @@
 // UserManager.java
+
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UserManager {
 	 private static final String USER_DATA_FILE = "UserInformation.csv";
@@ -33,8 +38,23 @@ public class UserManager {
     public String registerUser(String message) {
         System.out.println("Processing registration command: " + message); // Debugging output
 
-        String[] parts = message.split(" ");
-        if (parts.length != 8) {  // Expecting exactly 8 parts in the registration command
+        // Regular expression to match quoted strings or non-space sequences
+        Pattern pattern = Pattern.compile("\"([^\"]*)\"|(\\S+)");
+        Matcher matcher = pattern.matcher(message);
+
+        List<String> partsList = new ArrayList<>();
+        while (matcher.find()) {
+            if (matcher.group(1) != null) {
+                // Quoted string without the quotes
+                partsList.add(matcher.group(1));
+            } else {
+                // Unquoted word
+                partsList.add(matcher.group(2));
+            }
+        }
+
+        String[] parts = partsList.toArray(new String[0]);
+        if (parts.length != 8) {
             return "Error: Invalid registration command";
         }
 
@@ -42,9 +62,9 @@ public class UserManager {
         String lastName = parts[2];
         String username = parts[3];
         String email = parts[4];
-        String dob = parts[5];  // Already formatted as "yyyy-MM-dd" by the client
+        String dob = parts[5];  // Already formatted as "yyyy-MM-dd"
         String password = parts[6];
-        String accountType = parts[7];  // Account type (e.g., "CarOwner" or "JobSubmitter")
+        String accountType = parts[7];
 
         // Check if username already exists
         if (users.containsKey(username)) {

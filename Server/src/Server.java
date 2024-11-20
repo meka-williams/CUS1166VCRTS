@@ -1,7 +1,12 @@
+
+
 // Server.java
 import java.io.*;
 import java.net.*;
-import java.util.Scanner;
+// Removed Scanner import
+// import java.util.Scanner;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 public class Server {
     private static final int PORT = 12345;  // Port number for the server to listen on
@@ -106,8 +111,8 @@ public class Server {
 
     // Prompt to approve or deny a VCCController registration request
     private String promptAndHandleVCCControllerRegistration(String message) {
-        System.out.print("Approve VCC Controller registration request? (Y/N): ");
-        if (promptForConfirmation()) {
+        String promptMessage = "Approve VCC Controller registration request?";
+        if (promptForConfirmation(promptMessage)) {
             return userManager.registerUser(message);  // Register the user if approved
         } else {
             return "VCC Controller registration declined.";  // Notify the client of declined registration
@@ -116,8 +121,8 @@ public class Server {
 
     // Handle job submission requests with server-side approval prompt
     private String promptAndHandleJobSubmission(String message) {
-        System.out.print("Accept job submission request? (Y/N): ");
-        if (promptForConfirmation()) {
+        String promptMessage = "Accept job submission request?";
+        if (promptForConfirmation(promptMessage)) {
             String response = vcController.handleJobSubmission(message);
             System.out.println("Job submission response: " + response);  // Debugging output for job submission
             return response;
@@ -128,8 +133,8 @@ public class Server {
 
     // Handle car readiness notifications with server-side approval prompt
     private String promptAndHandleCarReady(String message) {
-        System.out.print("Accept car ready notification? (Y/N): ");
-        if (promptForConfirmation()) {
+        String promptMessage = "Accept car ready notification?";
+        if (promptForConfirmation(promptMessage)) {
             return vcController.handleCarReady(message);
         } else {
             return "Car readiness declined.";
@@ -145,12 +150,32 @@ public class Server {
         return vcController.displayJobsAndCompletionTimes(clientId, role);
     }
 
-    // Prompt for server administrator confirmation (Y/N) - returns true if 'Y' is entered
-    private boolean promptForConfirmation() {
-        Scanner scanner = new Scanner(System.in);
-        String input = scanner.nextLine().trim().toUpperCase();
-        return input.equals("Y");
+
+    private boolean promptForConfirmation(String message) {
+        final Object lock = new Object();
+        final boolean[] result = new boolean[1];
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                int option = JOptionPane.showConfirmDialog(null, message, "Confirmation", JOptionPane.YES_NO_OPTION);
+                result[0] = (option == JOptionPane.YES_OPTION);
+                synchronized (lock) {
+                    lock.notify(); // Notify the waiting thread
+                }
+            }
+        });
+        synchronized (lock) {
+            try {
+                lock.wait(); // Wait for the GUI thread to notify
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                result[0] = false;
+            }
+        }
+        return result[0];
     }
+
+
+
 
     // Main method - Starts the server
     public static void main(String[] args) {
