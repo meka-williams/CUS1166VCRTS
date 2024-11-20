@@ -68,6 +68,7 @@ public class VCRTSGUI extends JFrame {
         add(mainPanel);
     }
     private void createVCCControllerPanel() {
+
         // Set up the main panel for VCC Controller view
         JPanel vccControllerPanel = new JPanel(new BorderLayout());
 
@@ -84,8 +85,7 @@ public class VCRTSGUI extends JFrame {
 
         // Refresh button to reload the job list
         JButton refreshButton = createStyledButton("Refresh Job List");
-        refreshButton.addActionListener(e -> refreshJobList());
-
+        refreshButton.addActionListener(e -> refreshJobList()
         // Back button to return to the login screen
         JButton backButton = createStyledButton("Back");
         backButton.addActionListener(e -> cardLayout.show(mainPanel, "Welcome")); // Navigate to login panel
@@ -103,7 +103,14 @@ public class VCRTSGUI extends JFrame {
 
         // Add the VCC Controller panel to the main layout
         mainPanel.add(vccControllerPanel, "VCCController");
+
+        vccControllerPanel.setBackground(backgroundColor);
+
+        // Opens job list upon entry
+        //refreshJobList();
     }
+
+    
 
 
     private void refreshJobList() {
@@ -766,13 +773,26 @@ public class VCRTSGUI extends JFrame {
             LocalDate parsedDate = LocalDate.parse(residencyDate, DateTimeFormatter.ofPattern("MMM d, yyyy"));
             residencyDate = parsedDate.format(DateTimeFormatter.ISO_LOCAL_DATE); // Format as "YYYY-MM-DD"
         } catch (DateTimeParseException e) {
-            JOptionPane.showMessageDialog(this, "Invalid date format. Please use 'MMM d, yyyy'.");
+            JOptionPane.showMessageDialog(this, "Invalid date format. Please use 'MM dd, yyyy'.");
             return;
         }
 
         // Send car registration details to the server
         String response = client.notifyCarReady(ownerId, vehicleModel, vehicleBrand, plateNumber, serialNumber, vinNumber, residencyDate);
         JOptionPane.showMessageDialog(this, response);
+
+        // Ensures all fields are filled out
+        try 
+        {
+            if (ownerId.isEmpty()|| vehicleModel.isEmpty() || vehicleBrand.isEmpty() || plateNumber.isEmpty() ||serialNumber.isEmpty() || vinNumber.isEmpty())
+            {
+                throw new NoSuchFieldException();
+            }
+
+        } catch (NoSuchFieldException ex) 
+        {
+            JOptionPane.showMessageDialog(this, "Please fill in all car details before registering.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
 
