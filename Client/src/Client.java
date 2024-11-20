@@ -110,6 +110,20 @@ public class Client {
         return "No jobs available."; // Default message if no valid response
     }
 
+    // Requests all jobs for a VCCController to view vehicle information
+    public String requestAllVehicles() {
+        System.out.println("Requesting all Vehicles for VCC Controller");
+        String response2 = sendRequest("GET_ALL_VEHICLES"); // Send the request to the server
+        System.out.println("Received response: \n" + response2); // Debugging
+
+        if (response2.length() > 5) {
+            return response2; // Return the valid response
+        }
+
+        System.out.println("No valid response received.");
+        return "No vehicles available."; // Default message if no valid response
+    }
+
     // Submits a job with the given details to the server
     public String submitJob(String clientId, String jobDescription, int duration, int redundancyLevel,
             String jobDeadline) {

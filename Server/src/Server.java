@@ -60,7 +60,9 @@ public class Server {
                     response = handleDisplayJobTimes(clientMessage);
                 } else if (clientMessage.equals("GET_ALL_JOBS")) {
                     response = vcController.getAllJobs();
-                } else if (clientMessage.startsWith("MARK_COMPLETE")) {
+                } else if (clientMessage.equals("GET_ALL_VEHICLES")) {
+                    response = vcController.getAllVehicles();
+                }else if (clientMessage.startsWith("MARK_COMPLETE")) {
                     response = vcController.markJobComplete(clientMessage);
                 } else {
                     response = "Invalid request";

@@ -12,8 +12,12 @@ import javax.swing.border.Border;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -68,9 +72,11 @@ public class VCRTSGUI extends JFrame {
         add(mainPanel);
     }
     private void createVCCControllerPanel() {
+
         // Set up the main panel for VCC Controller view
         JPanel vccControllerPanel = new JPanel(new BorderLayout());
-
+        
+        
         // Title label for the header, already hardcoded
         JLabel titleLabel = new JLabel("<html><h2>All Assigned Jobs and Completion Times:</h2></html>");
         titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -83,8 +89,9 @@ public class VCRTSGUI extends JFrame {
         jobScrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Refresh button to reload the job list
-        JButton refreshButton = createStyledButton("Refresh Job List");
+        JButton refreshButton = createStyledButton("Refresh Job and Vehicle List");
         refreshButton.addActionListener(e -> refreshJobList());
+
 
         // Back button to return to the login screen
         JButton backButton = createStyledButton("Back");
@@ -103,10 +110,16 @@ public class VCRTSGUI extends JFrame {
 
         // Add the VCC Controller panel to the main layout
         mainPanel.add(vccControllerPanel, "VCCController");
+
+        vccControllerPanel.setBackground(backgroundColor);
+
+       
     }
 
+    
 
-    private void refreshJobList() {
+
+    /*private void refreshJobList() {
         jobContainer.removeAll(); // Clear previous entries
 
         String response = client.requestAllJobs();
@@ -123,12 +136,41 @@ public class VCRTSGUI extends JFrame {
                 JButton completeButton = createStyledButton("Mark Complete");
                 completeButton.setPreferredSize(new Dimension(200, completeButton.getPreferredSize().height));
 
+                JButton acceptButton = createStyledButton("Accept");
+                acceptButton.setBackground(new Color(34, 139, 34));
+                acceptButton.setForeground(Color.WHITE);
+                acceptButton.setOpaque(true);
+
+                JButton rejectButton = createStyledButton("Reject");
+                rejectButton.setBackground(new Color(220, 20, 60));
+                rejectButton.setForeground(Color.WHITE);
+                rejectButton.setOpaque(true);
+
+                //acceptButton.addActionListener(ev -> authorizeJob(jobId, true));
+                
+
+                JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+                buttonPanel.add(acceptButton);
+                buttonPanel.add(rejectButton);
+
                 // Extract Job ID and pass it to the button's ActionListener
                 String jobId = jobs[i].split(",")[0].split(": ")[1].trim();
                 completeButton.addActionListener(ev -> markJobComplete(jobId));
+
+                String ownerId = jobs[i].split(",")[0].split(": ")[1].trim();
+                completeButton.addActionListener(ev -> markJobComplete(jobId));
                 
+                //
+
+                rejectButton.addActionListener(ev -> deleteJobFromCSV(jobId));
+
+
+                
+                jobPanel.add(buttonPanel,BorderLayout.SOUTH);
                 jobPanel.add(completeButton, BorderLayout.EAST);
-                jobContainer.add(jobPanel);
+                jobContainer.add(jobPanel, BorderLayout.EAST);
+                
+
             }
         } else {
             JLabel noJobsLabel = new JLabel("Please refresh to view available jobs if any are currently available.");
@@ -136,10 +178,154 @@ public class VCRTSGUI extends JFrame {
             jobContainer.add(noJobsLabel);
         }
 
+        String response2 = client.requestAllVehicles();
+        String[] vehicles = response2.split("\n(?=Owner ID: )");
+        if (vehicles.length > 1) 
+        {
+            for (int i = 1; i < vehicles.length; i++) {
+                JPanel jobPanel = new JPanel(new BorderLayout());
+                jobPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
+
+                JLabel jobLabel = new JLabel("<html>" + vehicles[i].replaceAll("\n", "<br>") + "</html>");
+                jobPanel.add(jobLabel, BorderLayout.CENTER);
+
+                JButton completeButton = createStyledButton("Mark Complete");
+                completeButton.setPreferredSize(new Dimension(200, completeButton.getPreferredSize().height));
+
+                JButton acceptButton = createStyledButton("Accept");
+                acceptButton.setBackground(new Color(34, 139, 34));
+                acceptButton.setForeground(Color.WHITE);
+                acceptButton.setOpaque(true);
+
+                JButton rejectButton = createStyledButton("Reject");
+                rejectButton.setBackground(new Color(220, 20, 60));
+                rejectButton.setForeground(Color.WHITE);
+                rejectButton.setOpaque(true);
+
+                //acceptButton.addActionListener(ev -> authorizeJob(jobId, true));
+                
+
+                JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+                buttonPanel.add(acceptButton);
+                buttonPanel.add(rejectButton);
+
+                // Extract Job ID and pass it to the button's ActionListener
+                String OwnerId = vehicles[i].split(",")[0].split(": ")[1].trim();
+                completeButton.addActionListener(ev -> markJobComplete(jobId));
+
+                String ownerId = vehicles[i].split(",")[0].split(": ")[1].trim();
+                completeButton.addActionListener(ev -> markJobComplete(jobId));
+                
+                //
+
+                rejectButton.addActionListener(ev -> deleteJobFromCSV(jobId));
+
+
+                
+                jobPanel.add(buttonPanel,BorderLayout.SOUTH);
+                jobPanel.add(completeButton, BorderLayout.EAST);
+                jobContainer.add(jobPanel, BorderLayout.EAST);
+                
+
+            }
+        } 
+        else 
+        {
+            System.out.println("No vehicles found.");
+        }
+
+        jobContainer.revalidate();
+        jobContainer.repaint();
+        pack();
+    }*/
+
+    private void refreshJobList() {
+        jobContainer.removeAll(); // Clear previous entries
+    
+        // Process jobs
+        String jobResponse = client.requestAllJobs();
+        String[] jobs = jobResponse.split("\n(?=Job ID: )");
+
+        // Process vehicles
+        String vehicleResponse = client.requestAllVehicles();
+        String[] vehicles = vehicleResponse.split("\n(?=Owner ID: )");
+    
+        if (jobs.length > 1) { // Skip header and process jobs
+            for (int i = 1; i < jobs.length; i++) {
+                processJobOrVehicle(jobs[i], true); // Process job entry
+            }
+        } else {
+            JLabel noJobsLabel = new JLabel("No jobs available. Please refresh.");
+            noJobsLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            jobContainer.add(noJobsLabel);
+        }
+    
+        
+        if (vehicles.length > 1) { // Skip header and process vehicles
+            for (int i = 1; i < vehicles.length; i++) {
+                processJobOrVehicle(vehicles[i], false); // Process vehicle entry
+            }
+        } else {
+            JLabel noVehiclesLabel = new JLabel("No vehicles found. Please refresh.");
+            noVehiclesLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            jobContainer.add(noVehiclesLabel);
+        }
+    
+        // Refresh the container
         jobContainer.revalidate();
         jobContainer.repaint();
         pack();
     }
+    
+    // Helper method to process jobs or vehicles
+    private void processJobOrVehicle(String entry, boolean isJob) {
+        JPanel entryPanel = new JPanel(new BorderLayout());
+        entryPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
+    
+        JLabel entryLabel = new JLabel("<html>" + entry.replaceAll("\n", "<br>") + "</html>");
+        entryPanel.add(entryLabel, BorderLayout.CENTER);
+    
+        JButton completeButton = createStyledButton("Mark Complete");
+        completeButton.setPreferredSize(new Dimension(200, completeButton.getPreferredSize().height));
+    
+        JButton acceptButton = createStyledButton("Accept");
+        acceptButton.setBackground(new Color(34, 139, 34));
+        acceptButton.setForeground(Color.WHITE);
+        acceptButton.setOpaque(true);
+    
+        JButton rejectButton = createStyledButton("Reject");
+        rejectButton.setBackground(new Color(220, 20, 60));
+        rejectButton.setForeground(Color.WHITE);
+        rejectButton.setOpaque(true);
+    
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(acceptButton);
+        buttonPanel.add(rejectButton);
+    
+        // Extract ID and attach actions
+        String id = entry.split(",")[0].split(": ")[1].trim();
+    
+        if (isJob) {
+            completeButton.addActionListener(ev -> markJobComplete(id));
+            rejectButton.addActionListener(ev -> deleteJobFromCSV(id));
+        } else {
+            //completeButton.addActionListener(ev -> markVehicleComplete(id));
+            //rejectButton.addActionListener(ev -> deleteVehicleFromCSV(id));
+        }
+    
+        entryPanel.add(buttonPanel, BorderLayout.SOUTH);
+        entryPanel.add(completeButton, BorderLayout.EAST);
+    
+        jobContainer.add(entryPanel);
+    }
+    
+
+
+
+
+
+
+
 
 
 
@@ -766,13 +952,29 @@ public class VCRTSGUI extends JFrame {
             LocalDate parsedDate = LocalDate.parse(residencyDate, DateTimeFormatter.ofPattern("MMM d, yyyy"));
             residencyDate = parsedDate.format(DateTimeFormatter.ISO_LOCAL_DATE); // Format as "YYYY-MM-DD"
         } catch (DateTimeParseException e) {
-            JOptionPane.showMessageDialog(this, "Invalid date format. Please use 'MMM d, yyyy'.");
+            JOptionPane.showMessageDialog(this, "Invalid date format. Please use 'MM dd, yyyy'.");
+            return;
+        }
+
+        // Ensures all fields are filled out
+        try 
+        {
+            if (ownerId.isEmpty()|| vehicleModel.isEmpty() || vehicleBrand.isEmpty() || plateNumber.isEmpty() ||serialNumber.isEmpty() || vinNumber.isEmpty())
+            {
+                throw new NoSuchFieldException();
+            }
+
+        } catch (NoSuchFieldException ex) 
+        {
+            JOptionPane.showMessageDialog(this, "Please fill in all car details before registering.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         // Send car registration details to the server
         String response = client.notifyCarReady(ownerId, vehicleModel, vehicleBrand, plateNumber, serialNumber, vinNumber, residencyDate);
         JOptionPane.showMessageDialog(this, response);
+
+        
     }
 
 
@@ -816,6 +1018,54 @@ public class VCRTSGUI extends JFrame {
         //button.setBorder(new RoundedBorder(30));
         return button;
     }
+
+    private boolean deleteJobFromCSV(String jobId) {
+        File inputFile = new File("JobRequests.csv");
+        File tempFile = new File("JobRequests_temp.csv");
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+             PrintWriter writer = new PrintWriter(new FileWriter(tempFile))) {
+
+            String line;
+            boolean jobFound = false;
+
+            // Read each line and write to the temp file, excluding the job to delete
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith(jobId + ",")) {
+                    jobFound = true;
+                    continue; // Skip this job
+                }
+                writer.println(line); // Write other jobs to temp file
+            }
+
+            if (!jobFound) {
+                System.err.println("Job ID not found: " + jobId);
+                return false;
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error processing JobRequests.csv: " + e.getMessage());
+            return false;
+        }
+
+        // Delete the original file
+        if (!inputFile.delete()) {
+            System.err.println("Failed to delete original file.");
+            return false;
+        }
+
+        // Rename temp file to original file name
+        if (!tempFile.renameTo(inputFile)) {
+            System.err.println("Failed to rename temporary file.");
+            return false;
+        }
+
+        JOptionPane.showMessageDialog(this, "Successfully Rejected");
+        return true;
+    }
+
+
+
 
     private JLabel createStyledHeader(String text){
         JLabel header = new JLabel(text);

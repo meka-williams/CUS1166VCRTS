@@ -12,6 +12,8 @@ public class VCController {
         this.jobsQueue = new LinkedList<>();
         this.vehiclesReady = new ArrayList<>();
         loadJobsFromCSV();
+        loadVehiclesFromCSV();
+
     }
     private void loadJobsFromCSV() {
         try (BufferedReader reader = new BufferedReader(new FileReader("JobRequests.csv"))) {
@@ -39,6 +41,39 @@ public class VCController {
             System.err.println("Error parsing job details: " + e.getMessage());
         }
     }
+
+    private void loadVehiclesFromCSV() {
+    File file = new File("CarRegistration.csv");
+
+    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split(",");
+            if (parts.length == 7) { // Expecting 7 parts in each vehicle record
+                try {
+                    String ownerId = parts[0].trim();
+                    String vehicleModel = parts[1].trim();
+                    String vehicleBrand = parts[2].trim();
+                    String plateNumber = parts[3].trim();
+                    String serialNumber = parts[4].trim();
+                    String vinNumber = parts[5].trim();
+                    String residencyTime = parts[6].trim();
+
+                    CarRentals car = new CarRentals(ownerId, vehicleModel, vehicleBrand, plateNumber, serialNumber, vinNumber, residencyTime);
+                    vehiclesReady.add(car);
+                    System.out.println("Loaded vehicle from CSV: " + car); // Debug output
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Invalid vehicle data in line: " + line + " - Error: " + e.getMessage());
+                }
+            } else {
+                System.err.println("Invalid vehicle format in CSV: " + line);
+            }
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading vehicles from CSV: " + e.getMessage());
+    }
+}
+
     public String handleJobSubmission(String message) {
         System.out.println("Received job submission message: " + message); // Debugging
         Pattern pattern = Pattern.compile("JOB_SUBMIT (\\S+) \"([^\"]+)\" (\\d+) (\\d+) (\\S+)");
@@ -163,6 +198,27 @@ public class VCController {
         }
         return jobInfo.toString();
     }
+
+    public String getAllVehicles() {
+        StringBuilder vehicleInfo = new StringBuilder("All Vehicles Ready:\n");
+        
+        for (CarRentals car : vehiclesReady) {
+            vehicleInfo.append(String.format(
+                "Owner ID: %s, Model: %s, Brand: %s, Plate Number: %s, Serial Number: %s, VIN: %s, Residency Time: %s\n",
+                car.getOwnerId(), 
+                car.getVehicleModel(), 
+                car.getVehicleBrand(), 
+                car.getPlateNumber(), 
+                car.getSerialNumber(), 
+                car.getVinNumber(), 
+                car.getResidencyTime()
+            ));
+        }
+        
+        return vehicleInfo.toString();
+    }
+    
+
     public String markJobComplete(String message) {
         try {
             String[] parts = message.split(" ");
@@ -193,6 +249,8 @@ public class VCController {
             return "Error processing MARK_COMPLETE request.";
         }
     }
+
+    
 
     // Helper method to remove a job from the CSV
     private boolean deleteJobFromCSV(String jobId) {
@@ -238,6 +296,5 @@ public class VCController {
 
         return true;
     }
-
 
 }
