@@ -39,7 +39,7 @@ public class VCRTSGUI extends JFrame {
     public VCRTSGUI() throws IOException {
         client = new Client();
         setTitle("Vehicular Cloud Real Time System (VCRTS)");
-        setSize(800, 500);
+        setSize(500,800);
         ImageIcon logo = new ImageIcon("bin/VCRTS Logo.png");
         
         setIconImage(logo.getImage());
@@ -166,13 +166,13 @@ public class VCRTSGUI extends JFrame {
     private void resizeForPanel(String panelName) {
         switch (panelName) {
             case "Welcome":
-                setSize(500, 250); // Smaller window for welcome page
+                setSize(500, 800); // Medium window for welcome page
                 break;
             case "Login":
-                setSize(300, 250); // Smaller window for login screen
+                setSize(500, 600); // Smaller window for login screen
                 break;
             case "Signup":
-                setSize(550, 410); // Medium-sized window for login/signup
+                setSize(550, 600); // Medium window for login/signup
                 break;
             case "Client":
             	setSize(500, 410);
@@ -209,7 +209,6 @@ public class VCRTSGUI extends JFrame {
         titleLabel.setFont(new Font("Serif", Font.BOLD, 45));
         titleLabel.setForeground(textColor);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
 
         JLabel infoLabel = new JLabel("<html><div style='text-align:center'>This system allow car owners to share their computation power with clients to complete their jobs.<br>Join as a Job Submitter or Car Owner to participate!</div></html>", SwingConstants.CENTER);
         infoLabel.setFont(new Font("Serif", Font.PLAIN, 20));
@@ -257,69 +256,102 @@ public class VCRTSGUI extends JFrame {
         mainPanel.add(welcomePanel, "Welcome");
     }
 
-    private void createLoginPanel() {
+    private void createLoginPanel() throws IOException {
         loginPanel = new JPanel(new GridBagLayout());
+        loginPanel.setBackground(backgroundColor);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        //gbc.insets = new Insets(2, 2, 2, 2); // Minimal spacing
+        gbc.insets = new Insets(2, 2, 2, 2); // Minimal spacing
 
         // Remove unnecessary borders
         loginPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0)); 
 
-        JLabel usernameLabel = new JLabel("Username:");
-        usernameField = new JTextField(15);
+        JLabel loginHeader = createStyledHeader("<html><div style='text-align:center'>Login</div></html>");
 
-        JLabel passwordLabel = new JLabel("Password:");
-        passwordField = new JPasswordField(15);
+        JLabel usernameLabel = createStyledBody("Username:");
+        usernameLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        usernameField = new JTextField(25);
+
+        JLabel passwordLabel = createStyledBody("Password: ");
+        passwordLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        passwordField = new JPasswordField(25);
+
+        JButton backButton = createBackButton();
+        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Welcome"));
+        backButton.addActionListener(e -> resizeForPanel("Welcome"));
+        
+        //Add back button
+        gbc.gridx = 0; gbc.gridy = 0;
+        loginPanel.add(backButton, gbc);
+
+        //Add header
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        loginPanel.add(loginHeader, gbc);
 
         // Add username components
+        gbc.gridwidth = 1;
         gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridy = 2;
         loginPanel.add(usernameLabel, gbc);
         gbc.gridx = 1;
         loginPanel.add(usernameField, gbc);
 
         // Add password components
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 3;
         loginPanel.add(passwordLabel, gbc);
         gbc.gridx = 1;
         loginPanel.add(passwordField, gbc);
 
         // Add buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        buttonPanel.setBackground(backgroundColor);
+
         JButton loginButton = createStyledButton("Login");
         loginButton.addActionListener(e -> loginUser());
 
-        JButton backButton = createStyledButton("Back");
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Welcome")); 
-        backButton.addActionListener(e -> resizeForPanel("Welcome"));
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        loginPanel.add(loginButton, gbc);
-        gbc.gridx = 1;
-        loginPanel.add(backButton, gbc);
+        JButton signUpButton = createStyledButton("Sign Up");
+        signUpButton.addActionListener(e -> cardLayout.show(mainPanel, "Signup")); 
+        signUpButton.addActionListener(e -> resizeForPanel("Signup"));
+
+        buttonPanel.add(loginButton);
+        buttonPanel.add(signUpButton);
+
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0; gbc.gridy = 4;
+        loginPanel.add(buttonPanel, gbc);
 
         // Add the panel to the main layout
         mainPanel.add(loginPanel, "Login");
     }
 
 
-    private void createSignupPanel() {
+    private void createSignupPanel() throws IOException {
         signupPanel = new JPanel(new GridBagLayout());
+        signupPanel.setBackground(backgroundColor);
         signupPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        JLabel fNameLabel = new JLabel("First Name:");
-        fNameField = new JTextField(15);
-        JLabel lNameLabel = new JLabel("Last Name:");
-        lNameField = new JTextField(15);
-        JLabel usernameLabel = new JLabel("Username:");
-        newUsernameField = new JTextField(15);
-        JLabel emailLabel = new JLabel("Email Address:");
-        emailField = new JTextField(15);
-        JLabel dobLabel = new JLabel("Date of Birth:");
+        JButton backButton = createBackButton();
+        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Welcome"));
+        backButton.addActionListener(e -> resizeForPanel("Welcome"));
+
+        JLabel signUpHeader = createStyledHeader("Sign Up");
+
+        JLabel fNameLabel = createStyledBody("First Name: ");
+        fNameField = new JTextField(25);
+        JLabel lNameLabel = createStyledBody("Last Name: ");
+        lNameField = new JTextField(25);
+        JLabel usernameLabel = createStyledBody("Username: ");
+        newUsernameField = new JTextField(25);
+        JLabel emailLabel = createStyledBody("Email Address: ");
+        emailField = new JTextField(25);
+        JLabel dobLabel = createStyledBody("Date of Birth: ");
 
         UtilDateModel dateModel = new UtilDateModel();
         Properties properties = new Properties();
@@ -329,68 +361,83 @@ public class VCRTSGUI extends JFrame {
         JDatePanelImpl datePanel = new JDatePanelImpl(dateModel, properties);
         dobPicker = new JDatePickerImpl(datePanel, new DateComponentFormatter());
 
-        JLabel passwordLabel = new JLabel("Password:");
-        JPasswordField newPasswordField = new JPasswordField(15);
-        JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
-        JPasswordField confirmPasswordField = new JPasswordField(15);
+        JLabel passwordLabel = createStyledBody("Password: ");
+        JPasswordField newPasswordField = new JPasswordField(25);
+        JLabel confirmPasswordLabel = createStyledBody("Confirm Password: ");
+        JPasswordField confirmPasswordField = new JPasswordField(25);
 
-        JLabel accountTypeLabel = new JLabel("Account Type:");
+        JLabel accountTypeLabel = createStyledBody("Account Type: ");
         JRadioButton carOwnerButton = new JRadioButton("Car Owner");
+        carOwnerButton.setBackground(backgroundColor);
+        carOwnerButton.setFont(new Font("Serif", Font.PLAIN, 20));
         JRadioButton jobSubmitterButton = new JRadioButton("Job Submitter");
+        jobSubmitterButton.setBackground(backgroundColor);
+        jobSubmitterButton.setFont(new Font("Serif", Font.PLAIN, 20));
+        carOwnerButton.setBackground(backgroundColor);
         
 
         ButtonGroup accountTypeGroup = new ButtonGroup();
         accountTypeGroup.add(carOwnerButton);
         accountTypeGroup.add(jobSubmitterButton);
         
+        gbc.gridx = 0; gbc.gridy = 0;
+        signupPanel.add(backButton, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        signupPanel.add(signUpHeader, gbc);
+
+        gbc.gridwidth = 1;
 
         gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridy = 2;
         signupPanel.add(fNameLabel, gbc);
         gbc.gridx = 1;
         signupPanel.add(fNameField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 3;
         signupPanel.add(lNameLabel, gbc);
         gbc.gridx = 1;
         signupPanel.add(lNameField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 4;
         signupPanel.add(usernameLabel, gbc);
         gbc.gridx = 1;
         signupPanel.add(newUsernameField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 5;
         signupPanel.add(emailLabel, gbc);
         gbc.gridx = 1;
         signupPanel.add(emailField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 6;
         signupPanel.add(dobLabel, gbc);
         gbc.gridx = 1;
         signupPanel.add(dobPicker, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 7;
         signupPanel.add(passwordLabel, gbc);
         gbc.gridx = 1;
         signupPanel.add(newPasswordField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = 8;
         signupPanel.add(confirmPasswordLabel, gbc);
         gbc.gridx = 1;
         signupPanel.add(confirmPasswordField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 7;
+        gbc.gridy = 9;
         signupPanel.add(accountTypeLabel, gbc);
         gbc.gridx = 1;
         JPanel accountTypePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        accountTypePanel.setBackground(backgroundColor);
         accountTypePanel.add(carOwnerButton);
         accountTypePanel.add(jobSubmitterButton);
         signupPanel.add(accountTypePanel, gbc);
@@ -427,14 +474,14 @@ public class VCRTSGUI extends JFrame {
             }
         });
 
-        JButton backButton = createStyledButton("Back");
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Welcome"));
-        backButton.addActionListener(e -> resizeForPanel("Welcome"));
+        JButton loginButton = createStyledButton("Login");
+        loginButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
+        loginButton.addActionListener(e -> resizeForPanel("Login"));
         gbc.gridx = 0;
-        gbc.gridy = 8;
+        gbc.gridy = 10;
         signupPanel.add(signupButton, gbc);
         gbc.gridx = 1;
-        signupPanel.add(backButton, gbc);
+        signupPanel.add(loginButton, gbc);
 
         mainPanel.add(signupPanel, "Signup");
     }
@@ -767,6 +814,38 @@ public class VCRTSGUI extends JFrame {
         button.setFocusPainted(false);
         button.setBounds(500, 500, 100, 25);
         //button.setBorder(new RoundedBorder(30));
+        return button;
+    }
+
+    private JLabel createStyledHeader(String text){
+        JLabel header = new JLabel(text);
+        header.setFont(new Font("Serif", Font.BOLD, 45));
+        header.setForeground(textColor);
+        header.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+        return header;
+    }
+
+    private JLabel createStyledBody(String text) {
+        JLabel body = new JLabel(text);
+        body.setFont(new Font("Serif", Font.PLAIN, 20));
+        body.setForeground(textColor);
+
+        return body;
+    }
+
+    private JButton createBackButton() throws IOException{
+        JButton button = new JButton();
+        
+        // Add image to button and resize it
+        Image image = ImageIO.read(getClass().getResource("BackButton.png"));
+        image = image.getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+        button.setIcon(new ImageIcon(image));
+
+        button.setFocusable(false);
+        button.setMargin(new Insets(0, 0, 0, 0));
+        button.setBackground(backgroundColor);
+        button.setBorder(null);
+
         return button;
     }
 
