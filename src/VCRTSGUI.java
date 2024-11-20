@@ -1,671 +1,882 @@
-/**
- * Project:     Vehicular Cloud Real Time System
- * Class:       VCRTSGUI.java
- * Authors:     Shameka Williams, Farheen Mahmud, Jery Vizhnay, Bryan Benjamin, Hasan Mousa
- * Date:        November 4, 2024   
- */
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.util.*;
+// VCRTSGUI.java
+
+
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
-public class VCRTSGUI {
-    private JFrame frame;
-    private JTextField usernameField;
+import org.jdatepicker.impl.DateComponentFormatter;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.border.Border;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Properties;
+
+public class VCRTSGUI extends JFrame {
+    private Client client;
+    private JTextField usernameField, clientIdField, jobDurationField, jobDescriptionField;
     private JPasswordField passwordField;
-    private JRadioButton clientButton, ownerButton;
-    private JPanel mainPagePanel;
-    private JPanel mainPanel, clientPanel, ownerPanel;
-    private JTextField clientIdField, jobDurationField, jobDeadlineField;
-    private JTextField ownerIdField, vehicleModelField, vehicleBrandField, plateNumberField, serialNumberField, vinNumberField, residencyTimeField;
-    private JButton submitButton;
-    private User currentUser;
-    private Server server;
-    private VCController vcc; // VCController instance
+    private JTextField ownerIdField, vehicleModelField, vehicleBrandField, plateNumberField, serialNumberField, vinNumberField, fNameField, lNameField, emailField, newUsernameField;
+    private JComboBox<String> redundancyComboBox;
+    private JDatePickerImpl residencyDatePicker, dobPicker, jobDeadlinePicker;
+    private JPanel mainPanel, loginPanel, signupPanel, clientPanel, ownerPanel, mainPagePanel, jobContainer;
+
     private CardLayout cardLayout;
-    private String sessionToken; // Session token for authenticated actions
-    private GridBagConstraints gbc;
+    private String accountType;
+    private String currentClientId;
 
-    //Customizations fields for GUI
-    private Dimension windowSize = new Dimension(800, 600);
-    private Color backgroundColor = new Color(255, 255, 255);;
-    private Color buttonColor = new Color(139, 189, 189);;
+    private Color buttonColor;
+    private Color backgroundColor;
+    private Color textColor;
 
-    private float headerSize = 20;
-    private float textSize = 14;
-
-    // Constructor to initialize GUI components
     public VCRTSGUI() throws IOException {
-        frame = new JFrame("Vehicular Cloud Real Time System (VCRTS)");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLayout(new CardLayout());
-        frame.setSize(windowSize);
-        ImageIcon logo = new ImageIcon("src/VCRTS_logo.png");
-        frame.setIconImage(logo.getImage());
-        server = new Server();
-        vcc = new VCController(1, 2); // Initialize VCController with example ID=1 and redundancy level=2
+        client = new Client();
+        setTitle("Vehicular Cloud Real Time System (VCRTS)");
+        setSize(500,800);
+        ImageIcon logo = new ImageIcon("bin/VCRTS Logo.png");
+        
+        setIconImage(logo.getImage());
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
 
-        createWelcomeScreen();
-        createLoginScreen();
-        createSignUpScreen();
+        buttonColor = new Color(44, 118, 220);
+        backgroundColor = new Color(240, 250, 255);
+        textColor = new Color(29, 42, 59);
+
+        setupPanels();
         createMainPage();
-
-        frame.setLocationRelativeTo(null);
-        frame.setResizable(false);
-        frame.setVisible(true);
+        setVisible(true);
     }
 
-    public static void main(String[] args) throws IOException {
-        new VCRTSGUI();
-    }
-
-    private void createWelcomeScreen() throws IOException{
-        JPanel welcomePanel = new JPanel(new GridBagLayout());
-        welcomePanel.setBackground(backgroundColor);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.insets = new Insets(5, 5, 5, 5);
-        Dimension buttonSize = new Dimension(100, 30);
-        
-        JLabel welcomeMessage = new JLabel("Welcome to the Vehicular Cloud Real Time!");
-        welcomeMessage.setFont(welcomeMessage.getFont().deriveFont(headerSize));
-
-        JLabel logoImage = new JLabel("");
-        BufferedImage bufferedImage = ImageIO.read(this.getClass().getResource("VCRTS_logo.png"));
-        Image image = bufferedImage.getScaledInstance(100, 100, Image.SCALE_DEFAULT);
-        logoImage.setIcon(new ImageIcon(image));
-
-        JButton signUpButton = new JButton("Sign Up");
-        signUpButton.setBackground(buttonColor);
-        signUpButton.setBorderPainted(false);
-        signUpButton.setPreferredSize(buttonSize);
-        signUpButton.setOpaque(true);
-        signUpButton.setFont(signUpButton.getFont().deriveFont(textSize));
-        signUpButton.addActionListener(e -> showSignUpScreen());
-
-        JButton loginButton = new JButton("Login");
-        loginButton.setPreferredSize(buttonSize);
-        loginButton.setBackground(buttonColor);
-        loginButton.setBorderPainted(false);
-        loginButton.setOpaque(true);
-        loginButton.setFont(loginButton.getFont().deriveFont(textSize));
-        loginButton.addActionListener(e -> showLoginScreen());
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 150, 10));
-        buttonPanel.setBackground(backgroundColor);
-        buttonPanel.add(loginButton);
-        buttonPanel.add(signUpButton);
-
-        // Center the welcome message across both columns
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.gridwidth = 2;  //centering
-        gbc.anchor = GridBagConstraints.CENTER;
-        welcomePanel.add(welcomeMessage, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.CENTER;
-        welcomePanel.add(logoImage, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 2; 
-        gbc.anchor = GridBagConstraints.CENTER;
-        welcomePanel.add(new JLabel(), gbc);
-
-        gbc.gridx = 0; gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        welcomePanel.add(buttonPanel, gbc);
-    
-        frame.add(welcomePanel, "Welcome");
-        frame.setResizable(false);
-    }
-
-    private void createLoginScreen() throws IOException {
-        JPanel loginPanel = new JPanel(new GridBagLayout());
-        loginPanel.setBackground(backgroundColor);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        Dimension fieldSize = new Dimension(200, 25);
-        Dimension buttonSize = new Dimension(100, 25);
-
-        JButton backHome;
-        BufferedImage bufferedImage = ImageIO.read(this.getClass().getResource("backButton.png"));
-        Image image = bufferedImage.getScaledInstance(50, 50, Image.SCALE_DEFAULT);
-        backHome = new JButton(new ImageIcon(image));
-        backHome.setPreferredSize(new Dimension(30, 30));
-        backHome.addActionListener(e -> showWelcomeScreen());
-
-        JLabel header = new JLabel("Login");
-        header.setFont(header.getFont().deriveFont(headerSize));
-
-        JLabel usernameLabel = new JLabel("Username:");
-        usernameLabel.setFont(usernameLabel.getFont().deriveFont(textSize));
-        usernameField = new JTextField();
-        usernameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        usernameField.setPreferredSize(fieldSize);
-
-        JLabel passwordLabel = new JLabel("Password:");
-        passwordLabel.setFont(passwordLabel.getFont().deriveFont(textSize));
-        passwordField = new JPasswordField();
-        passwordField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        passwordField.setPreferredSize(fieldSize);
-
-        JButton loginButton = new JButton("Login");
-        loginButton.setFont(loginButton.getFont().deriveFont(textSize));
-        loginButton.setBackground(buttonColor);
-        loginButton.setPreferredSize(buttonSize);
-        loginButton.addActionListener(e -> loginUser());
-
-        JButton signUpButton = new JButton("Sign Up");
-        signUpButton.setFont(signUpButton.getFont().deriveFont(textSize));
-        signUpButton.setBackground(buttonColor);
-        signUpButton.setPreferredSize(buttonSize);
-        signUpButton.addActionListener(e -> showSignUpScreen());
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.LINE_START;
-        loginPanel.add(backHome, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.gridwidth = 2; //centering
-        gbc.anchor = GridBagConstraints.CENTER;
-        loginPanel.add(header, gbc);
-
-        gbc.gridwidth = 1; //reset gridwidth back to 1 for remaining components
-        gbc.gridx = 0; gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.LINE_END;
-        loginPanel.add(usernameLabel, gbc);
-
-        gbc.gridx = 1; gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.LINE_START;
-        loginPanel.add(usernameField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 3;
-        gbc.anchor = GridBagConstraints.LINE_END;
-        loginPanel.add(passwordLabel, gbc);
-
-        gbc.gridx = 1; gbc.gridy = 3;
-        gbc.anchor = GridBagConstraints.LINE_START;
-        loginPanel.add(passwordField, gbc);
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        buttonPanel.setBackground(backgroundColor);
-        buttonPanel.add(loginButton);
-        buttonPanel.add(signUpButton);
-       
-        gbc.gridx = 0; gbc.gridy = 4;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        loginPanel.add(buttonPanel, gbc);
-
-        gbc.insets = new Insets(5, 105, 5, 5);
-
-        frame.add(loginPanel, "Login");
-        frame.setResizable(false);
-    }
-
-    private void createSignUpScreen() throws IOException {
-    	JLabel dobLabel = new JLabel("Date of Birth:");
-    	UtilDateModel dateModel = new UtilDateModel();
-    	Properties properties = new Properties();
-    	properties.put("text.today", "Today");
-    	properties.put("text.month", "Month");
-    	properties.put("text.year", "Year");
-    	JDatePanelImpl datePanel = new JDatePanelImpl(dateModel, properties);
-    	JDatePickerImpl dobPicker = new JDatePickerImpl(datePanel, new org.jdatepicker.impl.DateComponentFormatter());
-        dobLabel.setFont(dobLabel.getFont().deriveFont(textSize));
-
-    	JPanel signUpPanel = new JPanel(new GridBagLayout());
-        signUpPanel.setBackground(backgroundColor);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        Dimension fieldSize = new Dimension(200, 25);
-
-        JButton backHome;
-        BufferedImage bufferedImage = ImageIO.read(this.getClass().getResource("backButton.png"));
-        Image image = bufferedImage.getScaledInstance(50, 50, Image.SCALE_DEFAULT);
-        backHome = new JButton(new ImageIcon(image));
-        backHome.setPreferredSize(new Dimension(30, 30));
-        backHome.addActionListener(e -> showWelcomeScreen());
-        
-        JLabel header = new JLabel("Sign Up");
-        header.setFont(header.getFont().deriveFont(headerSize));
-        
-        JLabel fNameLabel = new JLabel("First Name:");
-        JTextField fNameField = new JTextField();
-        fNameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        fNameLabel.setFont(fNameLabel.getFont().deriveFont(textSize));
-        fNameField.setPreferredSize(fieldSize);
-
-        JLabel lNameLabel = new JLabel("Last Name:");
-        JTextField lNameField = new JTextField();
-        lNameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        lNameLabel.setFont(lNameLabel.getFont().deriveFont(textSize));
-        lNameField.setPreferredSize(fieldSize);
-
-        JLabel usernameLabel = new JLabel("Username:");
-        JTextField newUsernameField = new JTextField();
-        newUsernameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        usernameLabel.setFont(usernameLabel.getFont().deriveFont(textSize));
-        newUsernameField.setPreferredSize(fieldSize);
-
-        JLabel emailLabel = new JLabel("Email Address:");
-        JTextField emailField = new JTextField();
-        emailField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        emailLabel.setFont(emailLabel.getFont().deriveFont(textSize));
-        emailField.setPreferredSize(fieldSize);
-
-        JLabel passwordLabel = new JLabel("Password:");
-        JPasswordField newPasswordField = new JPasswordField();
-        newPasswordField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        passwordLabel.setFont(passwordLabel.getFont().deriveFont(textSize));
-        newPasswordField.setPreferredSize(fieldSize);
-
-        JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
-        JPasswordField confirmPasswordField = new JPasswordField();
-        confirmPasswordField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        confirmPasswordLabel.setFont(confirmPasswordLabel.getFont().deriveFont(textSize));
-        confirmPasswordField.setPreferredSize(fieldSize);
-
-        JButton registerButton = new JButton("Register");
-        registerButton.setFont(registerButton.getFont().deriveFont(textSize));
-        registerButton.setBackground(buttonColor);
-        registerButton.addActionListener(e -> registerUser(newUsernameField.getText(), newPasswordField.getText()));
-        
-        JButton backButton = new JButton("Back to Login");
-        backButton.setFont(registerButton.getFont().deriveFont(textSize));
-        backButton.setBackground(buttonColor);
-        backButton.addActionListener(e -> showLoginScreen());
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.LINE_START;
-        signUpPanel.add(backHome, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1; 
-        gbc.gridwidth = 2; //center
-        gbc.anchor = GridBagConstraints.CENTER;
-        signUpPanel.add(header, gbc);
-
-        gbc.gridwidth = 1;
-        gbc.gridx = 0; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_END;
-        signUpPanel.add(fNameLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.LINE_START;
-        signUpPanel.add(fNameField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_END;
-        signUpPanel.add(lNameLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 3; gbc.anchor = GridBagConstraints.LINE_START;
-        signUpPanel.add(lNameField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 4; gbc.anchor = GridBagConstraints.LINE_END;
-        signUpPanel.add(usernameLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 4; gbc.anchor = GridBagConstraints.LINE_START;
-        signUpPanel.add(newUsernameField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 5; gbc.anchor = GridBagConstraints.LINE_END;
-        signUpPanel.add(emailLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 5; gbc.anchor = GridBagConstraints.LINE_START;
-        signUpPanel.add(emailField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 6; gbc.anchor = GridBagConstraints.LINE_END;
-        signUpPanel.add(dobLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 6; gbc.anchor = GridBagConstraints.LINE_START;
-        signUpPanel.add(dobPicker, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 7; gbc.anchor = GridBagConstraints.LINE_END;
-        signUpPanel.add(passwordLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 7; gbc.anchor = GridBagConstraints.LINE_START;
-        signUpPanel.add(newPasswordField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 8; gbc.anchor = GridBagConstraints.LINE_END;
-        signUpPanel.add(confirmPasswordLabel, gbc);
-        gbc.gridx = 1; gbc.gridy = 8; gbc.anchor = GridBagConstraints.LINE_START;
-        signUpPanel.add(confirmPasswordField, gbc);
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        buttonPanel.setBackground(backgroundColor);
-        buttonPanel.add(registerButton);
-        buttonPanel.add(backButton);
-
-        gbc.gridx = 0; gbc.gridy = 9;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        signUpPanel.add(buttonPanel, gbc);
-
-        signUpPanel.setPreferredSize(new Dimension(409, 292));
-        frame.add(signUpPanel, "SignUp");
-    }
-
-    private void displayVCCJobsAndTimes() {
-        String jobInfo = vcc.displayJobsAndCompletionTimes();
-        JOptionPane.showMessageDialog(frame, jobInfo, "VCC Job Queue and Completion Times", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private void createMainPage() {
-        // Set frame size and layout
-        mainPagePanel = new JPanel(new GridBagLayout());
-        mainPagePanel.setBackground(backgroundColor);
-
-        Dimension fieldSize = new Dimension(200, 25);
-        Dimension buttonSize = new Dimension(100, 25);
-
-        gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        // Role selection panel (Client / Owner)
-        JPanel rolePanel = new JPanel(new FlowLayout());
-        rolePanel.setBackground(backgroundColor);
-
-        JButton signOutButton = new JButton("Sign Out");
-        signOutButton.setPreferredSize(buttonSize);
-        signOutButton.setBackground(Color.RED);
-        signOutButton.setBorderPainted(false);
-        signOutButton.setFont(signOutButton.getFont().deriveFont(textSize));
-        signOutButton.addActionListener(e -> showWelcomeScreen());
-
-        clientButton = new JRadioButton("Submit a Job");
-        clientButton.setBackground(backgroundColor);
-        clientButton.setFont(clientButton.getFont().deriveFont(textSize));
-        clientButton.setSelected(true);
-
-        ownerButton = new JRadioButton("Register a Vehicle");
-        ownerButton.setBackground(backgroundColor);
-        ownerButton.setFont(ownerButton.getFont().deriveFont(textSize));
-
-        ButtonGroup roleGroup = new ButtonGroup();
-        roleGroup.add(clientButton);
-        roleGroup.add(ownerButton);
-        rolePanel.add(clientButton);
-        rolePanel.add(ownerButton);
-
-        // Main input panels for client and owner roles with CardLayout
+    private void setupPanels() throws IOException {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        clientPanel = new JPanel(new GridLayout(10, 2));
+        createWelcomePanel();
+        createLoginPanel();
+        createSignupPanel();
+        createClientPanel();
+        createOwnerPanel();
+        createVCCControllerPanel();
+        add(mainPanel);
+    }
+    private void createVCCControllerPanel() {
 
-        clientPanel.setBackground(backgroundColor);
+        // Set up the main panel for VCC Controller view
+        JPanel vccControllerPanel = new JPanel(new BorderLayout());
 
-        clientPanel.add(new JLabel("Client ID:"));
-        clientIdField = new JTextField();
-        clientIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        clientButton.setPreferredSize(fieldSize);
-        clientPanel.add(clientIdField);
+        // Title label for the header, already hardcoded
+        JLabel titleLabel = new JLabel("<html><h2>All Assigned Jobs and Completion Times:</h2></html>");
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Container to hold all job entries
+        jobContainer = new JPanel();
+        jobContainer.setLayout(new BoxLayout(jobContainer, BoxLayout.Y_AXIS));
+        JScrollPane jobScrollPane = new JScrollPane(jobContainer);
+        jobScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        jobScrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Refresh button to reload the job list
+        JButton refreshButton = createStyledButton("Refresh Job List");
+        refreshButton.addActionListener(e -> refreshJobList());
+
+        // Back button to return to the login screen
+        JButton backButton = createStyledButton("Back");
+        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Welcome")); // Navigate to login panel
+        backButton.addActionListener(e -> resizeForPanel("Welcome"));
         
-        clientPanel.add(new JLabel("Job Duration (hrs):"));
-        jobDurationField = new JTextField();
-        jobDurationField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        jobDurationField.setPreferredSize(fieldSize);
-        clientPanel.add(jobDurationField);
+        // Panel to hold the bottom buttons (Refresh and Back)
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomPanel.add(refreshButton);
+        bottomPanel.add(backButton);
 
-        clientPanel.add(new JLabel("Job Deadline:"));
-        jobDeadlineField = new JTextField();
-        jobDeadlineField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        jobDeadlineField.setPreferredSize(fieldSize);
-        clientPanel.add(jobDeadlineField);
+        // Add components to the main VCC Controller panel
+        vccControllerPanel.add(titleLabel, BorderLayout.NORTH);
+        vccControllerPanel.add(jobScrollPane, BorderLayout.CENTER);
+        vccControllerPanel.add(bottomPanel, BorderLayout.SOUTH);
 
-        ownerPanel = new JPanel();
-        ownerPanel.setLayout(new GridLayout(14, 2));
-        ownerPanel.setBackground(backgroundColor);
+        // Add the VCC Controller panel to the main layout
+        mainPanel.add(vccControllerPanel, "VCCController");
 
-        ownerPanel.add(new JLabel("Owner ID:"));
-        ownerIdField = new JTextField();
-        ownerIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        ownerIdField.setPreferredSize(fieldSize);
-        ownerPanel.add(ownerIdField);
+        vccControllerPanel.setBackground(backgroundColor);
 
-        ownerPanel.add(new JLabel("Vehicle Model:"));
-		vehicleModelField = new JTextField();
-        vehicleModelField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        vehicleModelField.setPreferredSize(fieldSize);
-		ownerPanel.add(vehicleModelField);
+        // Opens job list upon entry
+        //refreshJobList();
+    }
 
-		ownerPanel.add(new JLabel("Vehicle Brand:"));
-		vehicleBrandField = new JTextField();
-        vehicleBrandField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        vehicleBrandField.setPreferredSize(fieldSize);
-		ownerPanel.add(vehicleBrandField);
+    
 
-		ownerPanel.add(new JLabel("Plate Number:"));
-		plateNumberField = new JTextField();
-        plateNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        plateNumberField.setPreferredSize(fieldSize);
-		ownerPanel.add(plateNumberField);
 
-		ownerPanel.add(new JLabel("Serial Number:"));
-		serialNumberField = new JTextField();
-        serialNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        serialNumberField.setPreferredSize(fieldSize);
-		ownerPanel.add(serialNumberField);
+    private void refreshJobList() {
+        jobContainer.removeAll(); // Clear previous entries
 
-		ownerPanel.add(new JLabel("VIN Number:"));
-		vinNumberField = new JTextField();
-        vinNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        vinNumberField.setPreferredSize(fieldSize);
-		ownerPanel.add(vinNumberField);
+        String response = client.requestAllJobs();
+        String[] jobs = response.split("\n(?=Job ID: )");
 
-		ownerPanel.add(new JLabel("Residency Time (hrs):"));
-		residencyTimeField = new JTextField();
-        residencyTimeField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        residencyTimeField.setPreferredSize(fieldSize);
-		ownerPanel.add(residencyTimeField);
+        if (jobs.length > 1) { // Skip header and process jobs
+            for (int i = 1; i < jobs.length; i++) {
+                JPanel jobPanel = new JPanel(new BorderLayout());
+                jobPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
+
+                JLabel jobLabel = new JLabel("<html>" + jobs[i].replaceAll("\n", "<br>") + "</html>");
+                jobPanel.add(jobLabel, BorderLayout.CENTER);
+
+                JButton completeButton = createStyledButton("Mark Complete");
+                completeButton.setPreferredSize(new Dimension(200, completeButton.getPreferredSize().height));
+
+                // Extract Job ID and pass it to the button's ActionListener
+                String jobId = jobs[i].split(",")[0].split(": ")[1].trim();
+                completeButton.addActionListener(ev -> markJobComplete(jobId));
+                
+                jobPanel.add(completeButton, BorderLayout.EAST);
+                jobContainer.add(jobPanel);
+            }
+        } else {
+            JLabel noJobsLabel = new JLabel("Please refresh to view available jobs if any are currently available.");
+            noJobsLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            jobContainer.add(noJobsLabel);
+        }
+
+        jobContainer.revalidate();
+        jobContainer.repaint();
+        pack();
+    }
+
+
+
+
+    // Helper method for marking job as complete
+    private void markJobComplete(String jobId) {
+        try {
+            // Send the mark complete request to the server
+            String response = client.sendRequest("MARK_COMPLETE " + jobId);
+
+            // Show the server response
+            JOptionPane.showMessageDialog(this, response);
+
+            // Refresh the job list to update the GUI
+            refreshJobList();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "An error occurred while marking the job complete.");
+        }
+    }
+
+
+    private void resizeForPanel(String panelName) {
+        switch (panelName) {
+            case "Welcome":
+                setSize(500, 800); // Medium window for welcome page
+                break;
+            case "Login":
+                setSize(500, 600); // Smaller window for login screen
+                break;
+            case "Signup":
+                setSize(550, 600); // Medium window for login/signup
+                break;
+            case "Client":
+            	setSize(500, 410);
+            	break;
+            case "Owner":
+            	setSize(450, 410);
+            	break;
+            case "VCCController":
+                setSize(700, 300); // Larger window for other panels
+                break;
+            default:
+                setSize(300, 250); // Default size
+        }
+        setLocationRelativeTo(null); // Re-center the window after resizing
+    }
+
+    // Helper method to send a completion request to the server
+
+
+    private void createWelcomePanel() throws IOException {
+        JPanel welcomePanel = new JPanel();
+        welcomePanel.setBackground(backgroundColor);
+        welcomePanel.setLayout(new BoxLayout(welcomePanel, BoxLayout.Y_AXIS));
+        welcomePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel logoImage = new JLabel("");
+        BufferedImage bufferedImage = ImageIO.read(this.getClass().getResource("VCRTS Logo.png"));
+        Image image = bufferedImage.getScaledInstance(200, 200, Image.SCALE_DEFAULT);
+        logoImage.setIcon(new ImageIcon(image));
+        logoImage.setAlignmentX(Component.CENTER_ALIGNMENT);
+        logoImage.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
         
-        mainPanel.add(clientPanel, "Client");
-        mainPanel.add(ownerPanel, "Owner");
+        JLabel titleLabel = new JLabel("<html><div style='text-align:center'>Welcome to the Vehicular Cloud Real-Time System </div></html>", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 45));
+        titleLabel.setForeground(textColor);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        JLabel infoLabel = new JLabel("<html><div style='text-align:center'>This system allow car owners to share their computation power with clients to complete their jobs.<br>Join as a Job Submitter or Car Owner to participate!</div></html>", SwingConstants.CENTER);
+        infoLabel.setFont(new Font("Serif", Font.PLAIN, 20));
+        infoLabel.setForeground(textColor);
+        infoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(backgroundColor);
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 20));
+
+        JLabel loginText = new JLabel("Returning Users");
+        loginText.setFont(new Font("Serif", Font.BOLD, 20));
+
+        JLabel signUpText = new JLabel("New Users");
+
+        JButton loginButton = createStyledButton("Login");
+
+        loginButton.addActionListener(e -> cardLayout.show(mainPanel, "Login")); //resizeForPanel
+        loginButton.addActionListener(e -> resizeForPanel("Login"));
+
+
+        JButton signupButton = createStyledButton("Sign Up");
+
+        signupButton.addActionListener(e -> cardLayout.show(mainPanel, "Signup"));
+        signupButton.addActionListener(e -> resizeForPanel("Signup"));
+        buttonPanel.add(loginButton);
+        buttonPanel.add(signupButton);
+
+        // Footer component
+        JLabel footerLabel = new JLabel("© 2024 Vehicular Cloud Real-Time System");
+        footerLabel.setFont(new Font("Serif", Font.ITALIC, 12));
+        footerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        footerLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+
+        // Add components to the welcome panel with balanced spacing
+        welcomePanel.add(logoImage);
+        welcomePanel.add(titleLabel);
+        welcomePanel.add(Box.createVerticalStrut(50));
+        welcomePanel.add(infoLabel);
+        welcomePanel.add(Box.createVerticalStrut(50)); // Space between info text and buttons
+        welcomePanel.add(buttonPanel);
+        welcomePanel.add(Box.createVerticalGlue()); // Dynamic space between buttons and footer
+        welcomePanel.add(footerLabel);
+
+        mainPanel.add(welcomePanel, "Welcome");
+    }
+
+    private void createLoginPanel() throws IOException {
+        loginPanel = new JPanel(new GridBagLayout());
+        loginPanel.setBackground(backgroundColor);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(2, 2, 2, 2); // Minimal spacing
+
+        // Remove unnecessary borders
+        loginPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0)); 
+
+        JLabel loginHeader = createStyledHeader("<html><div style='text-align:center'>Login</div></html>");
+
+        JLabel usernameLabel = createStyledBody("Username:");
+        usernameLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        usernameField = new JTextField(25);
+
+        JLabel passwordLabel = createStyledBody("Password: ");
+        passwordLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        passwordField = new JPasswordField(25);
+
+        JButton backButton = createBackButton();
+        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Welcome"));
+        backButton.addActionListener(e -> resizeForPanel("Welcome"));
+        
+        //Add back button
         gbc.gridx = 0; gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.LINE_START;
-        mainPagePanel.add(signOutButton, gbc);
+        loginPanel.add(backButton, gbc);
 
-        // Set up role selection panel at the top
+        //Add header
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        loginPanel.add(loginHeader, gbc);
+
+        // Add username components
+        gbc.gridwidth = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        loginPanel.add(usernameLabel, gbc);
+        gbc.gridx = 1;
+        loginPanel.add(usernameField, gbc);
+
+        // Add password components
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        loginPanel.add(passwordLabel, gbc);
+        gbc.gridx = 1;
+        loginPanel.add(passwordField, gbc);
+
+        // Add buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        buttonPanel.setBackground(backgroundColor);
+
+        JButton loginButton = createStyledButton("Login");
+        loginButton.addActionListener(e -> loginUser());
+
+        JButton signUpButton = createStyledButton("Sign Up");
+        signUpButton.addActionListener(e -> cardLayout.show(mainPanel, "Signup")); 
+        signUpButton.addActionListener(e -> resizeForPanel("Signup"));
+
+        buttonPanel.add(loginButton);
+        buttonPanel.add(signUpButton);
+
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0; gbc.gridy = 4;
+        loginPanel.add(buttonPanel, gbc);
+
+        // Add the panel to the main layout
+        mainPanel.add(loginPanel, "Login");
+    }
+
+
+    private void createSignupPanel() throws IOException {
+        signupPanel = new JPanel(new GridBagLayout());
+        signupPanel.setBackground(backgroundColor);
+        signupPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        JButton backButton = createBackButton();
+        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Welcome"));
+        backButton.addActionListener(e -> resizeForPanel("Welcome"));
+
+        JLabel signUpHeader = createStyledHeader("Sign Up");
+
+        JLabel fNameLabel = createStyledBody("First Name: ");
+        fNameField = new JTextField(25);
+        JLabel lNameLabel = createStyledBody("Last Name: ");
+        lNameField = new JTextField(25);
+        JLabel usernameLabel = createStyledBody("Username: ");
+        newUsernameField = new JTextField(25);
+        JLabel emailLabel = createStyledBody("Email Address: ");
+        emailField = new JTextField(25);
+        JLabel dobLabel = createStyledBody("Date of Birth: ");
+
+        UtilDateModel dateModel = new UtilDateModel();
+        Properties properties = new Properties();
+        properties.put("text.today", "Today");
+        properties.put("text.month", "Month");
+        properties.put("text.year", "Year");
+        JDatePanelImpl datePanel = new JDatePanelImpl(dateModel, properties);
+        dobPicker = new JDatePickerImpl(datePanel, new DateComponentFormatter());
+
+        JLabel passwordLabel = createStyledBody("Password: ");
+        JPasswordField newPasswordField = new JPasswordField(25);
+        JLabel confirmPasswordLabel = createStyledBody("Confirm Password: ");
+        JPasswordField confirmPasswordField = new JPasswordField(25);
+
+        JLabel accountTypeLabel = createStyledBody("Account Type: ");
+        JRadioButton carOwnerButton = new JRadioButton("Car Owner");
+        carOwnerButton.setBackground(backgroundColor);
+        carOwnerButton.setFont(new Font("Serif", Font.PLAIN, 20));
+        JRadioButton jobSubmitterButton = new JRadioButton("Job Submitter");
+        jobSubmitterButton.setBackground(backgroundColor);
+        jobSubmitterButton.setFont(new Font("Serif", Font.PLAIN, 20));
+        carOwnerButton.setBackground(backgroundColor);
+        
+
+        ButtonGroup accountTypeGroup = new ButtonGroup();
+        accountTypeGroup.add(carOwnerButton);
+        accountTypeGroup.add(jobSubmitterButton);
+        
+        gbc.gridx = 0; gbc.gridy = 0;
+        signupPanel.add(backButton, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        signupPanel.add(signUpHeader, gbc);
+
+        gbc.gridwidth = 1;
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        signupPanel.add(fNameLabel, gbc);
+        gbc.gridx = 1;
+        signupPanel.add(fNameField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        signupPanel.add(lNameLabel, gbc);
+        gbc.gridx = 1;
+        signupPanel.add(lNameField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        signupPanel.add(usernameLabel, gbc);
+        gbc.gridx = 1;
+        signupPanel.add(newUsernameField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        signupPanel.add(emailLabel, gbc);
+        gbc.gridx = 1;
+        signupPanel.add(emailField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        signupPanel.add(dobLabel, gbc);
+        gbc.gridx = 1;
+        signupPanel.add(dobPicker, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        signupPanel.add(passwordLabel, gbc);
+        gbc.gridx = 1;
+        signupPanel.add(newPasswordField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 8;
+        signupPanel.add(confirmPasswordLabel, gbc);
+        gbc.gridx = 1;
+        signupPanel.add(confirmPasswordField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        signupPanel.add(accountTypeLabel, gbc);
+        gbc.gridx = 1;
+        JPanel accountTypePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        accountTypePanel.setBackground(backgroundColor);
+        accountTypePanel.add(carOwnerButton);
+        accountTypePanel.add(jobSubmitterButton);
+        signupPanel.add(accountTypePanel, gbc);
+
+        JButton signupButton = createStyledButton("Register");
+        signupButton.addActionListener(e -> {
+            String firstName = fNameField.getText();
+            String lastName = lNameField.getText();
+            String username = newUsernameField.getText();
+            String email = emailField.getText();
+            String dob = dobPicker.getJFormattedTextField().getText();
+            String password = new String(newPasswordField.getPassword());
+            String confirmPassword = new String(confirmPasswordField.getPassword());
+
+            String accountType;
+            if (carOwnerButton.isSelected()) {
+                accountType = "CarOwner";
+            } else if (jobSubmitterButton.isSelected()) {
+                accountType = "JobSubmitter";
+            } else {
+                JOptionPane.showMessageDialog(this, "Please select an account type.");
+                return;
+            }
+
+            if (password.equals(confirmPassword)) {
+                String response = client.register(firstName, lastName, username, email, dob, password, accountType);
+                JOptionPane.showMessageDialog(this, response);
+                if (response.equals("Registration successful")) {
+                    cardLayout.show(mainPanel, "Login");
+                    resizeForPanel("Login");
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Passwords do not match!");
+            }
+        });
+
+        JButton loginButton = createStyledButton("Login");
+        loginButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
+        loginButton.addActionListener(e -> resizeForPanel("Login"));
+        gbc.gridx = 0;
+        gbc.gridy = 10;
+        signupPanel.add(signupButton, gbc);
+        gbc.gridx = 1;
+        signupPanel.add(loginButton, gbc);
+
+        mainPanel.add(signupPanel, "Signup");
+    }
+
+
+    private void createMainPage() {
+        mainPagePanel = new JPanel(new GridLayout(3, 1, 10, 10));
+        mainPagePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPagePanel.add(new JLabel("Main Page", SwingConstants.CENTER));
+
+        JButton clientButton = createStyledButton("Client Panel");
+        clientButton.addActionListener(e -> cardLayout.show(mainPanel, "Client"));
+        mainPagePanel.add(clientButton);
+
+        JButton ownerButton = createStyledButton("Owner Panel");
+        ownerButton.addActionListener(e -> cardLayout.show(mainPanel, "Owner"));
+        mainPagePanel.add(ownerButton);
+
+        mainPanel.add(mainPagePanel, "MainPage");
+    }
+
+    private void createClientPanel() {
+        clientPanel = new JPanel(new GridBagLayout());
+        clientPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        // Client ID (auto-populated and uneditable)
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        clientPanel.add(new JLabel("Client ID:"), gbc);
+
+        clientIdField = new JTextField(15);
+        clientIdField.setEditable(false);
+        gbc.gridx = 1;
+        clientPanel.add(clientIdField, gbc);
+
+        // Job Description Field
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.gridwidth = 2;  // Span across both columns
-        gbc.anchor = GridBagConstraints.CENTER;
-        mainPagePanel.add(rolePanel, gbc);
+        clientPanel.add(new JLabel("Job Description:"), gbc);
 
-        // Set up client/owner input panels
+        JTextField jobDescriptionField = new JTextField(15);
+        gbc.gridx = 1;
+        clientPanel.add(jobDescriptionField, gbc);
+
+        // Job Duration Field (in hours)
+        gbc.gridx = 0;
         gbc.gridy = 2;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weighty = 1.0;
-        mainPagePanel.add(mainPanel, gbc);
+        clientPanel.add(new JLabel("Job Duration (hours):"), gbc);
 
-        // Center Submit button directly under the input fields
-        submitButton = new JButton("Submit");
-        submitButton.setFont(submitButton.getFont().deriveFont(textSize));
-        submitButton.setBackground(buttonColor);
-        submitButton.setBorderPainted(false);
-        submitButton.addActionListener(e -> handleSubmissionWithVCCDisplay());
+        jobDurationField = new JTextField(15);
+        gbc.gridx = 1;
+        clientPanel.add(jobDurationField, gbc);
 
+        // Job Deadline (date picker)
+        gbc.gridx = 0;
         gbc.gridy = 3;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weighty = 0;
-        gbc.gridwidth = 2; // Span across both columns to center the button
-        gbc.anchor = GridBagConstraints.CENTER; // Center alignment for the button
-        mainPagePanel.add(submitButton, gbc);
+        clientPanel.add(new JLabel("Job Deadline:"), gbc);
 
-        // Center Test VCC Jobs button directly below the submit button
-        JButton testVCCButton = new JButton("Test VCC Jobs");
-        testVCCButton.setFont(testVCCButton.getFont().deriveFont(textSize));
-        testVCCButton.setBackground(buttonColor);
-        testVCCButton.setBorderPainted(false);
+        UtilDateModel dateModel = new UtilDateModel();
+        Properties properties = new Properties();
+        properties.put("text.today", "Today");
+        properties.put("text.month", "Month");
+        properties.put("text.year", "Year");
+        JDatePanelImpl datePanel = new JDatePanelImpl(dateModel, properties);
+        jobDeadlinePicker = new JDatePickerImpl(datePanel, new DateComponentFormatter());
+        gbc.gridx = 1;
+        clientPanel.add(jobDeadlinePicker, gbc);
 
-        testVCCButton.addActionListener(e -> displayVCCJobsAndTimes());
+        // Redundancy Level Selection (Number of Cars)
+        gbc.gridx = 0;
         gbc.gridy = 4;
-        mainPagePanel.add(testVCCButton, gbc);
+        clientPanel.add(new JLabel("Redundancy Level (Number of Cars):"), gbc);
 
-        // Add main page panel to the frame
-        frame.add(mainPagePanel, "Main");
+        JComboBox<String> redundancyComboBox = new JComboBox<>(new String[] { "1", "2", "3", "4", "5" });
+        gbc.gridx = 1;
+        clientPanel.add(redundancyComboBox, gbc);
 
-        // Show clientPanel by default and handle role switching
-        clientButton.addActionListener(e -> cardLayout.show(mainPanel, "Client"));
-        ownerButton.addActionListener(e -> cardLayout.show(mainPanel, "Owner"));
-
-        // Use pack() to resize the frame snugly around components and center it
-        frame.pack();
-        frame.setLocationRelativeTo(null); // Center the frame on the screen
-    }
-
-
-    // Helper method to create input panels for client and owner roles
-    private JPanel createInputPanel(String label1, String label2, String label3) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(Box.createVerticalStrut(20));
-        panel.add(createLabelFieldPanel(label1));
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(createLabelFieldPanel(label2));
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(createLabelFieldPanel(label3));
-        panel.add(Box.createVerticalStrut(20));
-        return panel;
-    }
-
-    // Helper method to create labeled text fields for input panels
-    private JPanel createLabelFieldPanel(String labelText) {
-        JPanel panel = new JPanel(new BorderLayout(10, 0));
-        JLabel label = new JLabel(labelText);
-        label.setPreferredSize(new Dimension(150, 25));
-        label.setHorizontalAlignment(JLabel.RIGHT);
-        panel.add(label, BorderLayout.WEST);
-
-        JTextField field = new JTextField(20);
-        panel.add(field, BorderLayout.CENTER);
-
-        // Assign fields based on label for easier data access
-        if (labelText.contains("Client"))
-            clientIdField = field;
-        if (labelText.contains("Job Duration"))
-            jobDurationField = field;
-        if (labelText.contains("Job Deadline"))
-            jobDeadlineField = field;
-        if (labelText.contains("Owner"))
-            ownerIdField = field;
-        if (labelText.contains("Vehicle Model"))
-            vehicleModelField = field;
-        if(labelText.contains("Vehicle Brand"))
-            vehicleBrandField = field;
-        if(labelText.contains("Plate Number"))
-            plateNumberField = field;
-        if(labelText.contains("Serial Number"))
-            serialNumberField = field;
-        if(labelText.contains("VIN Number"))
-            vinNumberField = field;
-        if (labelText.contains("Residency Time"))
-            residencyTimeField = field;
-
-        panel.setMaximumSize(new Dimension(400, 30));
-        return panel;
-    }
-
-
-    private void handleSubmissionWithVCCDisplay() {
-        // Example of validation for client ID, job duration, and job deadline fields
-        String clientId = clientIdField.getText().trim();
-        String jobDurationText = jobDurationField.getText().trim();
-        String jobDeadline = jobDeadlineField.getText().trim();
-
-        // Check if required fields for "Client" submission are filled
-        if (clientButton.isSelected()) {
-            if (clientId.isEmpty() || jobDurationText.isEmpty() || jobDeadline.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please fill in all fields for Client submission.", "Input Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+        // Submit Job Button
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        JButton submitJobButton = createStyledButton("Submit Job");
+        submitJobButton.addActionListener(e -> {
             try {
-                int duration = Integer.parseInt(jobDurationText);
-                JobRequest job = new JobRequest(clientId, duration);
+                String clientId = clientIdField.getText();
+                String jobDescription = jobDescriptionField.getText();
+                int jobDuration = Integer.parseInt(jobDurationField.getText());
+                int redundancyLevel = Integer.parseInt((String) redundancyComboBox.getSelectedItem());
+                String jobDeadline = jobDeadlinePicker.getJFormattedTextField().getText();
 
-                // Submit job to VCController and display job info and completion times
-                vcc.submitJob(job);
-                // String jobInfo = vcc.displayJobsAndCompletionTimes();
-                // JOptionPane.showMessageDialog(frame, jobInfo, "VCC Job Queue and Completion Times", JOptionPane.INFORMATION_MESSAGE);
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Job Duration must be a valid integer.", "Input Error", JOptionPane.ERROR_MESSAGE);
-            }
-        } 
-        // Check if required fields for "Owner" submission are filled
-        else if (ownerButton.isSelected()) {
-            String ownerId = ownerIdField.getText().trim();
-            String vehicleModel = vehicleModelField.getText().trim();
-            String vehicleBrand = vehicleBrandField.getText().trim();
-            String plateNumber = plateNumberField.getText().trim();
-            String serialNumber = serialNumberField.getText().trim();
-            String vinNumber = vinNumberField.getText().trim();
-            String residencyTimeText = residencyTimeField.getText().trim();
+                if (clientId.isEmpty() || jobDescription.isEmpty() || jobDeadline.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Please fill in all fields.");
+                    return;
+                }
 
-            if (ownerId.isEmpty() || vehicleModel.isEmpty() || vehicleBrand.isEmpty() || plateNumber.isEmpty() || serialNumber.isEmpty() || vinNumber.isEmpty() || residencyTimeText.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please fill in all fields for Owner submission.", "Input Error", JOptionPane.ERROR_MESSAGE);
-                return;
+                String response = client.submitJob(clientId, jobDescription, jobDuration, redundancyLevel, jobDeadline);
+                JOptionPane.showMessageDialog(this, response);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Please enter valid numbers for job duration and redundancy level.");
             }
-            try {
-                int residencyTime = Integer.parseInt(residencyTimeText);
-                vcc.saveOwnerCarToFile(ownerId, vehicleBrand, vehicleModel, plateNumber, serialNumber, vinNumber, residencyTime); // save owner data to csv weeee
-                JOptionPane.showMessageDialog(frame, "Owner data submitted successfully!");
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Residency Time must be a valid integer.", "Input Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-        clearFields();
+        });
+        clientPanel.add(submitJobButton, gbc);
+
+        // Display Jobs & Completion Times Button
+        gbc.gridy = 6;
+        gbc.gridwidth = 1; // Reset to single column width
+        gbc.gridx = 0;
+        JButton displayJobsButton = createStyledButton("Display Jobs & Completion Times");
+        displayJobsButton.addActionListener(e -> displayVCCJobsAndTimes());
+        clientPanel.add(displayJobsButton, gbc);
+
+        // Back Button
+        gbc.gridx = 1;
+        JButton backButton = createStyledButton("Back");
+        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Login")); // Adjusted to go to Login screen
+        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
+        
+        clientPanel.add(backButton, gbc);
+
+        mainPanel.add(clientPanel, "Client");
     }
 
-    // Method to clear input fields after submission
-    private void clearFields() {
-        clientIdField.setText("");
-        jobDurationField.setText("");
-        jobDeadlineField.setText("");
-        ownerIdField.setText("");
-        vehicleBrandField.setText("");
-        vehicleModelField.setText("");
-        plateNumberField.setText("");
-        serialNumberField.setText("");
-        vinNumberField.setText("");
-        residencyTimeField.setText("");
+
+
+
+    private void createOwnerPanel() {
+        ownerPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        // Owner ID (auto-populated and uneditable)
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        ownerPanel.add(new JLabel("Owner ID:"), gbc);
+        ownerIdField = new JTextField();
+        ownerIdField.setEditable(false);
+        gbc.gridx = 1;
+        ownerPanel.add(ownerIdField, gbc);
+
+        // Vehicle Model
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        ownerPanel.add(new JLabel("Vehicle Model:"), gbc);
+        vehicleModelField = new JTextField(15);
+        gbc.gridx = 1;
+        ownerPanel.add(vehicleModelField, gbc);
+
+        // Vehicle Brand
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        ownerPanel.add(new JLabel("Vehicle Brand:"), gbc);
+        vehicleBrandField = new JTextField(15);
+        gbc.gridx = 1;
+        ownerPanel.add(vehicleBrandField, gbc);
+
+        // Plate Number
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        ownerPanel.add(new JLabel("Plate Number:"), gbc);
+        plateNumberField = new JTextField(15);
+        gbc.gridx = 1;
+        ownerPanel.add(plateNumberField, gbc);
+
+        // Serial Number
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        ownerPanel.add(new JLabel("Serial Number:"), gbc);
+        serialNumberField = new JTextField(15);
+        gbc.gridx = 1;
+        ownerPanel.add(serialNumberField, gbc);
+
+        // VIN Number
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        ownerPanel.add(new JLabel("VIN Number:"), gbc);
+        vinNumberField = new JTextField(15);
+        gbc.gridx = 1;
+        ownerPanel.add(vinNumberField, gbc);
+
+        // Residency Date
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        ownerPanel.add(new JLabel("Residency Date:"), gbc);
+
+        UtilDateModel model = new UtilDateModel();
+        Properties p = new Properties();
+        p.put("text.today", "Today");
+        p.put("text.month", "Month");
+        p.put("text.year", "Year");
+
+        JDatePanelImpl datePanel = new JDatePanelImpl(model, p);
+        residencyDatePicker = new JDatePickerImpl(datePanel, new DateComponentFormatter());
+        gbc.gridx = 1;
+        ownerPanel.add(residencyDatePicker, gbc);
+
+        // Register Vehicle Button
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.gridwidth = 2;
+        JButton registerVehicleButton = new JButton("Register Vehicle");
+        registerVehicleButton.addActionListener(e -> registerVehicle());
+        ownerPanel.add(registerVehicleButton, gbc);
+
+        // Back Button - now set to return to the Login panel
+        gbc.gridy = 8;
+        JButton backButton = new JButton("Back");
+        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
+        backButton.addActionListener(e -> resizeForPanel("Login"));// Show Login screen
+        
+        ownerPanel.add(backButton, gbc);
+
+        mainPanel.add(ownerPanel, "Owner");
     }
 
     private void loginUser() {
-        if (server.accountFound(usernameField.getText(), new String(passwordField.getPassword()))) {
-            currentUser = server.getUser(usernameField.getText());
-            server.updateServer("Login", currentUser);
-            showMainPage();
+        String username = usernameField.getText();
+        String password = new String(passwordField.getPassword());
+        String response = client.login(username, password).trim();  // Trim the response to remove any extra whitespace
+
+        if (response.startsWith("Login successful")) {
+            String[] parts = response.split(",");
+            accountType = parts[1].trim();  // Ensure no extra spaces
+            currentClientId = username;
+            clientIdField.setText(currentClientId);
+
+            // Redirect based on account type
+            if ("JobSubmitter".equals(accountType)) {
+                cardLayout.show(mainPanel, "Client");
+                resizeForPanel("Client");
+            } else if ("CarOwner".equals(accountType)) {
+                cardLayout.show(mainPanel, "Owner");
+                ownerIdField.setText(currentClientId);
+                resizeForPanel("Owner");
+            } else if ("VCCController".equals(accountType)) {
+                cardLayout.show(mainPanel, "VCCController");  // Show VCC Controller panel
+                resizeForPanel("VCCController");
+            }
+            JOptionPane.showMessageDialog(this, "Login successful as " + accountType);
         } else {
-            JOptionPane.showMessageDialog(frame, "Invalid credentials. Please try again or sign up.");
+            JOptionPane.showMessageDialog(this, "Invalid credentials. Please try again.");
         }
     }
 
-    private void showMainPage() {
-        ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "Main");
-    }
 
-    private void showLoginScreen() {
-        ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "Login");
-    }
 
-    private void showSignUpScreen() {
-        ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "SignUp");
-    }
+    private void submitJob() {
+        try {
+            String clientId = clientIdField.getText();
+            String jobDescription = jobDescriptionField.getText();
+            int jobDuration = Integer.parseInt(jobDurationField.getText());
+            int redundancyLevel = Integer.parseInt((String) redundancyComboBox.getSelectedItem());
+            String jobDeadline = jobDeadlinePicker.getJFormattedTextField().getText();  // Get jobDeadline from the date picker
 
-    private void showWelcomeScreen(){
-        ((CardLayout) frame.getContentPane().getLayout()).show(frame.getContentPane(), "Welcome");
-    }
+            if (clientId.isEmpty() || jobDescription.isEmpty() || jobDeadline.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please fill in all fields.");
+                return;
+            }
 
-    private void registerUser(String username, String password) {
-        if (!username.isEmpty() && !password.isEmpty() && !server.isUser(username)) {
-            server.addUser(new User(username, password));
-            JOptionPane.showMessageDialog(frame, "Account created successfully. Please log in.");
-            showLoginScreen();
-        } else {
-            JOptionPane.showMessageDialog(frame, "Account creation failed. Try a different username.");
+            String response = client.submitJob(clientId, jobDescription, jobDuration, redundancyLevel, jobDeadline);
+            JOptionPane.showMessageDialog(this, response);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Please enter valid numbers for job duration and redundancy level.");
         }
+    }
+
+
+    private void registerVehicle() {
+        String ownerId = ownerIdField.getText();
+        String vehicleModel = vehicleModelField.getText();
+        String vehicleBrand = vehicleBrandField.getText();
+        String plateNumber = plateNumberField.getText();
+        String serialNumber = serialNumberField.getText();
+        String vinNumber = vinNumberField.getText();
+        
+        // Format residency date to avoid spaces
+        String residencyDate = residencyDatePicker.getJFormattedTextField().getText();
+        try {
+            LocalDate parsedDate = LocalDate.parse(residencyDate, DateTimeFormatter.ofPattern("MMM d, yyyy"));
+            residencyDate = parsedDate.format(DateTimeFormatter.ISO_LOCAL_DATE); // Format as "YYYY-MM-DD"
+        } catch (DateTimeParseException e) {
+            JOptionPane.showMessageDialog(this, "Invalid date format. Please use 'MM dd, yyyy'.");
+            return;
+        }
+
+        // Send car registration details to the server
+        String response = client.notifyCarReady(ownerId, vehicleModel, vehicleBrand, plateNumber, serialNumber, vinNumber, residencyDate);
+        JOptionPane.showMessageDialog(this, response);
+
+        // Ensures all fields are filled out
+        try 
+        {
+            if (ownerId.isEmpty()|| vehicleModel.isEmpty() || vehicleBrand.isEmpty() || plateNumber.isEmpty() ||serialNumber.isEmpty() || vinNumber.isEmpty())
+            {
+                throw new NoSuchFieldException();
+            }
+
+        } catch (NoSuchFieldException ex) 
+        {
+            JOptionPane.showMessageDialog(this, "Please fill in all car details before registering.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
+    private void displayVCCJobsAndTimes() {
+        //String clientId = clientIdField.getText();  // Retrieve the current client ID from the text field
+        String response = client.requestAllJobs();  // Send both clientId and role to server
+        JOptionPane.showMessageDialog(this, response);  // Display server response in a message dialog
+    }
+
+    private static class RoundedBorder implements Border {
+        private int radius;
+
+        RoundedBorder(int radius) {
+            this.radius = radius;
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c){
+            return new Insets(this.radius + 1, this.radius + 1, this.radius + 2, this.radius);
+        }
+
+        @Override
+        public boolean isBorderOpaque(){
+            return true;
+        }
+
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            g.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+        }
+    }
+
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        //button.setPreferredSize(new Dimension(150, 50));
+        button.setFont(new Font("Arial", Font.BOLD, 20));
+        button.setForeground(Color.WHITE);
+        button.setBackground(buttonColor);
+        button.setFocusPainted(false);
+        button.setBounds(500, 500, 100, 25);
+        //button.setBorder(new RoundedBorder(30));
+        return button;
+    }
+
+    private JLabel createStyledHeader(String text){
+        JLabel header = new JLabel(text);
+        header.setFont(new Font("Serif", Font.BOLD, 45));
+        header.setForeground(textColor);
+        header.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+        return header;
+    }
+
+    private JLabel createStyledBody(String text) {
+        JLabel body = new JLabel(text);
+        body.setFont(new Font("Serif", Font.PLAIN, 20));
+        body.setForeground(textColor);
+
+        return body;
+    }
+
+    private JButton createBackButton() throws IOException{
+        JButton button = new JButton();
+        
+        // Add image to button and resize it
+        Image image = ImageIO.read(getClass().getResource("BackButton.png"));
+        image = image.getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+        button.setIcon(new ImageIcon(image));
+
+        button.setFocusable(false);
+        button.setMargin(new Insets(0, 0, 0, 0));
+        button.setBackground(backgroundColor);
+        button.setBorder(null);
+
+        return button;
+    }
+
+    public static void main(String[] args) throws IOException {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                new VCRTSGUI();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
