@@ -70,13 +70,15 @@ public class VCRTSGUI extends JFrame {
     private void createVCCControllerPanel() {
         // Set up the main panel for VCC Controller view
         JPanel vccControllerPanel = new JPanel(new BorderLayout());
+        vccControllerPanel.setBackground(backgroundColor);
 
         // Title label for the header, already hardcoded
-        JLabel titleLabel = new JLabel("<html><h2>All Assigned Jobs and Completion Times:</h2></html>");
+        JLabel titleLabel = createStyledHeader("<html><h2>All Assigned Jobs and Completion Times:</h2></html>");
         titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Container to hold all job entries
         jobContainer = new JPanel();
+        jobContainer.setBackground(backgroundColor);
         jobContainer.setLayout(new BoxLayout(jobContainer, BoxLayout.Y_AXIS));
         JScrollPane jobScrollPane = new JScrollPane(jobContainer);
         jobScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -271,10 +273,12 @@ public class VCRTSGUI extends JFrame {
         JLabel usernameLabel = createStyledBody("Username:");
         usernameLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         usernameField = new JTextField(25);
+        usernameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         JLabel passwordLabel = createStyledBody("Password: ");
         passwordLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         passwordField = new JPasswordField(25);
+        passwordField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         JButton backButton = createBackButton();
         backButton.addActionListener(e -> cardLayout.show(mainPanel, "Welcome"));
@@ -345,12 +349,16 @@ public class VCRTSGUI extends JFrame {
 
         JLabel fNameLabel = createStyledBody("First Name: ");
         fNameField = new JTextField(25);
+        fNameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         JLabel lNameLabel = createStyledBody("Last Name: ");
         lNameField = new JTextField(25);
+        lNameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         JLabel usernameLabel = createStyledBody("Username: ");
         newUsernameField = new JTextField(25);
+        newUsernameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         JLabel emailLabel = createStyledBody("Email Address: ");
         emailField = new JTextField(25);
+        emailField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         JLabel dobLabel = createStyledBody("Date of Birth: ");
 
         UtilDateModel dateModel = new UtilDateModel();
@@ -360,11 +368,14 @@ public class VCRTSGUI extends JFrame {
         properties.put("text.year", "Year");
         JDatePanelImpl datePanel = new JDatePanelImpl(dateModel, properties);
         dobPicker = new JDatePickerImpl(datePanel, new DateComponentFormatter());
+        dobPicker.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         JLabel passwordLabel = createStyledBody("Password: ");
         JPasswordField newPasswordField = new JPasswordField(25);
+        newPasswordField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         JLabel confirmPasswordLabel = createStyledBody("Confirm Password: ");
         JPasswordField confirmPasswordField = new JPasswordField(25);
+        confirmPasswordField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         JLabel accountTypeLabel = createStyledBody("Account Type: ");
         JRadioButton carOwnerButton = new JRadioButton("Car Owner");
@@ -539,6 +550,7 @@ public class VCRTSGUI extends JFrame {
         clientPanel.add(createStyledBody("Client ID:"), gbc);
 
         clientIdField = new JTextField(15);
+        clientIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         clientIdField.setEditable(false);
         gbc.gridx = 1;
         clientPanel.add(clientIdField, gbc);
@@ -549,6 +561,7 @@ public class VCRTSGUI extends JFrame {
         clientPanel.add(createStyledBody("Job Description:"), gbc);
 
         JTextField jobDescriptionField = new JTextField(15);
+        jobDescriptionField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
         clientPanel.add(jobDescriptionField, gbc);
 
@@ -558,6 +571,7 @@ public class VCRTSGUI extends JFrame {
         clientPanel.add(createStyledBody("Job Duration (hours):"), gbc);
 
         jobDurationField = new JTextField(15);
+        jobDurationField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
         clientPanel.add(jobDurationField, gbc);
 
@@ -573,6 +587,7 @@ public class VCRTSGUI extends JFrame {
         properties.put("text.year", "Year");
         JDatePanelImpl datePanel = new JDatePanelImpl(dateModel, properties);
         jobDeadlinePicker = new JDatePickerImpl(datePanel, new DateComponentFormatter());
+        jobDeadlinePicker.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
         clientPanel.add(jobDeadlinePicker, gbc);
 
@@ -582,6 +597,7 @@ public class VCRTSGUI extends JFrame {
         clientPanel.add(createStyledBody("Redundancy Level (Number of Cars):"), gbc);
 
         JComboBox<String> redundancyComboBox = new JComboBox<>(new String[] { "1", "2", "3", "4", "5" });
+        redundancyComboBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
         clientPanel.add(redundancyComboBox, gbc);
 
@@ -632,58 +648,86 @@ public class VCRTSGUI extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Owner ID (auto-populated and uneditable)
+        JPanel logOutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        logOutPanel.setBackground(backgroundColor);
+
+        JButton logOutButton = createLogOutButton();
+        logOutButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
+        logOutButton.addActionListener(e -> resizeForPanel("Login"));// Show Login screen
+
+        logOutPanel.add(logOutButton);
+
+        JLabel welcomePage = createStyledHeader("Car Registration");
+
         gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridx = 0;
+        ownerPanel.add(logOutPanel, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        ownerPanel.add(welcomePage, gbc);
+
+        // Owner ID (auto-populated and uneditable)
+        gbc.gridwidth = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         ownerPanel.add(createStyledBody("Owner ID:"), gbc);
         ownerIdField = new JTextField();
+        ownerIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         ownerIdField.setEditable(false);
         gbc.gridx = 1;
         ownerPanel.add(ownerIdField, gbc);
 
         // Vehicle Model
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 3;
         ownerPanel.add(createStyledBody("Vehicle Model:"), gbc);
         vehicleModelField = new JTextField(15);
+        vehicleModelField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
         ownerPanel.add(vehicleModelField, gbc);
 
         // Vehicle Brand
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 4;
         ownerPanel.add(createStyledBody("Vehicle Brand:"), gbc);
         vehicleBrandField = new JTextField(15);
+        vehicleBrandField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
         ownerPanel.add(vehicleBrandField, gbc);
 
         // Plate Number
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 5;
         ownerPanel.add(createStyledBody("Plate Number:"), gbc);
         plateNumberField = new JTextField(15);
+        plateNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
         ownerPanel.add(plateNumberField, gbc);
 
         // Serial Number
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 6;
         ownerPanel.add(createStyledBody("Serial Number:"), gbc);
         serialNumberField = new JTextField(15);
+        serialNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
         ownerPanel.add(serialNumberField, gbc);
 
         // VIN Number
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 7;
         ownerPanel.add(createStyledBody("VIN Number:"), gbc);
         vinNumberField = new JTextField(15);
+        vinNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
         ownerPanel.add(vinNumberField, gbc);
 
         // Residency Date
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = 8;
         ownerPanel.add(createStyledBody("Residency Date:"), gbc);
 
         UtilDateModel model = new UtilDateModel();
@@ -694,24 +738,17 @@ public class VCRTSGUI extends JFrame {
 
         JDatePanelImpl datePanel = new JDatePanelImpl(model, p);
         residencyDatePicker = new JDatePickerImpl(datePanel, new DateComponentFormatter());
+        residencyDatePicker.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
         ownerPanel.add(residencyDatePicker, gbc);
 
         // Register Vehicle Button
         gbc.gridx = 0;
-        gbc.gridy = 7;
+        gbc.gridy = 9;
         gbc.gridwidth = 2;
         JButton registerVehicleButton = createStyledButton("Register Vehicle");
         registerVehicleButton.addActionListener(e -> registerVehicle());
         ownerPanel.add(registerVehicleButton, gbc);
-
-        // Back Button - now set to return to the Login panel
-        gbc.gridy = 8;
-        JButton backButton = createStyledButton("Back");
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
-        backButton.addActionListener(e -> resizeForPanel("Login"));// Show Login screen
-        
-        ownerPanel.add(backButton, gbc);
 
         mainPanel.add(ownerPanel, "Owner");
     }
