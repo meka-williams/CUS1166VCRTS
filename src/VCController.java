@@ -32,12 +32,15 @@ public class VCController {
 
     // Logs job details to a dedicated file for VC records
     public void saveOwnerCarToFile(String ownerId, String vehicleBrand, String vehicleModel, String plateNumber, String serialNumber, String vinNumber, int residencyTime) {
-        String fileName = "vcrts_data_owner.csv"; // Updated file name
+        String fileName = "vcrts_data_owner.csv";
         String header = "Owner ID,Vehicle Info,Residency Time";
-        String data = String.format("%s,%s,%d", ownerId, vehicleBrand, vehicleModel, plateNumber, serialNumber, vinNumber, residencyTime);
-
+        // Combine all vehicle info into one field
+        String vehicleInfo = String.format("%s %s (Plate: %s, Serial: %s, VIN: %s)", 
+            vehicleBrand, vehicleModel, plateNumber, serialNumber, vinNumber);
+        String data = String.format("%s,%s,%d", ownerId, vehicleInfo, residencyTime);
+    
         File file = new File(fileName);
-
+    
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
             if (!file.exists() || file.length() == 0) {
                 writer.write(header);
@@ -48,7 +51,6 @@ public class VCController {
         } catch (IOException e) {
             System.err.println("Error saving owner car to file.");
         }
-    
     }
 
     private void logJobRequest(JobRequest job) {
