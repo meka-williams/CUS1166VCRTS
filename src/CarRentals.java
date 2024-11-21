@@ -1,6 +1,7 @@
+import java.util.ArrayList;
+import java.util.List;
 
-public class Vehicle {
-
+public class CarRentals {
     private int vehicleID;
     private String status;
     private int ownerID;
@@ -10,11 +11,12 @@ public class Vehicle {
     private String serialNumber;
     private String vinNum;
     private int residencyTime;
-    private int lastCheckpointID; // Field to store the last checkpoint ID
+
+    private List<JobRequest> assignedJobs; // List to track jobs assigned to this car
 
     // Constructor
-    public Vehicle(int vehicleID, String status, int ownerID, String model, String brand, 
-                   String plateNumber, String serialNumber, String vinNum, int residencyTime) {
+    public CarRentals(int vehicleID, String status, int ownerID, String model, String brand,
+                      String plateNumber, String serialNumber, String vinNum, int residencyTime) {
         this.vehicleID = vehicleID;
         this.status = status;
         this.ownerID = ownerID;
@@ -24,20 +26,20 @@ public class Vehicle {
         this.serialNumber = serialNumber;
         this.vinNum = vinNum;
         this.residencyTime = residencyTime;
-        this.lastCheckpointID = -1; // Initialize with -1 to indicate no checkpoint
+        this.assignedJobs = new ArrayList<>(); // Initialize list for assigned jobs
     }
 
-    // Method to set the last checkpoint ID for this vehicle
-    public void setLastCheckpointID(int checkpointID) {
-        this.lastCheckpointID = checkpointID;
+    // Method to assign a job to this vehicle
+    public void assignJob(JobRequest job) {
+        assignedJobs.add(job); // Add the job to the assigned jobs list
     }
 
-    // Method to retrieve the last checkpoint ID
-    public int getLastCheckpointID() {
-        return lastCheckpointID;
+    // Optional: Method to get all assigned jobs for logging or debugging
+    public List<JobRequest> getAssignedJobs() {
+        return assignedJobs;
     }
 
-    // Other getters and setters for the fields
+    
     public int getVehicleID() {
         return vehicleID;
     }
@@ -110,9 +112,10 @@ public class Vehicle {
         this.residencyTime = residencyTime;
     }
 
+
     @Override
     public String toString() {
-        return "Vehicle{" +
+        return "CarRentals{" +
                 "vehicleID=" + vehicleID +
                 ", status='" + status + '\'' +
                 ", ownerID=" + ownerID +
@@ -122,7 +125,7 @@ public class Vehicle {
                 ", serialNumber='" + serialNumber + '\'' +
                 ", vinNum='" + vinNum + '\'' +
                 ", residencyTime=" + residencyTime +
-                ", lastCheckpointID=" + lastCheckpointID +
+                ", assignedJobs=" + assignedJobs +
                 '}';
     }
 }
