@@ -27,6 +27,7 @@ public class VCRTSGUI extends JFrame {
     private JComboBox<String> redundancyComboBox;
     private JDatePickerImpl residencyDatePicker, dobPicker, jobDeadlinePicker;
     private JPanel mainPanel, loginPanel, signupPanel, clientPanel, ownerPanel, mainPagePanel, jobContainer;
+    private RegisteredVehiclesPanel registeredVehiclesPanel;
 
     private CardLayout cardLayout;
     private String accountType;
@@ -180,7 +181,7 @@ public class VCRTSGUI extends JFrame {
             	setSize(800, 600);
             	break;
             case "Owner":
-            	setSize(500, 600);
+            	setSize(900, 600);
             	break;
             case "VCCController":
                 setSize(700, 300); // Larger window for other panels
@@ -642,8 +643,12 @@ public class VCRTSGUI extends JFrame {
 
 
     private void createOwnerPanel() {
-        ownerPanel = new JPanel(new GridBagLayout());
+        ownerPanel = new JPanel(new BorderLayout());
         ownerPanel.setBackground(backgroundColor);
+
+        // Create the main registration form panel
+        JPanel registrationFormPanel = new JPanel(new GridBagLayout());
+        registrationFormPanel.setBackground(backgroundColor);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -652,83 +657,107 @@ public class VCRTSGUI extends JFrame {
         logOutPanel.setBackground(backgroundColor);
 
         JButton logOutButton = createLogOutButton();
-        logOutButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
-        logOutButton.addActionListener(e -> resizeForPanel("Login"));// Show Login screen
-
+        logOutButton.addActionListener(e -> {
+            cardLayout.show(mainPanel, "Login");
+            resizeForPanel("Login");
+        });
+        
         logOutPanel.add(logOutButton);
 
         JLabel welcomePage = createStyledHeader("Car Registration");
 
         gbc.gridx = 0;
-        gbc.gridx = 0;
-        ownerPanel.add(logOutPanel, gbc);
+        gbc.gridy = 0;
+        registrationFormPanel.add(logOutPanel, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
-        ownerPanel.add(welcomePage, gbc);
+        registrationFormPanel.add(welcomePage, gbc);
 
+         // Add all the existing registration fields
+         addRegistrationFields(registrationFormPanel, gbc);
+
+         // Create the vehicles panel
+         registeredVehiclesPanel = new RegisteredVehiclesPanel();
+         
+         // Create a split pane to divide the registration form and vehicles list
+         JSplitPane splitPane = new JSplitPane(
+             JSplitPane.HORIZONTAL_SPLIT,
+             new JScrollPane(registrationFormPanel),
+             registeredVehiclesPanel
+         );
+         splitPane.setDividerLocation(500); // Adjust this value to set the initial divider position
+         
+         // Add the split pane to the owner panel
+         ownerPanel.add(splitPane, BorderLayout.CENTER);
+ 
+         // Add the owner panel to the main panel
+         mainPanel.add(ownerPanel, "Owner");
+     }
+     
+     private void addRegistrationFields(JPanel panel, GridBagConstraints gbc) {
         // Owner ID (auto-populated and uneditable)
         gbc.gridwidth = 1;
         gbc.gridx = 0;
         gbc.gridy = 2;
-        ownerPanel.add(createStyledBody("Owner ID:"), gbc);
+        panel.add(createStyledBody("Username:"), gbc);
         ownerIdField = new JTextField();
         ownerIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         ownerIdField.setEditable(false);
         gbc.gridx = 1;
-        ownerPanel.add(ownerIdField, gbc);
+        panel.add(ownerIdField, gbc);
 
         // Vehicle Model
         gbc.gridx = 0;
         gbc.gridy = 3;
-        ownerPanel.add(createStyledBody("Vehicle Model:"), gbc);
+        panel.add(createStyledBody("Vehicle Model:"), gbc);
         vehicleModelField = new JTextField(15);
         vehicleModelField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
-        ownerPanel.add(vehicleModelField, gbc);
+        panel.add(vehicleModelField, gbc);
 
         // Vehicle Brand
         gbc.gridx = 0;
         gbc.gridy = 4;
-        ownerPanel.add(createStyledBody("Vehicle Brand:"), gbc);
+        panel.add(createStyledBody("Vehicle Brand:"), gbc);
         vehicleBrandField = new JTextField(15);
         vehicleBrandField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
-        ownerPanel.add(vehicleBrandField, gbc);
+        panel.add(vehicleBrandField, gbc);
 
         // Plate Number
         gbc.gridx = 0;
         gbc.gridy = 5;
-        ownerPanel.add(createStyledBody("Plate Number:"), gbc);
+        panel.add(createStyledBody("Plate Number:"), gbc);
         plateNumberField = new JTextField(15);
         plateNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
-        ownerPanel.add(plateNumberField, gbc);
+        panel.add(plateNumberField, gbc);
 
         // Serial Number
         gbc.gridx = 0;
         gbc.gridy = 6;
-        ownerPanel.add(createStyledBody("Serial Number:"), gbc);
+        panel.add(createStyledBody("Serial Number:"), gbc);
         serialNumberField = new JTextField(15);
         serialNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
-        ownerPanel.add(serialNumberField, gbc);
+        panel.add(serialNumberField, gbc);
 
         // VIN Number
         gbc.gridx = 0;
         gbc.gridy = 7;
-        ownerPanel.add(createStyledBody("VIN Number:"), gbc);
+        panel.add(createStyledBody("VIN Number:"), gbc);
         vinNumberField = new JTextField(15);
         vinNumberField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
-        ownerPanel.add(vinNumberField, gbc);
+        panel.add(vinNumberField, gbc);
 
         // Residency Date
         gbc.gridx = 0;
         gbc.gridy = 8;
-        ownerPanel.add(createStyledBody("Residency Date:"), gbc);
+        panel.add(createStyledBody("Residency Date:"), gbc);
 
         UtilDateModel model = new UtilDateModel();
         Properties p = new Properties();
@@ -740,7 +769,7 @@ public class VCRTSGUI extends JFrame {
         residencyDatePicker = new JDatePickerImpl(datePanel, new DateComponentFormatter());
         residencyDatePicker.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
-        ownerPanel.add(residencyDatePicker, gbc);
+        panel.add(residencyDatePicker, gbc);
 
         // Register Vehicle Button
         gbc.gridx = 0;
@@ -748,19 +777,18 @@ public class VCRTSGUI extends JFrame {
         gbc.gridwidth = 2;
         JButton registerVehicleButton = createStyledButton("Register Vehicle");
         registerVehicleButton.addActionListener(e -> registerVehicle());
-        ownerPanel.add(registerVehicleButton, gbc);
+        panel.add(registerVehicleButton, gbc);
 
-        mainPanel.add(ownerPanel, "Owner");
     }
 
     private void loginUser() {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
-        String response = client.login(username, password).trim();  // Trim the response to remove any extra whitespace
+        String response = client.login(username, password).trim(); // Trim the response to remove any extra whitespace
 
         if (response.startsWith("Login successful")) {
             String[] parts = response.split(",");
-            accountType = parts[1].trim();  // Ensure no extra spaces
+            accountType = parts[1].trim(); // Ensure no extra spaces
             currentClientId = username;
             clientIdField.setText(currentClientId);
 
@@ -773,7 +801,7 @@ public class VCRTSGUI extends JFrame {
                 ownerIdField.setText(currentClientId);
                 resizeForPanel("Owner");
             } else if ("VCCController".equals(accountType)) {
-                cardLayout.show(mainPanel, "VCCController");  // Show VCC Controller panel
+                cardLayout.show(mainPanel, "VCCController"); // Show VCC Controller panel
                 resizeForPanel("VCCController");
             }
             JOptionPane.showMessageDialog(this, "Login successful as " + accountType);
@@ -782,15 +810,14 @@ public class VCRTSGUI extends JFrame {
         }
     }
 
-
-
     private void submitJob() {
         try {
             String clientId = clientIdField.getText();
             String jobDescription = jobDescriptionField.getText();
             int jobDuration = Integer.parseInt(jobDurationField.getText());
             int redundancyLevel = Integer.parseInt((String) redundancyComboBox.getSelectedItem());
-            String jobDeadline = jobDeadlinePicker.getJFormattedTextField().getText();  // Get jobDeadline from the date picker
+            String jobDeadline = jobDeadlinePicker.getJFormattedTextField().getText(); // Get jobDeadline from the date
+                                                                                       // picker
 
             if (clientId.isEmpty() || jobDescription.isEmpty() || jobDeadline.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields.");
@@ -804,35 +831,93 @@ public class VCRTSGUI extends JFrame {
         }
     }
 
-
     private void registerVehicle() {
-        String ownerId = ownerIdField.getText();
-        String vehicleModel = vehicleModelField.getText();
-        String vehicleBrand = vehicleBrandField.getText();
-        String plateNumber = plateNumberField.getText();
-        String serialNumber = serialNumberField.getText();
-        String vinNumber = vinNumberField.getText();
-        
-        // Format residency date to avoid spaces
-        String residencyDate = residencyDatePicker.getJFormattedTextField().getText();
         try {
-            LocalDate parsedDate = LocalDate.parse(residencyDate, DateTimeFormatter.ofPattern("MMM d, yyyy"));
-            residencyDate = parsedDate.format(DateTimeFormatter.ISO_LOCAL_DATE); // Format as "YYYY-MM-DD"
-        } catch (DateTimeParseException e) {
-            JOptionPane.showMessageDialog(this, "Invalid date format. Please use 'MMM d, yyyy'.");
-            return;
-        }
+            String ownerId = ownerIdField.getText();
+            String vehicleModel = vehicleModelField.getText();
+            String vehicleBrand = vehicleBrandField.getText();
+            String plateNumber = plateNumberField.getText();
+            String serialNumber = serialNumberField.getText();
+            String vinNumber = vinNumberField.getText();
 
-        // Send car registration details to the server
-        String response = client.notifyCarReady(ownerId, vehicleModel, vehicleBrand, plateNumber, serialNumber, vinNumber, residencyDate);
-        JOptionPane.showMessageDialog(this, response);
+            // Format residency date
+            String residencyDate = residencyDatePicker.getJFormattedTextField().getText();
+            try {
+                LocalDate parsedDate = LocalDate.parse(residencyDate, DateTimeFormatter.ofPattern("MMM d, yyyy"));
+                residencyDate = parsedDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+            } catch (DateTimeParseException e) {
+                JOptionPane.showMessageDialog(this, "Invalid date format. Please use 'MMM d, yyyy'.");
+                return;
+            }
+
+            // Send car registration details to the server
+            String response = client.notifyCarReady(ownerId, vehicleModel, vehicleBrand, plateNumber, serialNumber,
+                    vinNumber, residencyDate);
+
+            // Debug print
+            System.out.println("Server response: " + response);
+
+            // If registration was successful, add the vehicle to the side panel
+            if (response.contains("successful")) {
+                // Create new vehicle with status "Available"
+                Vehicle newVehicle = new Vehicle(
+                        generateVehicleId(), // You can create a method to generate unique IDs
+                        "Available", // Initial status
+                        ownerId,
+                        vehicleModel,
+                        vehicleBrand,
+                        plateNumber,
+                        serialNumber,
+                        vinNumber,
+                        0 // Initial residency time
+                );
+
+                // Debug print
+                System.out.println("Adding vehicle to panel: " + newVehicle);
+
+                // Add to panel
+                registeredVehiclesPanel.addVehicle(newVehicle);
+                registeredVehiclesPanel.revalidate();
+                registeredVehiclesPanel.repaint();
+
+                // Clear the form fields
+                clearRegistrationFields();
+
+                JOptionPane.showMessageDialog(this, "Vehicle registered successfully!");
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Failed to register vehicle: " + response,
+                        "Registration Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error registering vehicle: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
+    private int generateVehicleId() {
+        // Simple ID generation - you might want to make this more sophisticated
+        return (int) (Math.random() * 10000);
+    }
+
+    private void clearRegistrationFields() {
+        vehicleModelField.setText("");
+        vehicleBrandField.setText("");
+        plateNumberField.setText("");
+        serialNumberField.setText("");
+        vinNumberField.setText("");
+        residencyDatePicker.getJFormattedTextField().setText("");
+    }
 
     private void displayVCCJobsAndTimes() {
-        //String clientId = clientIdField.getText();  // Retrieve the current client ID from the text field
-        String response = client.requestAllJobs();  // Send both clientId and role to server
-        JOptionPane.showMessageDialog(this, response);  // Display server response in a message dialog
+        // String clientId = clientIdField.getText(); // Retrieve the current client ID
+        // from the text field
+        String response = client.requestAllJobs(); // Send both clientId and role to server
+        JOptionPane.showMessageDialog(this, response); // Display server response in a message dialog
     }
 
     private static class RoundedBorder implements Border {

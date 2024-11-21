@@ -99,7 +99,11 @@ public class Client {
         return sendRequest(request);  // Send the request to the server
     }
 
-
+    //Handles Vehicle Removal 
+    public String removeVehicle(String ownerId, String vinNumber) {
+        String request = "REMOVE_VEHICLE " + ownerId + " " + vinNumber;
+        return sendRequest(request);
+    }
 
     // Logs in the user and identifies if they are a VCCController
     public String login(String username, String password) {

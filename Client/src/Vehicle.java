@@ -3,7 +3,7 @@ public class Vehicle {
 
     private int vehicleID;
     private String status;
-    private int ownerID;
+    private String ownerID;
     private String model;
     private String brand;
     private String plateNumber;
@@ -13,7 +13,7 @@ public class Vehicle {
     private int lastCheckpointID; // Field to store the last checkpoint ID
 
     // Constructor
-    public Vehicle(int vehicleID, String status, int ownerID, String model, String brand, 
+    public Vehicle(int vehicleID, String status, String ownerID, String model, String brand, 
                    String plateNumber, String serialNumber, String vinNum, int residencyTime) {
         this.vehicleID = vehicleID;
         this.status = status;
@@ -54,11 +54,11 @@ public class Vehicle {
         this.status = status;
     }
 
-    public int getOwnerID() {
+    public String getOwnerID() {
         return ownerID;
     }
 
-    public void setOwnerID(int ownerID) {
+    public void setOwnerID(String ownerID) {
         this.ownerID = ownerID;
     }
 

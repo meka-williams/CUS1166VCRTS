@@ -131,7 +131,8 @@ public class VCController {
         }
     }
 
-    // Restored and updated method to display jobs and completion times, with role-based access
+    // Restored and updated method to display jobs and completion times, with
+    // role-based access
     public String displayJobsAndCompletionTimes(String clientId, String role) {
         if (!"VCCController".equals(role)) {
             return "Access denied: Insufficient permissions.";
@@ -143,26 +144,27 @@ public class VCController {
         for (JobRequest job : jobsQueue) {
             cumulativeTime += job.getDuration();
             jobInfo.append(String.format(
-                "Job ID: %s, Client ID: %s, Description: %s, Duration: %d hours, Completion Time: %d hours\n",
-                job.getJobId(), job.getClientId(), job.getJobDescription(), job.getDuration(), cumulativeTime
-            ));
+                    "Job ID: %s, Client ID: %s, Description: %s, Duration: %d hours, Completion Time: %d hours\n",
+                    job.getJobId(), job.getClientId(), job.getJobDescription(), job.getDuration(), cumulativeTime));
             System.out.println("Returning job info: " + jobInfo.toString());
         }
 
         return jobInfo.toString();
     }
 
-
-    // Optional method to get all jobs if the client requests with a specific role (for further flexibility)
+    // Optional method to get all jobs if the client requests with a specific role
+    // (for further flexibility)
     public String getAllJobs() {
         StringBuilder jobInfo = new StringBuilder("All Jobs in Queue:\n");
         for (JobRequest job : jobsQueue) {
-            jobInfo.append(String.format("Job ID: %s, Client ID: %s, Description: %s, Duration: %d, Redundancy Level: %d, Deadline: %s\n",
-                                         job.getJobId(), job.getClientId(), job.getJobDescription(),
-                                         job.getDuration(), job.getRedundancyLevel(), job.getJobDeadline()));
+            jobInfo.append(String.format(
+                    "Job ID: %s, Client ID: %s, Description: %s, Duration: %d, Redundancy Level: %d, Deadline: %s\n",
+                    job.getJobId(), job.getClientId(), job.getJobDescription(),
+                    job.getDuration(), job.getRedundancyLevel(), job.getJobDeadline()));
         }
         return jobInfo.toString();
     }
+
     public String markJobComplete(String message) {
         try {
             String[] parts = message.split(" ");
@@ -186,7 +188,7 @@ public class VCController {
             }
 
             jobsQueue.remove(jobToRemove); // Remove the job from the in-memory queue
-            deleteJobFromCSV(jobId);       // Remove the job from the CSV
+            deleteJobFromCSV(jobId); // Remove the job from the CSV
             return "Job marked as complete and removed successfully.";
         } catch (Exception e) {
             e.printStackTrace();
@@ -200,7 +202,7 @@ public class VCController {
         File tempFile = new File("JobRequests_temp.csv");
 
         try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-             PrintWriter writer = new PrintWriter(new FileWriter(tempFile))) {
+                PrintWriter writer = new PrintWriter(new FileWriter(tempFile))) {
 
             String line;
             boolean jobFound = false;
@@ -239,5 +241,68 @@ public class VCController {
         return true;
     }
 
+    // Add this method to your VCController class
+    public String handleVehicleRemoval(String message) {
+        try {
+            // Parse message format: "REMOVE_VEHICLE ownerId vinNumber"
+            String[] parts = message.split(" ");
+            if (parts.length != 3) {
+                return "Error: Invalid command format";
+            }
 
+            String ownerId = parts[1];
+            String vinNumber = parts[2];
+
+            // Remove from vehiclesReady list
+            CarRentals carToRemove = null;
+            for (CarRentals car : vehiclesReady) {
+                if (car.getVinNumber().equals(vinNumber) && car.getOwnerId().equals(ownerId)) {
+                    carToRemove = car;
+                    break;
+                }
+            }
+
+            if (carToRemove != null) {
+                vehiclesReady.remove(carToRemove);
+                removeCarFromCSV(vinNumber);
+                return "Vehicle removed successfully";
+            } else {
+                return "Error: Vehicle not found";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error processing vehicle removal request";
+        }
+    }
+
+    private void removeCarFromCSV(String vinNumber) {
+        File inputFile = new File("CarRegistration.csv");
+        File tempFile = new File("CarRegistration_temp.csv");
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+                PrintWriter writer = new PrintWriter(new FileWriter(tempFile))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 6 && !parts[5].equals(vinNumber)) {
+                    writer.println(line);
+                }
+            }
+
+            // Delete the original file
+            if (!inputFile.delete()) {
+                System.err.println("Could not delete original file");
+                return;
+            }
+
+            // Rename temp file to original file name
+            if (!tempFile.renameTo(inputFile)) {
+                System.err.println("Could not rename temp file");
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error processing CarRegistration.csv: " + e.getMessage());
+        }
+    }
 }

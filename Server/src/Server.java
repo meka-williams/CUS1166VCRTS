@@ -62,6 +62,8 @@ public class Server {
                     response = vcController.getAllJobs();
                 } else if (clientMessage.startsWith("MARK_COMPLETE")) {
                     response = vcController.markJobComplete(clientMessage);
+                } else if (clientMessage.startsWith("REMOVE_VEHICLE")){
+                    response = vcController.handleVehicleRemoval(clientMessage);
                 } else {
                     response = "Invalid request";
                 }
