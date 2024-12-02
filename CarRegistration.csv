@@ -1,12 +1,3 @@
 Owner ID,Vehicle Model, Vehicle Brand, Plate Number, Serial Number, VIN Number, Residency Time, Timestamp
 1234,test test (Plate: test, Serial: test, VIN: test),1, 
-carOwner,Sudan,Toyota,GUEIW344,242434,343434,2024-09-16
-carOwner,323,3232323,323,2323,323,2024-11-11
-carOwner,323,3232323,323,2323,323,2024-11-11
-carOwner,232323,32323,323,2323,32323,2024-11-17
-carOwner,Sudan,Toyota,GUGR676,23232323,21243423423,2024-11-10
-carOwner,Sudan,Honda,GYD3934,23323,0995844,2024-11-11
-carOwner,Sudan,Toyota,HFYD23,23422324,2233FJE2323,2024-11-10
-carOwner,Sudan,Toyota,GYDISD2323,232323Dwd23,32323232,2024-11-10
-carOwner,Supra,Toyota,UIDI3233,32323fwj232e,2ewew23dw,2024-11-03
-carOwner,Sudan,Honda,UIO2323,wejwewe232,323,2024-11-17
+carOwner,Sedan,Toyota,GYS2323,2323232,23232323qs,2024-10-13

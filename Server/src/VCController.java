@@ -7,101 +7,122 @@ import java.util.regex.Pattern;
 public class VCController {
     private List<JobRequest> jobsQueue;
     private List<CarRentals> vehiclesReady;
+    private ServerGUI gui;
 
     public VCController() {
-        this.jobsQueue = new LinkedList<>();
-        this.vehiclesReady = new ArrayList<>();
+        jobsQueue = new LinkedList<>();
+        vehiclesReady = new ArrayList<>();
         loadJobsFromCSV();
     }
+
+    public void setGUI(ServerGUI gui) {
+        this.gui = gui;
+    }
+
     private void loadJobsFromCSV() {
         try (BufferedReader reader = new BufferedReader(new FileReader("JobRequests.csv"))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                if (parts.length == 6) { // Expecting 6 parts in each job record
-                    String jobId = parts[0];
-                    String clientId = parts[1];
-                    String jobDescription = parts[2];
-                    int duration = Integer.parseInt(parts[3]);
-                    int redundancyLevel = Integer.parseInt(parts[4]);
-                    String jobDeadline = parts[5];
-
-                    JobRequest job = new JobRequest(jobId, clientId, jobDescription, duration, redundancyLevel, jobDeadline);
+                if (parts.length == 6) {
+                    JobRequest job = new JobRequest(parts[0], parts[1], parts[2],
+                            Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), parts[5]);
                     jobsQueue.add(job);
-                    System.out.println("Loaded job from CSV: " + job); // Debug output
-                } else {
-                    System.err.println("Invalid job format in CSV: " + line);
+                    if (gui != null) {
+                        gui.log("Loaded job: " + job.getJobId());
+                    }
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Error reading jobs from CSV: " + e.getMessage());
-        } catch (NumberFormatException e) {
-            System.err.println("Error parsing job details: " + e.getMessage());
+        } catch (IOException | NumberFormatException e) {
+            if (gui != null) {
+                gui.log("Error loading jobs: " + e.getMessage());
+            }
         }
     }
+
     public String handleJobSubmission(String message) {
-        System.out.println("Received job submission message: " + message); // Debugging
-        Pattern pattern = Pattern.compile("JOB_SUBMIT (\\S+) \"([^\"]+)\" (\\d+) (\\d+) (\\S+)");
-        Matcher matcher = pattern.matcher(message);
+        try {
+            Pattern pattern = Pattern.compile("JOB_SUBMIT (\\S+) \"([^\"]+)\" (\\d+) (\\d+) (\\S+)");
+            Matcher matcher = pattern.matcher(message);
 
-        if (!matcher.matches()) {
-            return "Invalid job submission format.";
+            if (!matcher.matches()) {
+                return "Invalid job submission format.";
+            }
+
+            JobRequest job = new JobRequest(
+                    matcher.group(1),
+                    matcher.group(2),
+                    Integer.parseInt(matcher.group(3)),
+                    Integer.parseInt(matcher.group(4)),
+                    matcher.group(5));
+
+            jobsQueue.add(job);
+            logJobRequest(job);
+
+            if (gui != null) {
+                gui.log("New job submitted: " + job.getJobId());
+            }
+
+            return "Job submitted successfully with ID: " + job.getJobId();
+        } catch (Exception e) {
+            String error = "Error submitting job: " + e.getMessage();
+            if (gui != null) {
+                gui.log(error);
+            }
+            return error;
         }
-
-        String clientId = matcher.group(1);
-        String jobDescription = matcher.group(2);
-        int duration = Integer.parseInt(matcher.group(3));
-        int redundancyLevel = Integer.parseInt(matcher.group(4));
-        String jobDeadline = matcher.group(5);
-
-        JobRequest job = new JobRequest(clientId, jobDescription, duration, redundancyLevel, jobDeadline);
-        jobsQueue.add(job);  // Add to queue with correct clientId
-        logJobRequest(job);
-
-        System.out.println("Job successfully added to queue for clientId: " + clientId); // Debugging
-        System.out.println("Current jobsQueue: " + jobsQueue); // Print entire queue for verification
-
-        return "Job submitted and logged successfully with ID: " + job.getJobId();
     }
-
 
     public String handleCarReady(String message) {
-        String[] parts = message.split(" ");
-        if (parts.length < 8) {
-            return "Error: Invalid car readiness format.";
+        try {
+            String[] parts = message.split(" ");
+            if (parts.length < 8) {
+                return "Invalid car readiness format.";
+            }
+
+            CarRentals car = new CarRentals(parts[1], parts[2], parts[3],
+                    parts[4], parts[5], parts[6], parts[7]);
+            vehiclesReady.add(car);
+            logCarReady(car);
+
+            Vehicle guiVehicle = new Vehicle(
+                    generateVehicleId(),
+                    "Available",
+                    car.getOwnerId(),
+                    car.getVehicleModel(),
+                    car.getVehicleBrand(),
+                    car.getPlateNumber(),
+                    car.getSerialNumber(),
+                    car.getVinNumber(),
+                    0);
+
+            if (gui != null) {
+                gui.addVehicle(guiVehicle);
+                gui.log("New vehicle registered: " + car.getVinNumber());
+            }
+
+            return "Car registered successfully.";
+        } catch (Exception e) {
+            String error = "Error registering car: " + e.getMessage();
+            if (gui != null) {
+                gui.log(error);
+            }
+            return error;
         }
-
-        String ownerId = parts[1];
-        String model = parts[2];
-        String brand = parts[3];
-        String plateNumber = parts[4];
-        String serialNumber = parts[5];
-        String vinNumber = parts[6];
-        String residencyDate = parts[7];
-
-        CarRentals car = new CarRentals(ownerId, model, brand, plateNumber, serialNumber, vinNumber, residencyDate);
-        vehiclesReady.add(car);
-        logCarReady(car);
-
-        return "Car ready notification logged successfully.";
     }
 
     private void logJobRequest(JobRequest job) {
-        String jobInfo = String.format("%s,%s,%s,%d,%d,%s", 
-                                       job.getJobId(), 
-                                       job.getClientId(), 
-                                       job.getJobDescription(), 
-                                       job.getDuration(), 
-                                       job.getRedundancyLevel(),
-                                       job.getJobDeadline());
+        String jobInfo = String.format("%s,%s,%s,%d,%d,%s",
+                job.getJobId(), job.getClientId(), job.getJobDescription(),
+                job.getDuration(), job.getRedundancyLevel(), job.getJobDeadline());
         appendToFile("JobRequests.csv", jobInfo);
     }
 
     private void logCarReady(CarRentals car) {
         String carInfo = String.format("%s,%s,%s,%s,%s,%s,%s",
-                                       car.getOwnerId(), car.getVehicleModel(), car.getVehicleBrand(), 
-                                       car.getPlateNumber(), car.getSerialNumber(), 
-                                       car.getVinNumber(), car.getResidencyTime());
+                car.getOwnerId(), car.getVehicleModel(), car.getVehicleBrand(),
+                car.getPlateNumber(), car.getSerialNumber(),
+                car.getVinNumber(), car.getResidencyTime());
         appendToFile("CarRegistration.csv", carInfo);
     }
 
@@ -109,8 +130,49 @@ public class VCController {
         try (PrintWriter writer = new PrintWriter(new FileWriter(fileName, true))) {
             writer.println(data);
         } catch (IOException e) {
-            System.err.println("Error saving to file: " + fileName);
+            if (gui != null) {
+                gui.log("Error saving to file " + fileName + ": " + e.getMessage());
+            }
         }
+    }
+
+public String handleVehicleRemoval(String message) {
+    try {
+        String[] parts = message.split(" ");
+        if (parts.length != 3) return "Invalid command format";
+
+        String ownerId = parts[1];
+        String vinNumber = parts[2];
+
+        CarRentals carToRemove = vehiclesReady.stream()
+            .filter(car -> car.getVinNumber().equals(vinNumber))
+            .findFirst()
+            .orElse(null);
+
+        if (carToRemove != null) {
+            vehiclesReady.remove(carToRemove);
+            removeCarFromCSV(vinNumber);
+            // Notify clients
+            notifyVehicleRemoval(ownerId, vinNumber);
+            if (gui != null) {
+                gui.log("Vehicle removed: " + vinNumber);
+            }
+            return "Vehicle removed successfully";
+        }
+        return "Vehicle not found";
+    } catch (Exception e) {
+        return "Error removing vehicle: " + e.getMessage();
+    }
+}
+
+private void notifyVehicleRemoval(String ownerId, String vinNumber) {
+    String message = "VEHICLE_REMOVED " + ownerId + " " + vinNumber;
+    // Send message to client through socket connection
+    // Implementation depends on your client-server communication setup
+}
+
+    private int generateVehicleId() {
+        return (int) (Math.random() * 10000);
     }
 
     public void allocateJobToCars(JobRequest job) {
@@ -121,14 +183,22 @@ public class VCController {
             if (allocatedCars.size() < requiredCars) {
                 car.assignJob(job);
                 allocatedCars.add(car);
+                if (gui != null) {
+                    gui.updateVehicleStatus(Integer.parseInt(car.getOwnerId()), "Assigned");
+                    gui.log("Assigned job " + job.getJobId() + " to car " + car.getVinNumber());
+                }
             }
         }
 
-        if (allocatedCars.size() < requiredCars) {
-            System.out.println("Warning: Not enough cars available for requested redundancy level.");
-        } else {
-            System.out.println("Job assigned to " + allocatedCars.size() + " cars.");
+        if (gui != null) {
+            if (allocatedCars.size() < requiredCars) {
+                gui.log("Warning: Only allocated " + allocatedCars.size() + "/" + requiredCars
+                        + " requested cars for job " + job.getJobId());
+            } else {
+                gui.log("Successfully allocated " + requiredCars + " cars to job " + job.getJobId());
+            }
         }
+
     }
 
     // Restored and updated method to display jobs and completion times, with
@@ -196,7 +266,6 @@ public class VCController {
         }
     }
 
-    // Helper method to remove a job from the CSV
     private boolean deleteJobFromCSV(String jobId) {
         File inputFile = new File("JobRequests.csv");
         File tempFile = new File("JobRequests_temp.csv");
@@ -207,72 +276,39 @@ public class VCController {
             String line;
             boolean jobFound = false;
 
-            // Read each line and write to the temp file, excluding the job to delete
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith(jobId + ",")) {
                     jobFound = true;
-                    continue; // Skip this job
+                    continue;
                 }
-                writer.println(line); // Write other jobs to temp file
+                writer.println(line);
             }
 
             if (!jobFound) {
-                System.err.println("Job ID not found: " + jobId);
+                if (gui != null)
+                    gui.log("Job ID not found: " + jobId);
                 return false;
             }
 
         } catch (IOException e) {
-            System.err.println("Error processing JobRequests.csv: " + e.getMessage());
+            if (gui != null)
+                gui.log("Error processing JobRequests.csv: " + e.getMessage());
             return false;
         }
 
-        // Delete the original file
         if (!inputFile.delete()) {
-            System.err.println("Failed to delete original file.");
+            if (gui != null)
+                gui.log("Failed to delete original file.");
             return false;
         }
 
-        // Rename temp file to original file name
         if (!tempFile.renameTo(inputFile)) {
-            System.err.println("Failed to rename temporary file.");
+            if (gui != null)
+                gui.log("Failed to rename temporary file.");
             return false;
         }
 
         return true;
-    }
-
-    // Add this method to your VCController class
-    public String handleVehicleRemoval(String message) {
-        try {
-            // Parse message format: "REMOVE_VEHICLE ownerId vinNumber"
-            String[] parts = message.split(" ");
-            if (parts.length != 3) {
-                return "Error: Invalid command format";
-            }
-
-            String ownerId = parts[1];
-            String vinNumber = parts[2];
-
-            // Remove from vehiclesReady list
-            CarRentals carToRemove = null;
-            for (CarRentals car : vehiclesReady) {
-                if (car.getVinNumber().equals(vinNumber) && car.getOwnerId().equals(ownerId)) {
-                    carToRemove = car;
-                    break;
-                }
-            }
-
-            if (carToRemove != null) {
-                vehiclesReady.remove(carToRemove);
-                removeCarFromCSV(vinNumber);
-                return "Vehicle removed successfully";
-            } else {
-                return "Error: Vehicle not found";
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error processing vehicle removal request";
-        }
     }
 
     private void removeCarFromCSV(String vinNumber) {
@@ -290,19 +326,20 @@ public class VCController {
                 }
             }
 
-            // Delete the original file
             if (!inputFile.delete()) {
-                System.err.println("Could not delete original file");
+                if (gui != null)
+                    gui.log("Could not delete original file");
                 return;
             }
 
-            // Rename temp file to original file name
             if (!tempFile.renameTo(inputFile)) {
-                System.err.println("Could not rename temp file");
+                if (gui != null)
+                    gui.log("Could not rename temp file");
             }
 
         } catch (IOException e) {
-            System.err.println("Error processing CarRegistration.csv: " + e.getMessage());
+            if (gui != null)
+                gui.log("Error processing CarRegistration.csv: " + e.getMessage());
         }
     }
 }
