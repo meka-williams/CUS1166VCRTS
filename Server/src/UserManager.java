@@ -15,11 +15,10 @@ import java.util.UUID;
 import java.sql.Date;
 
 public class UserManager {
-    private static final String USER_DATA_FILE = "UserInformation.csv";
     private Map<String, String[]> users;
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/sys";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "HmP9HC6RAjRaSolvPqpcJmbj3wR+UuSUUywHMQgWm7M=";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/?user=Group 5";
+    private static final String DB_USER = "Group 5";
+    private static final String DB_PASSWORD = "@SoftwareEngineering2024";
 
     public UserManager() {
         users = new HashMap<>();
