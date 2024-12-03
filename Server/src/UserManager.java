@@ -1,89 +1,146 @@
 // UserManager.java
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.UUID;
+import java.sql.Date;
 
 public class UserManager {
-	 private static final String USER_DATA_FILE = "UserInformation.csv";
+    private static final String USER_DATA_FILE = "UserInformation.csv";
     private Map<String, String[]> users;
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/sys";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "HmP9HC6RAjRaSolvPqpcJmbj3wR+UuSUUywHMQgWm7M=";
 
     public UserManager() {
         users = new HashMap<>();
-        loadUsersFromCSV();
+        loadUsersFromDatabase();
     }
 
-    private void loadUsersFromCSV() {
-        try (BufferedReader reader = new BufferedReader(new FileReader(USER_DATA_FILE))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length == 7) {  // Confirm the format matches
-                    System.out.printf("Loading user: Username=%s, Password=%s, AccountType=%s\n", parts[2], parts[5], parts[6]);
-                    users.put(parts[2], parts); // Username at index 2, Password at index 5
-                } else {
-                    System.out.println("Invalid user data format: " + line);
-                }
+    private void loadUsersFromDatabase() {
+        String query = "SELECT * FROM users";
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(query)) {
+
+            while (resultSet.next()) {
+                String userId = resultSet.getString("userId");
+                String username = resultSet.getString("username");
+
+                String[] userData = new String[]{
+                    userId,
+                    resultSet.getString("firstName"),
+                    resultSet.getString("lastName"),
+                    username,
+                    resultSet.getString("email"),
+                    resultSet.getString("dob"),
+                    resultSet.getString("password"),
+                    resultSet.getString("accountType")
+                };
+
+                users.put(username, userData);
             }
-        } catch (IOException e) {
-            System.err.println("Error loading users from CSV: " + e.getMessage());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error loading users from database: " + e.getMessage());
         }
     }
 
+    public List<String[]> getAllUsers() {
+        List<String[]> users = new ArrayList<>();
+        String query = "SELECT userId, username, email, accountType FROM users";
+        
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(query)) {
+            
+            while (resultSet.next()) {
+                String[] user = new String[4];
+                user[0] = resultSet.getString("userId");
+                user[1] = resultSet.getString("username");
+                user[2] = resultSet.getString("email");
+                user[3] = resultSet.getString("accountType");
+                users.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error retrieving users from database: " + e.getMessage());
+        }
+        
+        return users;
+    }
 
     public String registerUser(String message) {
-        System.out.println("Processing registration command: " + message); // Debugging output
-
-        // Regular expression to match quoted strings or non-space sequences
-        Pattern pattern = Pattern.compile("\"([^\"]*)\"|(\\S+)");
-        Matcher matcher = pattern.matcher(message);
-
-        List<String> partsList = new ArrayList<>();
-        while (matcher.find()) {
-            if (matcher.group(1) != null) {
-                // Quoted string without the quotes
-                partsList.add(matcher.group(1));
-            } else {
-                // Unquoted word
-                partsList.add(matcher.group(2));
-            }
-        }
-
-        String[] parts = partsList.toArray(new String[0]);
+        String[] parts = message.split(" ");
         if (parts.length != 8) {
             return "Error: Invalid registration command";
         }
 
+        String userId = UUID.randomUUID().toString();
         String firstName = parts[1];
         String lastName = parts[2];
         String username = parts[3];
         String email = parts[4];
-        String dob = parts[5];  // Already formatted as "yyyy-MM-dd"
+        String dob = parts[5].trim();  // Trim whitespace
         String password = parts[6];
         String accountType = parts[7];
 
-        // Check if username already exists
-        if (users.containsKey(username)) {
-            return "Error: Username already exists";
+        // Debugging
+        System.out.println("Original DOB value: [" + dob + "]");
+
+        // Remove surrounding quotes, if any
+        dob = dob.replaceAll("^\"|\"$", "");
+        System.out.println("Processed DOB value: [" + dob + "]");
+
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement statement = connection.prepareStatement(
+                 "INSERT INTO Users (userId, firstName, lastName, username, email, dob, password, accountType) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+             )) {
+
+            statement.setString(1, userId);
+            statement.setString(2, firstName);
+            statement.setString(3, lastName);
+            statement.setString(4, username);
+            statement.setString(5, email);
+
+            try {
+                // Parse the date and convert to java.sql.Date
+                LocalDate parsedDate = LocalDate.parse(dob); // Ensures valid format
+                Date sqlDate = Date.valueOf(parsedDate);    // Converts to java.sql.Date
+                statement.setDate(6, sqlDate);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return "Error: Invalid date format for DOB. Ensure it is yyyy-MM-dd.";
+            }
+
+            statement.setString(7, password);
+            statement.setString(8, accountType);
+
+            statement.executeUpdate();
+            return "Registration successful";
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Unable to register user";
         }
-
-        // Store the user's data in the map
-        String[] userData = {firstName, lastName, username, email, dob, password, accountType};
-        users.put(username, userData);
-
-        // Save to CSV with all fields in the correct order
-        saveUserToCSV(firstName, lastName, username, email, dob, password, accountType);
-
-        return "Registration successful";
     }
+
+
+
+
+
 
     public String loginUser(String message) {
         String[] parts = message.split(" ");
-        if (parts.length != 3) {  
+        if (parts.length != 3) {
             return "Error: Invalid login command";
         }
 
@@ -95,36 +152,56 @@ public class UserManager {
         // Hardcoded credentials for "vcc"
         if (username.equals("vcc") && password.equals("vccadmin")) {
             System.out.println("Hardcoded VCC login successful");
-            return "Login successful,VCCController";
+            String vccUserId = "vcc-unique-id"; // Assign a fixed or generated userId
+            return "Login successful,VCCController," + vccUserId;
         }
 
-        // Check against stored users map
-        if (!users.containsKey(username)) {
-            System.out.println("Error: Username not found in users map");
-            return "Error: Username not found";
+        // SQL Query to validate user credentials
+        String query = "SELECT userId, password, accountType FROM users WHERE username = ?";
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, "\"" + username + "\""); // Add quotes to match the stored format
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    // Username not found in database
+                    System.out.println("Error: Username not found in database");
+                    return "Error: Username not found";
+                }
+
+                // Retrieve user details from database
+                String storedPassword = resultSet.getString("password");
+                String accountType = resultSet.getString("accountType");
+                String userId = resultSet.getString("userId");
+
+                // Remove quotes from stored values for comparison
+                storedPassword = storedPassword.replaceAll("^\"|\"$", "");
+                accountType = accountType.replaceAll("^\"|\"$", "");
+
+                System.out.printf("Found user: StoredPassword=%s, AccountType=%s, userId=%s\n", storedPassword, accountType, userId);
+
+                if (!storedPassword.equals(password)) {
+                    // Password mismatch
+                    System.out.println("Error: Incorrect password");
+                    return "Error: Incorrect password";
+                }
+
+                // Login successful
+                return "Login successful," + accountType + "," + userId;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Unable to process login";
         }
+    }
 
-        String[] userData = users.get(username);
-        String storedPassword = userData[5];
-        String accountType = userData[6];
 
-        System.out.printf("Found user: StoredPassword=%s, AccountType=%s\n", storedPassword, accountType);
-
-        if (!storedPassword.equals(password)) {
-            System.out.println("Error: Incorrect password");
-            return "Error: Incorrect password";
-        }
-
-        return "Login successful," + accountType;
     }
 
 
 
-    private void saveUserToCSV(String firstName, String lastName, String username, String email, String dob, String password, String accountType) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(USER_DATA_FILE, true))) {
-            writer.println(String.join(",", firstName, lastName, username, email, dob, password, accountType));
-        } catch (IOException e) {
-            System.err.println("Error saving user to CSV: " + e.getMessage());
-        }
-    }
-}
+
+   
+    
+

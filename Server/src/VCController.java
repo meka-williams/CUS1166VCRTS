@@ -1,345 +1,275 @@
-
-import java.io.*;
+import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VCController {
-    private List<JobRequest> jobsQueue;
-    private List<CarRentals> vehiclesReady;
-    private ServerGUI gui;
-
+    private List<JobRequest> jobsQueue;  // In-memory job queue
+    private List<CarRentals> vehiclesReady;  // In-memory vehicle list
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/sys";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "HmP9HC6RAjRaSolvPqpcJmbj3wR+UuSUUywHMQgWm7M=";
     public VCController() {
-        jobsQueue = new LinkedList<>();
-        vehiclesReady = new ArrayList<>();
-        loadJobsFromCSV();
+        this.jobsQueue = new LinkedList<>();
+        this.vehiclesReady = new ArrayList<>();
+        loadJobsFromDatabase(); // Load jobs into memory from SQL
+        loadVehiclesFromDatabase(); // Load vehicles into memory from SQL
+    }
+    public List<JobRequest> getJobsQueue() {
+        return new ArrayList<>(jobsQueue);
+    }
+    // Load jobs from SQL database into the in-memory queue
+    private void loadJobsFromDatabase() {
+        String query = "SELECT * FROM JobRequests";
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(query)) {
+
+            while (resultSet.next()) {
+                JobRequest job = new JobRequest(
+                    resultSet.getString("jobId"),
+                    resultSet.getString("clientId"),
+                    resultSet.getString("jobDescription"),
+                    resultSet.getInt("duration"),
+                    resultSet.getInt("redundancyLevel"),
+                    resultSet.getString("jobDeadline"),
+                    resultSet.getTimestamp("timestamp").toString()
+                );
+                jobsQueue.add(job);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error loading jobs from database: " + e.getMessage());
+        }
+    }
+    
+    public List<CarRentals> getVehiclesReady() {
+        return new ArrayList<>(vehiclesReady); // Return a copy to avoid modification
     }
 
-    public void setGUI(ServerGUI gui) {
-        this.gui = gui;
-    }
+    // Load vehicles from SQL database into the in-memory list
+    private void loadVehiclesFromDatabase() {
+        String query = "SELECT * FROM carrentals";
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(query)) {
 
-    private void loadJobsFromCSV() {
-        try (BufferedReader reader = new BufferedReader(new FileReader("JobRequests.csv"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length == 6) {
-                    JobRequest job = new JobRequest(parts[0], parts[1], parts[2],
-                            Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), parts[5]);
-                    jobsQueue.add(job);
-                    if (gui != null) {
-                        gui.log("Loaded job: " + job.getJobId());
-                    }
-                }
+            while (resultSet.next()) {
+                CarRentals car = new CarRentals(
+                    resultSet.getString("ownerId"),
+                    resultSet.getString("model"),
+                    resultSet.getString("brand"),
+                    resultSet.getString("plateNumber"),
+                    resultSet.getString("serialNumber"),
+                    resultSet.getString("vinNumber"),
+                    resultSet.getTimestamp("residencyTime").toString()
+                );
+                vehiclesReady.add(car);
             }
-        } catch (IOException | NumberFormatException e) {
-            if (gui != null) {
-                gui.log("Error loading jobs: " + e.getMessage());
-            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error loading vehicles from database: " + e.getMessage());
         }
     }
 
+    // Handle job submission and log it into SQL
     public String handleJobSubmission(String message) {
-        try {
-            Pattern pattern = Pattern.compile("JOB_SUBMIT (\\S+) \"([^\"]+)\" (\\d+) (\\d+) (\\S+)");
-            Matcher matcher = pattern.matcher(message);
+        System.out.println("Received job submission message: " + message);
+        Pattern pattern = Pattern.compile("JOB_SUBMIT (\\S+) \"([^\"]+)\" (\\d+) (\\d+) (\\S+)");
+        Matcher matcher = pattern.matcher(message);
 
-            if (!matcher.matches()) {
-                return "Invalid job submission format.";
-            }
+        if (!matcher.matches()) {
+            return "Invalid job submission format.";
+        }
 
-            JobRequest job = new JobRequest(
-                    matcher.group(1),
-                    matcher.group(2),
-                    Integer.parseInt(matcher.group(3)),
-                    Integer.parseInt(matcher.group(4)),
-                    matcher.group(5));
+        String clientId = matcher.group(1);
+        String jobDescription = matcher.group(2);
+        int duration = Integer.parseInt(matcher.group(3));
+        int redundancyLevel = Integer.parseInt(matcher.group(4));
+        String jobDeadline = matcher.group(5);
 
-            jobsQueue.add(job);
-            logJobRequest(job);
+        JobRequest job = new JobRequest(clientId, jobDescription, duration, redundancyLevel, jobDeadline);
 
-            if (gui != null) {
-                gui.log("New job submitted: " + job.getJobId());
-            }
+        // Log job into the database
+        String query = "INSERT INTO JobRequests (jobId, clientId, jobDescription, duration, redundancyLevel, jobDeadline, timestamp) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement statement = connection.prepareStatement(query)) {
 
-            return "Job submitted successfully with ID: " + job.getJobId();
-        } catch (Exception e) {
-            String error = "Error submitting job: " + e.getMessage();
-            if (gui != null) {
-                gui.log(error);
-            }
-            return error;
+            statement.setString(1, job.getJobId());
+            statement.setString(2, clientId);
+            statement.setString(3, jobDescription);
+            statement.setInt(4, duration);
+            statement.setInt(5, redundancyLevel);
+            statement.setString(6, jobDeadline);
+
+            statement.executeUpdate();
+            jobsQueue.add(job); // Keep it in memory
+            return "Job submitted and logged successfully with ID: " + job.getJobId();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Unable to log job in database.";
         }
     }
 
+    // Handle car readiness and log it into SQL
     public String handleCarReady(String message) {
-        try {
-            String[] parts = message.split(" ");
-            if (parts.length < 8) {
-                return "Invalid car readiness format.";
-            }
-
-            CarRentals car = new CarRentals(parts[1], parts[2], parts[3],
-                    parts[4], parts[5], parts[6], parts[7]);
-            vehiclesReady.add(car);
-            logCarReady(car);
-
-            Vehicle guiVehicle = new Vehicle(
-                    generateVehicleId(),
-                    "Available",
-                    car.getOwnerId(),
-                    car.getVehicleModel(),
-                    car.getVehicleBrand(),
-                    car.getPlateNumber(),
-                    car.getSerialNumber(),
-                    car.getVinNumber(),
-                    0);
-
-            if (gui != null) {
-                gui.addVehicle(guiVehicle);
-                gui.log("New vehicle registered: " + car.getVinNumber());
-            }
-
-            return "Car registered successfully.";
-        } catch (Exception e) {
-            String error = "Error registering car: " + e.getMessage();
-            if (gui != null) {
-                gui.log(error);
-            }
-            return error;
-        }
-    }
-
-    private void logJobRequest(JobRequest job) {
-        String jobInfo = String.format("%s,%s,%s,%d,%d,%s",
-                job.getJobId(), job.getClientId(), job.getJobDescription(),
-                job.getDuration(), job.getRedundancyLevel(), job.getJobDeadline());
-        appendToFile("JobRequests.csv", jobInfo);
-    }
-
-    private void logCarReady(CarRentals car) {
-        String carInfo = String.format("%s,%s,%s,%s,%s,%s,%s",
-                car.getOwnerId(), car.getVehicleModel(), car.getVehicleBrand(),
-                car.getPlateNumber(), car.getSerialNumber(),
-                car.getVinNumber(), car.getResidencyTime());
-        appendToFile("CarRegistration.csv", carInfo);
-    }
-
-    private void appendToFile(String fileName, String data) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(fileName, true))) {
-            writer.println(data);
-        } catch (IOException e) {
-            if (gui != null) {
-                gui.log("Error saving to file " + fileName + ": " + e.getMessage());
-            }
-        }
-    }
-
-public String handleVehicleRemoval(String message) {
-    try {
         String[] parts = message.split(" ");
-        if (parts.length != 3) return "Invalid command format";
+        if (parts.length < 8) {
+            return "Error: Invalid car readiness format.";
+        }
 
         String ownerId = parts[1];
-        String vinNumber = parts[2];
+        String model = parts[2];
+        String brand = parts[3];
+        String plateNumber = parts[4];
+        String serialNumber = parts[5];
+        String vinNumber = parts[6];
+        String residencyDate = parts[7]; // Expected format: yyyy-MM-dd
 
-        CarRentals carToRemove = vehiclesReady.stream()
-            .filter(car -> car.getVinNumber().equals(vinNumber))
-            .findFirst()
-            .orElse(null);
+        String query = "INSERT INTO CarRentals (ownerId, model, brand, plateNumber, serialNumber, vinNumber, residencyTime) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement statement = connection.prepareStatement(query)) {
 
-        if (carToRemove != null) {
-            vehiclesReady.remove(carToRemove);
-            removeCarFromCSV(vinNumber);
-            // Notify clients
-            notifyVehicleRemoval(ownerId, vinNumber);
-            if (gui != null) {
-                gui.log("Vehicle removed: " + vinNumber);
-            }
-            return "Vehicle removed successfully";
+            statement.setString(1, ownerId);
+            statement.setString(2, model);
+            statement.setString(3, brand);
+            statement.setString(4, plateNumber);
+            statement.setString(5, serialNumber);
+            statement.setString(6, vinNumber);
+            statement.setDate(7, java.sql.Date.valueOf(residencyDate)); // Convert to java.sql.Date
+
+            statement.executeUpdate();
+            CarRentals car = new CarRentals(ownerId, model, brand, plateNumber, serialNumber, vinNumber, residencyDate);
+            vehiclesReady.add(car); // Keep it in memory
+            return "Car ready notification logged successfully.";
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Unable to log car readiness in database.";
         }
-        return "Vehicle not found";
-    } catch (Exception e) {
-        return "Error removing vehicle: " + e.getMessage();
-    }
-}
-
-private void notifyVehicleRemoval(String ownerId, String vinNumber) {
-    String message = "VEHICLE_REMOVED " + ownerId + " " + vinNumber;
-    // Send message to client through socket connection
-    // Implementation depends on your client-server communication setup
-}
-
-    private int generateVehicleId() {
-        return (int) (Math.random() * 10000);
     }
 
-    public void allocateJobToCars(JobRequest job) {
-        int requiredCars = job.getRedundancyLevel();
-        List<CarRentals> allocatedCars = new ArrayList<>();
+    public String handleVehicleRemoval(String message) {
+        try {
+            // Parse message format: "REMOVE_VEHICLE ownerId vinNumber"
+            String[] parts = message.split(" ");
+            if (parts.length != 3) {
+                return "Error: Invalid command format";
+            }
 
-        for (CarRentals car : vehiclesReady) {
-            if (allocatedCars.size() < requiredCars) {
-                car.assignJob(job);
-                allocatedCars.add(car);
-                if (gui != null) {
-                    gui.updateVehicleStatus(Integer.parseInt(car.getOwnerId()), "Assigned");
-                    gui.log("Assigned job " + job.getJobId() + " to car " + car.getVinNumber());
+            String ownerId = parts[1];
+            String vinNumber = parts[2];
+
+            // SQL Query to remove vehicle from database
+            String query = "DELETE FROM CarRentals WHERE ownerId = ? AND vinNumber = ?";
+            try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+                 PreparedStatement statement = connection.prepareStatement(query)) {
+
+                statement.setString(1, ownerId);
+                statement.setString(2, vinNumber);
+
+                int rowsAffected = statement.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    // Remove from the in-memory list
+                    vehiclesReady.removeIf(car -> car.getOwnerId().equals(ownerId) && car.getVinNumber().equals(vinNumber));
+                    return "Vehicle removed successfully.";
+                } else {
+                    return "Error: Vehicle not found in the database.";
                 }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Unable to remove vehicle from the database.";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error processing vehicle removal request.";
         }
-
-        if (gui != null) {
-            if (allocatedCars.size() < requiredCars) {
-                gui.log("Warning: Only allocated " + allocatedCars.size() + "/" + requiredCars
-                        + " requested cars for job " + job.getJobId());
-            } else {
-                gui.log("Successfully allocated " + requiredCars + " cars to job " + job.getJobId());
-            }
-        }
-
     }
 
-    // Restored and updated method to display jobs and completion times, with
-    // role-based access
-    public String displayJobsAndCompletionTimes(String clientId, String role) {
-        if (!"VCCController".equals(role)) {
-            return "Access denied: Insufficient permissions.";
-        }
-
-        StringBuilder jobInfo = new StringBuilder("All Assigned Jobs and Completion Times:\n");
-        int cumulativeTime = 0;
-
-        for (JobRequest job : jobsQueue) {
-            cumulativeTime += job.getDuration();
-            jobInfo.append(String.format(
-                    "Job ID: %s, Client ID: %s, Description: %s, Duration: %d hours, Completion Time: %d hours\n",
-                    job.getJobId(), job.getClientId(), job.getJobDescription(), job.getDuration(), cumulativeTime));
-            System.out.println("Returning job info: " + jobInfo.toString());
-        }
-
-        return jobInfo.toString();
-    }
-
-    // Optional method to get all jobs if the client requests with a specific role
-    // (for further flexibility)
+    // Get all jobs from memory
     public String getAllJobs() {
         StringBuilder jobInfo = new StringBuilder("All Jobs in Queue:\n");
         for (JobRequest job : jobsQueue) {
             jobInfo.append(String.format(
-                    "Job ID: %s, Client ID: %s, Description: %s, Duration: %d, Redundancy Level: %d, Deadline: %s\n",
-                    job.getJobId(), job.getClientId(), job.getJobDescription(),
-                    job.getDuration(), job.getRedundancyLevel(), job.getJobDeadline()));
+                "Job ID: %s, Client ID: %s, Description: %s, Duration: %d, Redundancy Level: %d, Deadline: %s\n",
+                job.getJobId(), job.getClientId(), job.getJobDescription(),
+                job.getDuration(), job.getRedundancyLevel(), job.getJobDeadline()
+            ));
         }
         return jobInfo.toString();
     }
 
+    // Mark job as complete and remove it from SQL and memory
     public String markJobComplete(String message) {
-        try {
-            String[] parts = message.split(" ");
-            if (parts.length != 2) {
-                return "Error: Invalid MARK_COMPLETE command format.";
-            }
+        String[] parts = message.split(" ");
+        if (parts.length != 2) {
+            return "Error: Invalid MARK_COMPLETE command format.";
+        }
 
-            String jobId = parts[1].trim();
+        String jobId = parts[1];
 
-            // Find and remove the job from the queue
-            JobRequest jobToRemove = null;
-            for (JobRequest job : jobsQueue) {
-                if (job.getJobId().equals(jobId)) {
-                    jobToRemove = job;
-                    break;
-                }
-            }
+        String query = "DELETE FROM JobRequests WHERE jobId = ?";
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement statement = connection.prepareStatement(query)) {
 
-            if (jobToRemove == null) {
+            statement.setString(1, jobId);
+            int rowsAffected = statement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                jobsQueue.removeIf(job -> job.getJobId().equals(jobId)); // Remove from memory
+                return "Job marked as complete and removed successfully.";
+            } else {
                 return "Error: Job ID not found.";
             }
-
-            jobsQueue.remove(jobToRemove); // Remove the job from the in-memory queue
-            deleteJobFromCSV(jobId); // Remove the job from the CSV
-            return "Job marked as complete and removed successfully.";
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
-            return "Error processing MARK_COMPLETE request.";
+            return "Error: Unable to mark job as complete in database.";
+        }
+    }
+    public String displayJobsAndCompletionTimes(String clientId) {
+
+        StringBuilder jobInfo = new StringBuilder("All Assigned Jobs and Completion Times:\n");
+        int cumulativeTime = 0;
+
+        // Loop through in-memory jobsQueue for real-time data
+        for (JobRequest job : jobsQueue) {
+            if (job.getClientId().equals(clientId)) {
+                cumulativeTime += job.getDuration();
+                jobInfo.append(String.format(
+                    "Job ID: %s, Client ID: %s, Description: %s, Duration: %d hours, Completion Time: %d hours\n",
+                    job.getJobId(), job.getClientId(), job.getJobDescription(),
+                    job.getDuration(), cumulativeTime
+                ));
+            }
+        }
+
+        return jobInfo.length() > "All Assigned Jobs and Completion Times:\n".length()
+                ? jobInfo.toString()
+                : "No jobs found for the specified client ID.";
+    }
+    public String handleVehicleCompletion(String ownerId, String vinNumber) {
+        // Only update fields that exist in the database
+        String query = "DELETE FROM CarRentals WHERE ownerId = ? AND vinNumber = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, ownerId);
+            stmt.setString(2, vinNumber);
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                // Remove from the in-memory list
+                vehiclesReady.removeIf(vehicle -> vehicle.getOwnerId().equals(ownerId) && vehicle.getVinNumber().equals(vinNumber));
+                return "Vehicle marked as complete successfully.";
+            } else {
+                return "Error: Vehicle not found in the database.";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Unable to mark vehicle as complete.";
         }
     }
 
-    private boolean deleteJobFromCSV(String jobId) {
-        File inputFile = new File("JobRequests.csv");
-        File tempFile = new File("JobRequests_temp.csv");
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-                PrintWriter writer = new PrintWriter(new FileWriter(tempFile))) {
 
-            String line;
-            boolean jobFound = false;
-
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith(jobId + ",")) {
-                    jobFound = true;
-                    continue;
-                }
-                writer.println(line);
-            }
-
-            if (!jobFound) {
-                if (gui != null)
-                    gui.log("Job ID not found: " + jobId);
-                return false;
-            }
-
-        } catch (IOException e) {
-            if (gui != null)
-                gui.log("Error processing JobRequests.csv: " + e.getMessage());
-            return false;
-        }
-
-        if (!inputFile.delete()) {
-            if (gui != null)
-                gui.log("Failed to delete original file.");
-            return false;
-        }
-
-        if (!tempFile.renameTo(inputFile)) {
-            if (gui != null)
-                gui.log("Failed to rename temporary file.");
-            return false;
-        }
-
-        return true;
-    }
-
-    private void removeCarFromCSV(String vinNumber) {
-        File inputFile = new File("CarRegistration.csv");
-        File tempFile = new File("CarRegistration_temp.csv");
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-                PrintWriter writer = new PrintWriter(new FileWriter(tempFile))) {
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length >= 6 && !parts[5].equals(vinNumber)) {
-                    writer.println(line);
-                }
-            }
-
-            if (!inputFile.delete()) {
-                if (gui != null)
-                    gui.log("Could not delete original file");
-                return;
-            }
-
-            if (!tempFile.renameTo(inputFile)) {
-                if (gui != null)
-                    gui.log("Could not rename temp file");
-            }
-
-        } catch (IOException e) {
-            if (gui != null)
-                gui.log("Error processing CarRegistration.csv: " + e.getMessage());
-        }
-    }
 }
