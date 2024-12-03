@@ -7,7 +7,7 @@ import java.util.concurrent.Executors;
 public class Server implements Runnable {
     private static final int PORT = 12345;       // Port for the server
     private ServerSocket serverSocket;          // Server socket
-    private boolean running = true;            // Server state
+    private boolean running = false;            // Server state
     private ExecutorService threadPool;         // Thread pool for client handling
     private ServerGUI serverGUI;                // Reference to the GUI
 
@@ -16,28 +16,20 @@ public class Server implements Runnable {
 
     // Constructor to initialize server components with GUI reference
     public Server(ServerGUI serverGUI) {
-        this.serverGUI = serverGUI; // Assign the GUI reference
-        try {
-            serverSocket = new ServerSocket(PORT);
-            threadPool = Executors.newFixedThreadPool(10); // Limit to 10 concurrent clients
-            userManager = new UserManager();
-            vcController = new VCController();
-            serverGUI.log("Server initialized on port " + PORT);
-        } catch (IOException e) {
-            serverGUI.log("Failed to initialize server: " + e.getMessage());
-        }
+        this.serverGUI = serverGUI;
+        this.userManager = new UserManager();
+        this.vcController = new VCController();
+        serverGUI.log("Server instance created. Ready to start.");
     }
 
   
+   
     @Override
     public void run() {
-        try {
-            serverSocket = new ServerSocket(PORT); // Create a new ServerSocket
-            threadPool = Executors.newFixedThreadPool(10); // Create a new thread pool with size of 10
-            running = true;
-            serverGUI.updateServerStatus(true);
-            serverGUI.log("Server is running on port " + PORT + "...");
+        serverGUI.updateServerStatus(true);
+        serverGUI.log("Server is running on port " + PORT + "...");
 
+        try {
             while (running) {
                 try {
                     Socket clientSocket = serverSocket.accept();
@@ -48,37 +40,45 @@ public class Server implements Runnable {
                     }
                 }
             }
-        } catch (IOException e) {
-            serverGUI.log("Failed to start server: " + e.getMessage());
         } finally {
             shutdownServer(); // Ensure resources are cleaned up
         }
     }
 
 
+
     // Start the server
     public synchronized void start() {
         if (!running) {
-            new Thread(this).start(); // Start the server in a new thread
+            try {
+                serverSocket = new ServerSocket(PORT); // Initialize server socket
+                threadPool = Executors.newFixedThreadPool(10); // Initialize thread pool
+                running = true;
+                new Thread(this).start(); // Start the server in a new thread
+                serverGUI.log("Server started on port " + PORT);
+            } catch (IOException e) {
+                serverGUI.log("Failed to start server: " + e.getMessage());
+            }
         } else {
             serverGUI.log("Server is already running.");
         }
     }
 
 
-    // Stop the server gracefully
     public synchronized void stop() {
         if (running) {
             running = false;
             try {
                 if (serverSocket != null && !serverSocket.isClosed()) {
-                    serverSocket.close(); // Close the ServerSocket
+                    serverSocket.close();
+                    serverSocket = null; // Reset the server socket
                 }
                 if (threadPool != null && !threadPool.isShutdown()) {
-                    threadPool.shutdownNow(); // Stop all threads in the thread pool
+                    threadPool.shutdownNow();
+                    threadPool = null; // Reset the thread pool
                 }
                 serverGUI.log("Server stopped.");
-                serverGUI.updateServerStatus(false); // Update GUI to reflect the server's stopped status
+                serverGUI.updateServerStatus(false);
             } catch (IOException e) {
                 serverGUI.log("Error stopping server: " + e.getMessage());
             }
@@ -86,6 +86,7 @@ public class Server implements Runnable {
             serverGUI.log("Server is not running.");
         }
     }
+
 
     // Returns the current running state of the server
     public synchronized boolean isRunning() {
