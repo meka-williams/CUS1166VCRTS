@@ -226,21 +226,21 @@ public class VCController {
             return "Error: Unable to mark job as complete in database.";
         }
     }
-    public String displayJobsAndCompletionTimes(String clientId) {
+    public String displayJobsAndCompletionTimes() {
 
         StringBuilder jobInfo = new StringBuilder("All Assigned Jobs and Completion Times:\n");
         int cumulativeTime = 0;
 
         // Loop through in-memory jobsQueue for real-time data
         for (JobRequest job : jobsQueue) {
-            if (job.getClientId().equals(clientId)) {
+            
                 cumulativeTime += job.getDuration();
                 jobInfo.append(String.format(
                     "Job ID: %s, Client ID: %s, Description: %s, Duration: %d hours, Completion Time: %d hours\n",
                     job.getJobId(), job.getClientId(), job.getJobDescription(),
                     job.getDuration(), cumulativeTime
                 ));
-            }
+            
         }
 
         return jobInfo.length() > "All Assigned Jobs and Completion Times:\n".length()
