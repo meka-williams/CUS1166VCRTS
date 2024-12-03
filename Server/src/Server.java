@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -32,7 +33,7 @@ public class Server implements Runnable {
     public void run() {
         try {
             serverSocket = new ServerSocket(PORT); // Create a new ServerSocket
-            threadPool = Executors.newFixedThreadPool(10); // Create a new thread pool
+            threadPool = Executors.newFixedThreadPool(10); // Create a new thread pool with size of 10
             running = true;
             serverGUI.updateServerStatus(true);
             serverGUI.log("Server is running on port " + PORT + "...");
@@ -141,6 +142,8 @@ public class Server implements Runnable {
                 return vcController.markJobComplete(clientMessage);
             } else if (clientMessage.startsWith("REMOVE_VEHICLE")) {
                 return vcController.handleVehicleRemoval(clientMessage);
+            } else if (clientMessage.startsWith("GET_CARS")) {
+                return handleGetCars(clientMessage);
             } else {
                 return "Invalid request";
             }
@@ -149,6 +152,40 @@ public class Server implements Runnable {
             return "Error: Unable to process request";
         }
     }
+    private String handleGetCars(String clientMessage) {
+        try {
+            String[] parts = clientMessage.split(" ");
+            if (parts.length != 2) {
+                return "Invalid GET_CARS request format. Usage: GET_CARS <ownerId>";
+            }
+
+            String ownerId = parts[1].trim();
+            List<String[]> vehicles = vcController.getVehiclesByOwnerId(ownerId);
+
+            if (vehicles.isEmpty()) {
+                return "No vehicles found for owner ID: " + ownerId;
+            }
+
+            StringBuilder response = new StringBuilder("Vehicles for Owner ID: " + ownerId + ":\n");
+            for (String[] vehicle : vehicles) {
+                response.append("Car ID: ").append(vehicle[0])
+                        .append(", Model: ").append(vehicle[2])
+                        .append(", Brand: ").append(vehicle[3])
+                        .append(", Plate Number: ").append(vehicle[4])
+                        .append(", Serial Number: ").append(vehicle[5])
+                        .append(", VIN: ").append(vehicle[6])
+                        .append(", Residency Time: ").append(vehicle[7])
+                        .append("\n");
+            }
+
+            return response.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error fetching vehicles: " + e.getMessage();
+        }
+    }
+
+
 
     
     

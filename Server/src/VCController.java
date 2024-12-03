@@ -42,6 +42,36 @@ public class VCController {
             System.err.println("Error loading jobs from database: " + e.getMessage());
         }
     }
+    public List<String[]> getVehiclesByOwnerId(String ownerId) {
+        List<String[]> vehicles = new ArrayList<>();
+        String query = "SELECT carId, ownerId, model, brand, plateNumber, serialNumber, vinNumber, residencyTime FROM CarRentals WHERE ownerId = ?";
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, ownerId);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                String[] vehicle = new String[] {
+                    resultSet.getString("carId"),         // Car ID
+                    resultSet.getString("ownerId"),       // Owner ID
+                    resultSet.getString("model"),         // Model
+                    resultSet.getString("brand"),         // Brand
+                    resultSet.getString("plateNumber"),   // Plate Number
+                    resultSet.getString("serialNumber"),  // Serial Number
+                    resultSet.getString("vinNumber"),     // VIN
+                    resultSet.getString("residencyTime")  // Residency Time
+                };
+                vehicles.add(vehicle);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error fetching vehicles for owner ID: " + e.getMessage());
+        }
+        return vehicles;
+    }
+
+
     
     public List<CarRentals> getVehiclesReady() {
         return new ArrayList<>(vehiclesReady); // Return a copy to avoid modification
