@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 public class VCController {
     private List<JobRequest> jobsQueue;  // In-memory job queue
     private List<CarRentals> vehiclesReady;  // In-memory vehicle list
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/?user=Group 5";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/vcrts";
     private static final String DB_USER = "Group 5";
     private static final String DB_PASSWORD = "@SoftwareEngineering2024";
     public VCController() {
