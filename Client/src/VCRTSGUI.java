@@ -21,14 +21,14 @@ import java.util.Properties;
 
 public class VCRTSGUI extends JFrame {
     private Client client;
-    private JTextField usernameField, clientIdField, jobDurationField, jobDescriptionField;
+    private JTextField usernameField, clientIdField, jobDurationField, jobDescriptionField,usernameDisplayField,usernameDisplayFieldJob;
     private JPasswordField passwordField;
     private JTextField ownerIdField, vehicleModelField, vehicleBrandField, plateNumberField, serialNumberField, vinNumberField, fNameField, lNameField, emailField, newUsernameField;
     private JComboBox<String> redundancyComboBox;
     private JDatePickerImpl residencyDatePicker, dobPicker, jobDeadlinePicker;
     private JPanel mainPanel, loginPanel, signupPanel, clientPanel, ownerPanel, mainPagePanel, jobContainer;
     private RegisteredVehiclesPanel registeredVehiclesPanel;
-
+    JSplitPane splitPane;
     private CardLayout cardLayout;
     private String accountType;
     private String currentClientId;
@@ -182,6 +182,7 @@ public class VCRTSGUI extends JFrame {
             	break;
             case "Owner":
             	setSize(900, 600);
+            	splitPane.setDividerLocation(500); // added fix to allow user to log out and retain orginal splitplane divider location
             	break;
             case "VCCController":
                 setSize(700, 300); // Larger window for other panels
@@ -523,31 +524,43 @@ public class VCRTSGUI extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
+        // Logout button in the top-left corner
         JButton logOutButton = createLogOutButton();
-        logOutButton.addActionListener(e -> cardLayout.show(mainPanel, "Login")); // Adjusted to go to Login screen
         logOutButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
 
         JPanel logOutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         logOutPanel.setBackground(backgroundColor);
         logOutPanel.add(logOutButton);
 
-
-        JLabel welcomeMessage = createStyledHeader("Submit Job Request");
-
         gbc.gridx = 0;
         gbc.gridy = 0;
+        gbc.gridwidth = 2; // Span the logout panel across the entire top row
+        gbc.anchor = GridBagConstraints.NORTHWEST; // Align logout panel to the top-left
         clientPanel.add(logOutPanel, gbc);
 
+        // Welcome message positioned below the logout button
+        JLabel welcomeMessage = createStyledHeader("Submit Job Request");
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridwidth = 2; // Span the welcome message across two columns
+        gbc.anchor = GridBagConstraints.CENTER; // Center-align the welcome message
         clientPanel.add(welcomeMessage, gbc);
 
-        // Client ID (auto-populated and uneditable)
+        // Username Field
         gbc.gridwidth = 1;
         gbc.gridx = 0;
         gbc.gridy = 2;
+        clientPanel.add(createStyledBody("Username:"), gbc);
+
+        usernameDisplayFieldJob = new JTextField();
+        usernameDisplayFieldJob.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        usernameDisplayFieldJob.setEditable(false);
+        gbc.gridx = 1;
+        clientPanel.add(usernameDisplayFieldJob, gbc);
+
+        // Client ID (auto-populated and uneditable)
+        gbc.gridx = 0;
+        gbc.gridy = 3;
         clientPanel.add(createStyledBody("Client ID:"), gbc);
 
         clientIdField = new JTextField(15);
@@ -558,7 +571,7 @@ public class VCRTSGUI extends JFrame {
 
         // Job Description Field
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         clientPanel.add(createStyledBody("Job Description:"), gbc);
 
         JTextField jobDescriptionField = new JTextField(15);
@@ -568,7 +581,7 @@ public class VCRTSGUI extends JFrame {
 
         // Job Duration Field (in hours)
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         clientPanel.add(createStyledBody("Job Duration (hours):"), gbc);
 
         jobDurationField = new JTextField(15);
@@ -578,7 +591,7 @@ public class VCRTSGUI extends JFrame {
 
         // Job Deadline (date picker)
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 6;
         clientPanel.add(createStyledBody("Job Deadline:"), gbc);
 
         UtilDateModel dateModel = new UtilDateModel();
@@ -594,7 +607,7 @@ public class VCRTSGUI extends JFrame {
 
         // Redundancy Level Selection (Number of Cars)
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = 7;
         clientPanel.add(createStyledBody("Redundancy Level (Number of Cars):"), gbc);
 
         JComboBox<String> redundancyComboBox = new JComboBox<>(new String[] { "1", "2", "3", "4", "5" });
@@ -602,13 +615,14 @@ public class VCRTSGUI extends JFrame {
         gbc.gridx = 1;
         clientPanel.add(redundancyComboBox, gbc);
 
+        // Buttons panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         buttonPanel.setBackground(backgroundColor);
 
         // Submit Job Button
         gbc.gridx = 0;
-        gbc.gridy = 7;
-        gbc.gridwidth = 2;
+        gbc.gridy = 8;
+        gbc.gridwidth = 2; // Span buttons panel across two columns
         JButton submitJobButton = createStyledButton("Submit Job");
         submitJobButton.addActionListener(e -> {
             try {
@@ -629,7 +643,7 @@ public class VCRTSGUI extends JFrame {
                 JOptionPane.showMessageDialog(this, "Please enter valid numbers for job duration and redundancy level.");
             }
         });
-        
+
         JButton displayJobsButton = createStyledButton("Display Jobs & Completion Times");
         displayJobsButton.addActionListener(e -> displayVCCJobsAndTimes());
         buttonPanel.add(submitJobButton);
@@ -649,60 +663,81 @@ public class VCRTSGUI extends JFrame {
         // Create the main registration form panel
         JPanel registrationFormPanel = new JPanel(new GridBagLayout());
         registrationFormPanel.setBackground(backgroundColor);
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        JPanel logOutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        // Create a panel for the logout button
+        JPanel logOutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5)); // Align to the right with padding
         logOutPanel.setBackground(backgroundColor);
-
         JButton logOutButton = createLogOutButton();
         logOutButton.addActionListener(e -> {
             cardLayout.show(mainPanel, "Login");
             resizeForPanel("Login");
         });
-        
         logOutPanel.add(logOutButton);
 
-        JLabel welcomePage = createStyledHeader("Car Registration");
+        // Create a styled header for "Car Registration"
+        
+
+        // Create a top panel to hold both the logout button and the header
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(backgroundColor);
+        topPanel.add(logOutPanel, BorderLayout.WEST); // Add the logout panel to the right
+        //topPanel.add(welcomePage, BorderLayout.CENTER); // Center the header
+        JLabel CarHeader = createStyledHeader("Car Registration");
+        // Add the top panel to the top of the owner panel
+        ownerPanel.add(topPanel, BorderLayout.NORTH);
+
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        registrationFormPanel.add(logOutPanel, gbc);
+        gbc.gridwidth = 2;
+        gbc.insets = new Insets(10, 10, 10, 10); // Optional: Adjust padding for header
+        gbc.anchor = GridBagConstraints.CENTER;
+        registrationFormPanel.add(CarHeader, gbc);
+        addRegistrationFields(registrationFormPanel, gbc);
+        
+        // Create the vehicles panel
+        registeredVehiclesPanel = new RegisteredVehiclesPanel(client, this);
 
+
+
+        // Create a split pane to divide the registration form and vehicles list
+        splitPane = new JSplitPane(
+            JSplitPane.HORIZONTAL_SPLIT,
+            new JScrollPane(registrationFormPanel),
+            registeredVehiclesPanel
+        );
+        splitPane.setDividerLocation(500); // Adjust this value to set the initial divider position
+
+        // Add the split pane to the owner panel
+        ownerPanel.add(splitPane, BorderLayout.CENTER);
+
+        // Add the owner panel to the main panel
+        mainPanel.add(ownerPanel, "Owner");
+    }
+
+
+     
+    private void addRegistrationFields(JPanel panel, GridBagConstraints gbc) {
+
+        
+    	gbc.gridwidth = 1;
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        registrationFormPanel.add(welcomePage, gbc);
+        panel.add(createStyledBody("Username:"), gbc);
+        usernameDisplayField = new JTextField();
+        usernameDisplayField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        usernameDisplayField.setEditable(false);
+        gbc.gridx = 1;
+        panel.add(usernameDisplayField, gbc);
 
-         // Add all the existing registration fields
-         addRegistrationFields(registrationFormPanel, gbc);
-
-         // Create the vehicles panel
-         registeredVehiclesPanel = new RegisteredVehiclesPanel();
-         
-         // Create a split pane to divide the registration form and vehicles list
-         JSplitPane splitPane = new JSplitPane(
-             JSplitPane.HORIZONTAL_SPLIT,
-             new JScrollPane(registrationFormPanel),
-             registeredVehiclesPanel
-         );
-         splitPane.setDividerLocation(500); // Adjust this value to set the initial divider position
-         
-         // Add the split pane to the owner panel
-         ownerPanel.add(splitPane, BorderLayout.CENTER);
- 
-         // Add the owner panel to the main panel
-         mainPanel.add(ownerPanel, "Owner");
-     }
-     
-     private void addRegistrationFields(JPanel panel, GridBagConstraints gbc) {
-        // Owner ID (auto-populated and uneditable)
-        gbc.gridwidth = 1;
+        // Username (auto-populated and uneditable)
         gbc.gridx = 0;
         gbc.gridy = 2;
-        panel.add(createStyledBody("Username:"), gbc);
+        panel.add(createStyledBody("User ID:"), gbc);
         ownerIdField = new JTextField();
         ownerIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         ownerIdField.setEditable(false);
@@ -778,37 +813,51 @@ public class VCRTSGUI extends JFrame {
         JButton registerVehicleButton = createStyledButton("Register Vehicle");
         registerVehicleButton.addActionListener(e -> registerVehicle());
         panel.add(registerVehicleButton, gbc);
-
     }
 
-    private void loginUser() {
-        String username = usernameField.getText();
-        String password = new String(passwordField.getPassword());
-        String response = client.login(username, password).trim(); // Trim the response to remove any extra whitespace
 
-        if (response.startsWith("Login successful")) {
-            String[] parts = response.split(",");
-            accountType = parts[1].trim(); // Ensure no extra spaces
-            currentClientId = username;
-            clientIdField.setText(currentClientId);
+     private void loginUser() {
+    	    String username = usernameField.getText();
+    	    String password = new String(passwordField.getPassword());
+    	    String response = client.login(username, password).trim(); // Trim the response to remove any extra whitespace
 
-            // Redirect based on account type
-            if ("JobSubmitter".equals(accountType)) {
-                cardLayout.show(mainPanel, "Client");
-                resizeForPanel("Client");
-            } else if ("CarOwner".equals(accountType)) {
-                cardLayout.show(mainPanel, "Owner");
-                ownerIdField.setText(currentClientId);
-                resizeForPanel("Owner");
-            } else if ("VCCController".equals(accountType)) {
-                cardLayout.show(mainPanel, "VCCController"); // Show VCC Controller panel
-                resizeForPanel("VCCController");
-            }
-            JOptionPane.showMessageDialog(this, "Login successful as " + accountType);
-        } else {
-            JOptionPane.showMessageDialog(this, "Invalid credentials. Please try again.");
-        }
-    }
+    	    if (response.startsWith("Login successful")) {
+    	        String[] parts = response.split(",");
+    	        if (parts.length >= 3) {
+    	            accountType = parts[1].trim(); // Extract account type
+    	            currentClientId = parts[2].trim(); // Extract userId
+    	            clientIdField.setText(currentClientId); // Set the clientIdField to the userId
+    	            ownerIdField.setText(currentClientId);
+    	            
+    	        } else {
+    	            JOptionPane.showMessageDialog(this, "Invalid response from server.");
+    	            return;
+    	        }
+
+    	        // Redirect based on account type
+    	        if ("JobSubmitter".equals(accountType)) {
+    	            cardLayout.show(mainPanel, "Client");
+    	            resizeForPanel("Client");
+    	            usernameDisplayFieldJob.setText(usernameField.getText());
+    	            
+    	          
+    	        } else if ("CarOwner".equals(accountType)) {
+    	            cardLayout.show(mainPanel, "Owner");
+    	            ownerIdField.setText(currentClientId); // Populate the username field for CarOwner
+    	            resizeForPanel("Owner");
+    	            usernameDisplayField.setText(usernameField.getText());
+    	            
+    	        } else if ("VCCController".equals(accountType)) {
+    	            cardLayout.show(mainPanel, "VCCController"); // Show VCC Controller panel
+    	            resizeForPanel("VCCController");
+    	        }
+    	        JOptionPane.showMessageDialog(this, "Login successful as " + accountType);
+    	    } else {
+    	        JOptionPane.showMessageDialog(this, "Invalid credentials. Please try again.");
+    	    }
+    	}
+
+
 
     private void submitJob() {
         try {
@@ -840,11 +889,18 @@ public class VCRTSGUI extends JFrame {
             String serialNumber = serialNumberField.getText();
             String vinNumber = vinNumberField.getText();
 
-            // Format residency date
+            // Format residency date and calculate residency time
             String residencyDate = residencyDatePicker.getJFormattedTextField().getText();
+            int residencyTime;
             try {
                 LocalDate parsedDate = LocalDate.parse(residencyDate, DateTimeFormatter.ofPattern("MMM d, yyyy"));
                 residencyDate = parsedDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+                LocalDate today = LocalDate.now();
+                if (parsedDate.isBefore(today)) {
+                    JOptionPane.showMessageDialog(this, "Residency date cannot be in the past.");
+                    return;
+                }
+                residencyTime = (int) java.time.temporal.ChronoUnit.DAYS.between(today, parsedDate);
             } catch (DateTimeParseException e) {
                 JOptionPane.showMessageDialog(this, "Invalid date format. Please use 'MMM d, yyyy'.");
                 return;
@@ -861,7 +917,7 @@ public class VCRTSGUI extends JFrame {
             if (response.contains("successful")) {
                 // Create new vehicle with status "Available"
                 Vehicle newVehicle = new Vehicle(
-                        generateVehicleId(), // You can create a method to generate unique IDs
+                        generateVehicleId(), // Generate a unique ID for the vehicle
                         "Available", // Initial status
                         ownerId,
                         vehicleModel,
@@ -869,7 +925,7 @@ public class VCRTSGUI extends JFrame {
                         plateNumber,
                         serialNumber,
                         vinNumber,
-                        0 // Initial residency time
+                        residencyTime // Calculated residency time in days
                 );
 
                 // Debug print
@@ -898,6 +954,7 @@ public class VCRTSGUI extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
     private int generateVehicleId() {
         // Simple ID generation - you might want to make this more sophisticated
@@ -998,6 +1055,10 @@ public class VCRTSGUI extends JFrame {
 
         return button;
     }
+    public String getOwnerId() {
+        return ownerIdField != null ? ownerIdField.getText() : null;
+    }
+
 
     public static void main(String[] args) throws IOException {
         SwingUtilities.invokeLater(() -> {

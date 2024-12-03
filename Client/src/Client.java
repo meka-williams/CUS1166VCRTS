@@ -5,6 +5,8 @@ import java.net.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Client {
     private static final String SERVER_ADDRESS = "localhost";
@@ -128,6 +130,33 @@ public class Client {
         return "No jobs available."; // Default message if no valid response
     }
 
+    public List<Vehicle> getRegisteredVehiclesForOwner(String ownerId) {
+        List<Vehicle> vehicles = new ArrayList<>();
+        try {
+            String response = sendRequest("GET_CARS " + ownerId);
+            String[] vehicleLines = response.split("\n");
+
+            for (String line : vehicleLines) {
+                String[] parts = line.split(",");
+                if (parts.length == 8) {
+                    vehicles.add(new Vehicle(
+                        Integer.parseInt(parts[0]), // vehicleID
+                        parts[1],                   // status
+                        parts[2],                   // ownerID
+                        parts[3],                   // model
+                        parts[4],                   // brand
+                        parts[5],                   // plateNumber
+                        parts[6],                   // serialNumber
+                        parts[7],                   // vinNum
+                        Integer.parseInt(parts[8])  // residencyTime
+                    ));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return vehicles;
+    }
 
 
     // Submits a job with the given details to the server

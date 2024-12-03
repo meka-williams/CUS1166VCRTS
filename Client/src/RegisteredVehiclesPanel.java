@@ -3,19 +3,24 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
-
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 public class RegisteredVehiclesPanel extends JPanel {
     private List<Vehicle> vehicles;
     private JPanel vehiclesList;
-    private Client client;  // Add client reference
-    private static final Color BACKGROUND_COLOR = new Color(240, 250, 255);  // Match VCRTSGUI background
-    private static final Color BUTTON_COLOR = new Color(44, 118, 220);     // Match VCRTSGUI button color
-    private static final Color TEXT_COLOR = new Color(29, 42, 59);         // Match VCRTSGUI text color
+    private Client client;  
+    private VCRTSGUI parentGUI; // Reference to the parent GUI
+    private static final Color BACKGROUND_COLOR = new Color(240, 250, 255);  
+    private static final Color BUTTON_COLOR = new Color(44, 118, 220);     
+    private static final Color TEXT_COLOR = new Color(29, 42, 59);         
     private static final Font HEADER_FONT = new Font("Serif", Font.BOLD, 24);
     private static final Font DETAIL_FONT = new Font("Serif", Font.PLAIN, 16);
 
-    public RegisteredVehiclesPanel() {
-        this.client = new Client();  // Initialize client
+    public RegisteredVehiclesPanel(Client client, VCRTSGUI parentGUI) {
+        this.client = client;  // Use the passed Client instance
+        this.parentGUI = parentGUI; // Reference to the parent GUI
         this.vehicles = new ArrayList<>();
         setupPanel();
     }
@@ -25,29 +30,35 @@ public class RegisteredVehiclesPanel extends JPanel {
         setBackground(BACKGROUND_COLOR);
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Create header panel
         JPanel headerPanel = createHeaderPanel();
         add(headerPanel, BorderLayout.NORTH);
 
-        // Create scrollable vehicles list
         createVehiclesList();
         JScrollPane scrollPane = new JScrollPane(vehiclesList);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(BACKGROUND_COLOR);
-        
+
+        // Add refresh button
+        JButton refreshButton = createStyledButton("Refresh");
+        refreshButton.addActionListener(e -> refreshVehicles());
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        footerPanel.setBackground(BACKGROUND_COLOR);
+        footerPanel.add(refreshButton);
+
         add(scrollPane, BorderLayout.CENTER);
+        add(footerPanel, BorderLayout.SOUTH);
     }
 
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(BACKGROUND_COLOR);
-        
+
         JLabel titleLabel = new JLabel("Registered Vehicles", SwingConstants.CENTER);
         titleLabel.setFont(HEADER_FONT);
         titleLabel.setForeground(TEXT_COLOR);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        
+
         headerPanel.add(titleLabel, BorderLayout.CENTER);
         return headerPanel;
     }
@@ -61,15 +72,15 @@ public class RegisteredVehiclesPanel extends JPanel {
 
     private void updateVehiclesList() {
         vehiclesList.removeAll();
-        
+
         if (vehicles.isEmpty()) {
             JPanel emptyPanel = new JPanel(new BorderLayout());
             emptyPanel.setBackground(BACKGROUND_COLOR);
-            
+
             JLabel emptyLabel = new JLabel("No vehicles registered", SwingConstants.CENTER);
             emptyLabel.setFont(DETAIL_FONT);
             emptyLabel.setForeground(Color.GRAY);
-            
+
             emptyPanel.add(emptyLabel, BorderLayout.CENTER);
             vehiclesList.add(emptyPanel);
         } else {
@@ -91,20 +102,17 @@ public class RegisteredVehiclesPanel extends JPanel {
         panel.setBackground(BACKGROUND_COLOR);
         panel.setMaximumSize(new Dimension(400, 250));
 
-        // Create header panel with close button
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(BACKGROUND_COLOR);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        // Vehicle title label
-        JLabel vehicleLabel = new JLabel(String.format("%s %s (ID: %d)",
+        JLabel vehicleLabel = new JLabel(String.format("%s %s (VIN: %s)",
                 vehicle.getBrand(),
                 vehicle.getModel(),
-                vehicle.getVehicleID()));
+                vehicle.getVinNum()));
         vehicleLabel.setFont(new Font("Serif", Font.BOLD, 18));
         vehicleLabel.setForeground(TEXT_COLOR);
 
-        // Create close button
         JButton closeButton = new JButton("×");
         closeButton.setFont(new Font("Arial", Font.BOLD, 20));
         closeButton.setForeground(Color.WHITE);
@@ -115,36 +123,22 @@ public class RegisteredVehiclesPanel extends JPanel {
         closeButton.setOpaque(true);
         closeButton.addActionListener(e -> confirmAndRemoveVehicle(vehicle));
 
-        // Add components to header panel
         headerPanel.add(vehicleLabel, BorderLayout.CENTER);
         headerPanel.add(closeButton, BorderLayout.EAST);
 
-        // Details panel
         JPanel detailsPanel = new JPanel();
         detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
         detailsPanel.setBackground(BACKGROUND_COLOR);
         detailsPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        // Add details
-        addDetailRow(detailsPanel, "Username: ", String.valueOf(vehicle.getOwnerID()));
-        addDetailRow(detailsPanel, "Status: ", vehicle.getStatus());
+        addDetailRow(detailsPanel, "Owner ID: ", parentGUI.getOwnerId());
+        addDetailRow(detailsPanel, "Model: ", vehicle.getModel());
+        addDetailRow(detailsPanel, "Brand: ", vehicle.getBrand());
         addDetailRow(detailsPanel, "VIN: ", vehicle.getVinNum());
-        addDetailRow(detailsPanel, "Plate: ", vehicle.getPlateNumber());
-        addDetailRow(detailsPanel, "Serial: ", vehicle.getSerialNumber());
-        addDetailRow(detailsPanel, "Residency Time: ", vehicle.getResidencyTime() + " days");
-
-        // Remove button at bottom (optional, since we now have the X button)
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setBackground(BACKGROUND_COLOR);
-
-        JButton removeButton = createStyledButton("Remove Vehicle");
-        removeButton.addActionListener(e -> confirmAndRemoveVehicle(vehicle));
-        buttonPanel.add(removeButton);
-
-        // Add all components to main panel
+        addDetailRow(detailsPanel, "Residency Time: ", String.valueOf(vehicle.getResidencyTime()));
+        
         panel.add(headerPanel, BorderLayout.NORTH);
         panel.add(detailsPanel, BorderLayout.CENTER);
-        panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -177,8 +171,22 @@ public class RegisteredVehiclesPanel extends JPanel {
         return button;
     }
 
+    private void refreshVehicles() {
+    	
+        String ownerId = parentGUI.getOwnerId(); // Fetch owner ID dynamically
+        if (ownerId == null || ownerId.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Owner ID is not available. Please log in first.");
+            return;
+        }
+
+        String response = client.sendRequest("GET_CARS " + ownerId);
+        vehicles = parseVehiclesFromResponse(response);
+        updateVehiclesList();
+    }
+
     private void confirmAndRemoveVehicle(Vehicle vehicle) {
-        int result = JOptionPane.showConfirmDialog(
+    	vehicle.setOwnerID(parentGUI.getOwnerId());
+    	int result = JOptionPane.showConfirmDialog(
             this,
             "Are you sure you want to remove this vehicle?\n" +
             "Brand: " + vehicle.getBrand() + "\n" +
@@ -190,8 +198,7 @@ public class RegisteredVehiclesPanel extends JPanel {
         );
 
         if (result == JOptionPane.YES_OPTION) {
-            // Convert ownerID to String since the client method expects a String
-            String response = client.removeVehicle(String.valueOf(vehicle.getOwnerID()), vehicle.getVinNum());
+            String response = client.removeVehicle(vehicle.getOwnerID(), vehicle.getVinNum());
             
             if (response != null && response.contains("successful")) {
                 vehicles.remove(vehicle);
@@ -206,24 +213,59 @@ public class RegisteredVehiclesPanel extends JPanel {
         }
     }
 
+
+
+    private List<Vehicle> parseVehiclesFromResponse(String response) {
+        List<Vehicle> vehicleList = new ArrayList<>();
+        if (response != null && !response.isEmpty()) {
+            // Split the response into lines
+            String[] lines = response.split("\n");
+
+            // Start processing from the second line (skip the header)
+            for (int i = 1; i < lines.length; i++) {
+                String line = lines[i].trim();
+                if (line.isEmpty()) continue;
+
+                try {
+                    // Extract fields from the line
+                    String[] parts = line.split(", ");
+
+                    // Extract Car ID
+                    int carId = Integer.parseInt(parts[0].split(": ")[1].trim());
+
+                    // Extract other fields
+                    String model = parts[1].split(": ")[1].trim();
+                    String brand = parts[2].split(": ")[1].trim();
+                    String plateNumber = parts[3].split(": ")[1].trim();
+                    String serialNumber = parts[4].split(": ")[1].trim();
+                    String vinNum = parts[5].split(": ")[1].trim();
+                    String residencyDateTimeString = parts[6].split(": ")[1].trim(); // Full date-time string
+
+                    // Parse the residency date and calculate days from today
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                    LocalDateTime residencyDateTime = LocalDateTime.parse(residencyDateTimeString, formatter);
+                    LocalDateTime today = LocalDateTime.now();
+                    int daysDifference = (int) ChronoUnit.DAYS.between(today, residencyDateTime);
+
+                    // Create a new vehicle and add it to the list
+                    Vehicle vehicle = new Vehicle(carId, "Available", null, model, brand, plateNumber, serialNumber, vinNum, daysDifference);
+                    vehicleList.add(vehicle);
+                } catch (Exception e) {
+                    // Log and ignore any malformed line
+                    System.err.println("Failed to parse line: " + line + ". Error: " + e.getMessage());
+                }
+            }
+        }
+        return vehicleList;
+    }
+
+
+
+
     public void addVehicle(Vehicle vehicle) {
-        if (vehicle != null && !vehicleExists(vehicle.getVinNum())) {
+        if (vehicle != null && !vehicles.contains(vehicle)) {
             vehicles.add(vehicle);
             updateVehiclesList();
         }
-    }
-
-    public boolean vehicleExists(String vinNumber) {
-        if (vinNumber == null) return false;
-        return vehicles.stream().anyMatch(v -> vinNumber.equals(v.getVinNum()));
-    }
-
-    public void clearVehicles() {
-        vehicles.clear();
-        updateVehiclesList();
-    }
-
-    public int getVehicleCount() {
-        return vehicles.size();
     }
 }
