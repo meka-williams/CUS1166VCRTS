@@ -134,9 +134,9 @@ public class Server implements Runnable {
             } else if (clientMessage.startsWith("CAR_READY")) {
                 return promptAndHandleCarReady(clientMessage);
             } else if (clientMessage.startsWith("DISPLAY_JOB_TIMES")) {
-                return vcController.displayJobsAndCompletionTimes(clientMessage);
+                return vcController.displayJobsAndCompletionTimes();
             } else if (clientMessage.equals("GET_ALL_JOBS")) {
-                return vcController.displayJobsAndCompletionTimes(clientMessage);
+                return vcController.displayJobsAndCompletionTimes();
             } else if (clientMessage.startsWith("MARK_COMPLETE")) {
                 return vcController.markJobComplete(clientMessage);
             } else if (clientMessage.startsWith("REMOVE_VEHICLE")) {
