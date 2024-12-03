@@ -1,175 +1,185 @@
-
-
-// Server.java
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-// Removed Scanner import
-// import java.util.Scanner;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
+public class Server implements Runnable {
+    private static final int PORT = 12345;       // Port for the server
+    private ServerSocket serverSocket;          // Server socket
+    private boolean running = true;            // Server state
+    private ExecutorService threadPool;         // Thread pool for client handling
+    private ServerGUI serverGUI;                // Reference to the GUI
 
-public class Server {
-    private static final int PORT = 12345;
-    private ServerSocket serverSocket;
-    private UserManager userManager;
-    private VCController vcController;
-    private ServerGUI gui;
-    private boolean isRunning;
-    private ConnectedClients connectedClients = new ConnectedClients();
+    private UserManager userManager;            // Handles user registration and login
+    private VCController vcController;          // Handles job and vehicle management
 
-    public Server(ServerGUI gui) {
-        this.gui = gui;
-        this.userManager = new UserManager();
-        this.vcController = new VCController();
-        this.vcController.setGUI(gui);
-        isRunning = false;
-    }
-
-    public void start() {
-        if (isRunning) return;
-        
+    // Constructor to initialize server components with GUI reference
+    public Server(ServerGUI serverGUI) {
+        this.serverGUI = serverGUI; // Assign the GUI reference
         try {
             serverSocket = new ServerSocket(PORT);
-            isRunning = true;
-            gui.log("Server started on port " + PORT);
-            
-            new Thread(() -> {
-                while (isRunning) {
-                    try {
-                        Socket clientSocket = serverSocket.accept();
-                        new Thread(() -> handleClient(clientSocket)).start();
-                    } catch (IOException e) {
-                        if (isRunning) {
-                            gui.log("Connection error: " + e.getMessage());
-                        }
-                    }
-                }
-            }).start();
+            threadPool = Executors.newFixedThreadPool(10); // Limit to 10 concurrent clients
+            userManager = new UserManager();
+            vcController = new VCController();
+            serverGUI.log("Server initialized on port " + PORT);
         } catch (IOException e) {
-            gui.log("Could not start server: " + e.getMessage());
+            serverGUI.log("Failed to initialize server: " + e.getMessage());
         }
     }
 
-    public void stop() {
-        isRunning = false;
+  
+    @Override
+    public void run() {
+        try {
+            serverSocket = new ServerSocket(PORT); // Create a new ServerSocket
+            threadPool = Executors.newFixedThreadPool(10); // Create a new thread pool
+            running = true;
+            serverGUI.updateServerStatus(true);
+            serverGUI.log("Server is running on port " + PORT + "...");
+
+            while (running) {
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    threadPool.execute(() -> handleClient(clientSocket)); // Handle each client in a thread
+                } catch (IOException e) {
+                    if (running) {
+                        serverGUI.log("Error accepting client connection: " + e.getMessage());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            serverGUI.log("Failed to start server: " + e.getMessage());
+        } finally {
+            shutdownServer(); // Ensure resources are cleaned up
+        }
+    }
+
+
+    // Start the server
+    public synchronized void start() {
+        if (!running) {
+            new Thread(this).start(); // Start the server in a new thread
+        } else {
+            serverGUI.log("Server is already running.");
+        }
+    }
+
+
+    // Stop the server gracefully
+    public synchronized void stop() {
+        if (running) {
+            running = false;
+            try {
+                if (serverSocket != null && !serverSocket.isClosed()) {
+                    serverSocket.close(); // Close the ServerSocket
+                }
+                if (threadPool != null && !threadPool.isShutdown()) {
+                    threadPool.shutdownNow(); // Stop all threads in the thread pool
+                }
+                serverGUI.log("Server stopped.");
+                serverGUI.updateServerStatus(false); // Update GUI to reflect the server's stopped status
+            } catch (IOException e) {
+                serverGUI.log("Error stopping server: " + e.getMessage());
+            }
+        } else {
+            serverGUI.log("Server is not running.");
+        }
+    }
+
+    // Returns the current running state of the server
+    public synchronized boolean isRunning() {
+        return running;
+    }
+
+    // Shuts down server resources
+    private void shutdownServer() {
         try {
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
-                gui.log("Server stopped");
             }
+            threadPool.shutdown();
         } catch (IOException e) {
-            gui.log("Error stopping server: " + e.getMessage());
+            serverGUI.log("Error during server shutdown: " + e.getMessage());
         }
     }
-    public VCController getVCController() {
-        return vcController;
-    }
-    public boolean isRunning() {
-        return isRunning;
-    }
 
+    // Handles client communication
     private void handleClient(Socket clientSocket) {
-        connectedClients.add(clientSocket);
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+
             String clientMessage;
             while ((clientMessage = in.readLine()) != null) {
-                gui.log("Received: " + clientMessage);
+                serverGUI.log("Received: " + clientMessage);
                 String response = processClientMessage(clientMessage);
+
                 out.println(response);
-                out.println();
+                out.println(); // Send an empty line to indicate end of response
                 out.flush();
             }
         } catch (IOException e) {
-            gui.log("Error handling client: " + e.getMessage());
-        } finally {
-            connectedClients.remove(clientSocket);
+            serverGUI.log("Error handling client connection: " + e.getMessage());
         }
     }
 
-    private void broadcastVehicleRemoval(String ownerId, String vinNumber) {
-        String message = "VEHICLE_REMOVED " + ownerId + " " + vinNumber;
-        List<Socket> clients = connectedClients.getAll();
-
-        for (Socket clientSocket : clients) {
-            try {
-                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                out.println(message);
-                out.println(); // Empty line to mark end of message
-            } catch (IOException e) {
-                gui.log("Error broadcasting to client: " + e.getMessage());
-            }
-        }
-        gui.log("Broadcasted vehicle removal: " + message);
-    }
-
-
+    // Processes client messages and routes to the appropriate handler
     private String processClientMessage(String clientMessage) {
-        if (clientMessage.startsWith("REGISTER")) {
-            return handleRegistration(clientMessage);
-        } else if (clientMessage.startsWith("LOGIN")) {
-            return userManager.loginUser(clientMessage);
-        } else if (clientMessage.startsWith("JOB_SUBMIT")) {
-            return promptAndHandleJobSubmission(clientMessage);
-        } else if (clientMessage.startsWith("CAR_READY")) {
-            return promptAndHandleCarReady(clientMessage);
-        } else if (clientMessage.startsWith("DISPLAY_JOB_TIMES")) {
-            return handleDisplayJobTimes(clientMessage);
-        } else if (clientMessage.equals("GET_ALL_JOBS")) {
-            return vcController.getAllJobs();
-        } else if (clientMessage.startsWith("MARK_COMPLETE")) {
-            return vcController.markJobComplete(clientMessage);
-        } else if (clientMessage.startsWith("REMOVE_VEHICLE")) {
-            return vcController.handleVehicleRemoval(clientMessage);
+        try {
+            if (clientMessage.startsWith("REGISTER")) {
+                return userManager.registerUser(clientMessage);
+            } else if (clientMessage.startsWith("LOGIN")) {
+                return userManager.loginUser(clientMessage);
+            } else if (clientMessage.startsWith("JOB_SUBMIT")) {
+                return promptAndHandleJobSubmission(clientMessage);
+            } else if (clientMessage.startsWith("CAR_READY")) {
+                return promptAndHandleCarReady(clientMessage);
+            } else if (clientMessage.startsWith("DISPLAY_JOB_TIMES")) {
+                return vcController.displayJobsAndCompletionTimes(clientMessage);
+            } else if (clientMessage.equals("GET_ALL_JOBS")) {
+                return vcController.displayJobsAndCompletionTimes(clientMessage);
+            } else if (clientMessage.startsWith("MARK_COMPLETE")) {
+                return vcController.markJobComplete(clientMessage);
+            } else if (clientMessage.startsWith("REMOVE_VEHICLE")) {
+                return vcController.handleVehicleRemoval(clientMessage);
+            } else {
+                return "Invalid request";
+            }
+        } catch (Exception e) {
+            serverGUI.log("Error processing client message: " + e.getMessage());
+            return "Error: Unable to process request";
         }
-        return "Invalid request";
     }
 
-    private String handleRegistration(String message) {
-        String[] parts = message.split(" ");
-        String accountType = parts[7];
-        
-        if (accountType.equals("VCCController")) {
-            return promptAndHandleVCCControllerRegistration(message);
-        }
-        return userManager.registerUser(message);
-    }
-
-    private String promptAndHandleVCCControllerRegistration(String message) {
-        if (gui.showConfirmDialog("Approve VCC Controller registration request?")) {
-            return userManager.registerUser(message);
-        }
-        return "VCC Controller registration declined.";
-    }
-
+    
+    
     private String promptAndHandleJobSubmission(String message) {
-        if (gui.showConfirmDialog("Accept job submission request?")) {
-            return vcController.handleJobSubmission(message);
+        boolean approved = serverGUI.showConfirmDialog("Approve job submission request?\nDetails: " + message);
+        if (approved) {
+            String response = vcController.handleJobSubmission(message);
+            serverGUI.log("Job submission approved: " + response);
+            return response;
+        } else {
+            serverGUI.log("Job submission declined by admin.");
+            return "Job submission declined.";
         }
-        return "Job submission declined.";
     }
 
+    
     private String promptAndHandleCarReady(String message) {
-        if (gui.showConfirmDialog("Accept car ready notification?")) {
-            return vcController.handleCarReady(message);
+        boolean approved = serverGUI.showConfirmDialog("Approve vehicle readiness notification?\nDetails: " + message);
+        if (approved) {
+            String response = vcController.handleCarReady(message);
+            serverGUI.log("Car readiness approved: " + response);
+            return response;
+        } else {
+            serverGUI.log("Car readiness declined by admin.");
+            return "Car readiness declined.";
         }
-        return "Car readiness declined.";
     }
 
-    private String handleDisplayJobTimes(String message) {
-        String[] parts = message.split(" ");
-        return vcController.displayJobsAndCompletionTimes(parts[1], parts.length > 2 ? parts[2] : "");
-    }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            ServerGUI gui = new ServerGUI();
-            Server server = new Server(gui);
-            gui.setServer(server);
-            gui.setVisible(true);
-        });
+    // Accessors for VCController
+    public VCController getVCController() {
+        return vcController;
     }
 }
