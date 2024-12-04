@@ -483,6 +483,14 @@ public class VCRTSGUI extends JFrame {
                 if (response.equals("Registration successful")) {
                     cardLayout.show(mainPanel, "Login");
                     resizeForPanel("Login");
+
+                     //Clears Fields
+                     clearSignUpFields();
+                     newUsernameField.setText("");
+                     newPasswordField.setText("");
+                     confirmPasswordField.setText("");
+                     carOwnerButton.setSelected(false);
+                     jobSubmitterButton.setSelected(false);
                 }
             } else {
                 JOptionPane.showMessageDialog(this, "Passwords do not match!");
@@ -841,7 +849,6 @@ public class VCRTSGUI extends JFrame {
     	            cardLayout.show(mainPanel, "Client");
     	            resizeForPanel("Client");
     	            usernameDisplayFieldJob.setText(usernameField.getText());
-    	            
     	          
     	        } else if ("CarOwner".equals(accountType)) {
     	            cardLayout.show(mainPanel, "Owner");
@@ -854,6 +861,7 @@ public class VCRTSGUI extends JFrame {
     	            resizeForPanel("VCCController");
     	        }
     	        JOptionPane.showMessageDialog(this, "Login successful as " + accountType);
+                clearLoginFields();
     	    } else {
     	        JOptionPane.showMessageDialog(this, "Invalid credentials. Please try again.");
     	    }
@@ -972,12 +980,25 @@ public class VCRTSGUI extends JFrame {
         residencyDatePicker.getJFormattedTextField().setText("");
     }
 
+    private void clearLoginFields() {
+        usernameField.setText("");
+        passwordField.setText("");
+    }
+
+    private void clearSignUpFields() {
+        fNameField.setText("");
+        lNameField.setText("");
+        emailField.setText("");
+        dobPicker.getJFormattedTextField().setText("");
+    }
+
     private void displayVCCJobsAndTimes() {
         // String clientId = clientIdField.getText(); // Retrieve the current client ID
         // from the text field
         String response = client.requestAllJobs(); // Send both clientId and role to server
         JOptionPane.showMessageDialog(this, response); // Display server response in a message dialog
     }
+
 
     private static class RoundedBorder implements Border {
         private int radius;
