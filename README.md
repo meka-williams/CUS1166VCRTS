@@ -8,12 +8,15 @@ There are three types of users in the system:
 3. **Vehicular Cloud Controller** : Has the highest access and able to access all user data
 
 ## Directory
+- \bin : Contains images for GUI and Java classes
+- \classes : Contains created objects
 - \client\src : Contains the classes for the client-side of the system
-- \database : Contains the .CSV files that provides storage management
+- \database : Contains the SQL files to create database
 - \lib : Contains the neccessary libraries for the system 
 - \server\src : Contains the classes for the server-side of the system
 - \test : Contains all J-Unit classes for testing
 
 ## How to Run Program
-1. Run the Server.java located in the \server\src
-2. Run the VCRTSGUI.java located in the \client\src
+1. Run the ServerGUI.java located in the \server\src
+2. In the ServerGUI press "Start Server"
+3. Run the VCRTSGUI.java located in the \client\src
