@@ -113,11 +113,11 @@ public class RegisteredVehiclesPanel extends JPanel {
         vehicleLabel.setFont(new Font("Serif", Font.BOLD, 18));
         vehicleLabel.setForeground(TEXT_COLOR);
 
-        JButton closeButton = new JButton("×");
-        closeButton.setFont(new Font("Arial", Font.BOLD, 20));
+        JButton closeButton = new JButton("X");
+        closeButton.setFont(new Font("Arial", Font.BOLD, 15));
         closeButton.setForeground(Color.WHITE);
         closeButton.setBackground(Color.RED);
-        closeButton.setPreferredSize(new Dimension(25, 25));
+        closeButton.setPreferredSize(new Dimension(20, 20));
         closeButton.setBorderPainted(false);
         closeButton.setFocusPainted(false);
         closeButton.setOpaque(true);
