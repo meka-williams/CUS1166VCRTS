@@ -229,12 +229,14 @@ public class VCRTSGUI extends JFrame {
         JLabel signUpText = new JLabel("New Users");
 
         JButton loginButton = createStyledButton("Login");
+        loginButton.setFont(new Font("Arial", Font.BOLD, 20));
 
         loginButton.addActionListener(e -> cardLayout.show(mainPanel, "Login")); //resizeForPanel
         loginButton.addActionListener(e -> resizeForPanel("Login"));
 
 
         JButton signupButton = createStyledButton("Sign Up");
+        signupButton.setFont(new Font("Arial", Font.BOLD, 20));
 
         signupButton.addActionListener(e -> cardLayout.show(mainPanel, "Signup"));
         signupButton.addActionListener(e -> resizeForPanel("Signup"));
@@ -1003,7 +1005,7 @@ public class VCRTSGUI extends JFrame {
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
         //button.setPreferredSize(new Dimension(150, 50));
-        button.setFont(new Font("Arial", Font.BOLD, 20));
+        button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setForeground(Color.WHITE);
         button.setBackground(buttonColor);
         button.setFocusPainted(false);

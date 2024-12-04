@@ -11,10 +11,19 @@ public class ServerGUI extends JFrame {
     private JLabel statusLabel;
     private Server server;
 
+    private Color buttonColor = new Color(44, 118, 220);
+    private Color backgroundColor = new Color(240, 250, 255);
+    private Color textColor = new Color(29, 42, 59);
+
     public ServerGUI() {
         setupMainWindow();
         server = new Server(this);
         updateServerStatus(server.isRunning());
+
+        setTitle("VCRTS Server");
+        ImageIcon logo = new ImageIcon("bin/ServerLogo.png");
+        setIconImage(logo.getImage());
+
     }
 
     private void setupMainWindow() {
@@ -25,6 +34,7 @@ public class ServerGUI extends JFrame {
         // Main Panel Layout
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.setBackground(backgroundColor);
 
         // Add Status Panel
         mainPanel.add(createStatusPanel(), BorderLayout.NORTH);
@@ -44,15 +54,17 @@ public class ServerGUI extends JFrame {
 
     private JPanel createStatusPanel() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(backgroundColor);
         panel.setBorder(BorderFactory.createTitledBorder("Server Status"));
 
         statusLabel = new JLabel("Server Status: Stopped");
-        statusLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        statusLabel.setFont(new Font("Serif", Font.BOLD, 20));
         statusLabel.setForeground(Color.RED);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton startButton = new JButton("Start Server");
-        JButton stopButton = new JButton("Stop Server");
+        buttonPanel.setBackground(backgroundColor);
+        JButton startButton = createStyledButton("Start Server");
+        JButton stopButton = createStyledButton("Stop Server");
 
         startButton.addActionListener(e -> {
             if (!server.isRunning()) {
@@ -79,6 +91,7 @@ public class ServerGUI extends JFrame {
 
     private JPanel createVehiclePanel() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(backgroundColor);
         panel.setBorder(BorderFactory.createTitledBorder("Registered Vehicles"));
 
         String[] columns = {"VIN", "Owner ID", "Status", "Model", "Brand", "Plate Number", "Serial Number", "Residency Time"};
@@ -91,10 +104,15 @@ public class ServerGUI extends JFrame {
 
         JTable vehiclesTable = new JTable(vehiclesTableModel);
         vehiclesTable.getTableHeader().setReorderingAllowed(false);
+        vehiclesTable.setFont(new Font("Serif", Font.PLAIN, 14));
+        vehiclesTable.getTableHeader().setOpaque(false);
+        vehiclesTable.getTableHeader().setBackground(Color.WHITE);
+        vehiclesTable.setBackground(backgroundColor);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton refreshButton = new JButton("Refresh");
-        JButton markCompleteButton = new JButton("Mark Complete");
+        buttonPanel.setBackground(backgroundColor);
+        JButton refreshButton = createStyledButton("Refresh");
+        JButton markCompleteButton = createStyledButton("Mark Complete");
 
         refreshButton.addActionListener(e -> refreshVehicleTable());
         markCompleteButton.addActionListener(e -> markSelectedVehicleComplete(vehiclesTable));
@@ -111,6 +129,7 @@ public class ServerGUI extends JFrame {
 
     private JPanel createJobManagementPanel() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(backgroundColor);
         panel.setBorder(BorderFactory.createTitledBorder("Job Requests"));
 
         String[] columns = {"Job ID", "Client ID", "Description", "Duration", "Redundancy", "Deadline", "Timestamp"};
@@ -123,10 +142,14 @@ public class ServerGUI extends JFrame {
 
         JTable jobsTable = new JTable(jobsTableModel);
         jobsTable.getTableHeader().setReorderingAllowed(false);
+        jobsTable.getTableHeader().setOpaque(false);
+        jobsTable.getTableHeader().setBackground(Color.WHITE);
+        jobsTable.setBackground(backgroundColor);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton refreshButton = new JButton("Refresh");
-        JButton completeButton = new JButton("Mark Complete");
+        buttonPanel.setBackground(backgroundColor);
+        JButton refreshButton = createStyledButton("Refresh");
+        JButton completeButton = createStyledButton("Mark Complete");
 
         refreshButton.addActionListener(e -> refreshJobRequestsTable());
         completeButton.addActionListener(e -> markSelectedJobComplete(jobsTable));
@@ -142,12 +165,13 @@ public class ServerGUI extends JFrame {
 
     private JPanel createLogPanel() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(backgroundColor);
         panel.setBorder(BorderFactory.createTitledBorder("Server Log"));
 
         logArea = new JTextArea(6, 50);
         logArea.setEditable(false);
 
-        JButton clearButton = new JButton("Clear Log");
+        JButton clearButton = createStyledButton("Clear Log");
         clearButton.addActionListener(e -> logArea.setText(""));
 
         panel.add(new JScrollPane(logArea), BorderLayout.CENTER);
@@ -237,9 +261,19 @@ public class ServerGUI extends JFrame {
         } else {
             JOptionPane.showMessageDialog(this, "Please select a vehicle to mark as complete.");
         }
+        
     }
 
-
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        //button.setPreferredSize(new Dimension(150, 50));
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setForeground(Color.WHITE);
+        button.setBackground(buttonColor);
+        button.setFocusPainted(false);
+        button.setBounds(500, 500, 100, 25);
+        return button;
+    }
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             ServerGUI gui = new ServerGUI();
