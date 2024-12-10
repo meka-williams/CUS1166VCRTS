@@ -106,18 +106,16 @@ public class RegisteredVehiclesPanel extends JPanel {
         headerPanel.setBackground(BACKGROUND_COLOR);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        JLabel vehicleLabel = new JLabel(String.format("%s %s (VIN: %s)",
+        JLabel vehicleLabel = new JLabel(String.format("%s %s",
                 vehicle.getBrand(),
-                vehicle.getModel(),
-                vehicle.getVinNum()));
+                vehicle.getModel()));
         vehicleLabel.setFont(new Font("Serif", Font.BOLD, 18));
         vehicleLabel.setForeground(TEXT_COLOR);
 
         JButton closeButton = new JButton("X");
-        closeButton.setFont(new Font("Arial", Font.BOLD, 15));
+        closeButton.setFont(new Font("Arial", Font.BOLD, 9));
         closeButton.setForeground(Color.WHITE);
         closeButton.setBackground(Color.RED);
-        closeButton.setPreferredSize(new Dimension(20, 20));
         closeButton.setBorderPainted(false);
         closeButton.setFocusPainted(false);
         closeButton.setOpaque(true);
@@ -131,9 +129,10 @@ public class RegisteredVehiclesPanel extends JPanel {
         detailsPanel.setBackground(BACKGROUND_COLOR);
         detailsPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        addDetailRow(detailsPanel, "Owner ID: ", parentGUI.getOwnerId());
-        addDetailRow(detailsPanel, "Model: ", vehicle.getModel());
         addDetailRow(detailsPanel, "Brand: ", vehicle.getBrand());
+        addDetailRow(detailsPanel, "Model: ", vehicle.getModel());
+        addDetailRow(detailsPanel, "Plate Number: ", vehicle.getPlateNumber());
+        addDetailRow(detailsPanel, "Serial Number: ", vehicle.getSerialNumber());
         addDetailRow(detailsPanel, "VIN: ", vehicle.getVinNum());
         addDetailRow(detailsPanel, "Residency Time: ", String.valueOf(vehicle.getResidencyTime()));
         

@@ -21,7 +21,7 @@ import java.util.Properties;
 
 public class VCRTSGUI extends JFrame {
     private Client client;
-    private JTextField usernameField, clientIdField, jobDurationField, jobDescriptionField,usernameDisplayField,usernameDisplayFieldJob;
+    private JTextField usernameField, clientIdField, jobDurationField, jobIDField,usernameDisplayField,usernameDisplayFieldJob;
     private JPasswordField passwordField;
     private JTextField ownerIdField, vehicleModelField, vehicleBrandField, plateNumberField, serialNumberField, vinNumberField, fNameField, lNameField, emailField, newUsernameField;
     private JComboBox<String> redundancyComboBox;
@@ -554,17 +554,20 @@ public class VCRTSGUI extends JFrame {
         headerPanel.add(logOutButton, BorderLayout.WEST);
     
         JLabel submitJobHeader = createStyledHeader("Submit Job Request");
-        headerPanel.add(submitJobHeader, BorderLayout.CENTER);
         
         // Add header to main panel
         clientPanel.add(headerPanel, BorderLayout.NORTH);
     
         // Add form fields to jobSubmissionPanel
-        gbc.gridwidth = 1;
+        gbc.gridwidth = 2;
         gbc.gridx = 0;
         gbc.gridy = 0;
+        jobSubmissionPanel.add(submitJobHeader, gbc);
     
         // Username field
+        gbc.gridwidth = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         jobSubmissionPanel.add(createStyledBody("Username:"), gbc);
         gbc.gridx = 1;
         usernameDisplayFieldJob = new JTextField();
@@ -574,8 +577,8 @@ public class VCRTSGUI extends JFrame {
     
         // Client ID
         gbc.gridx = 0;
-        gbc.gridy = 1;
-        jobSubmissionPanel.add(createStyledBody("Client ID:"), gbc);
+        gbc.gridy = 2;
+        jobSubmissionPanel.add(createStyledBody("Generated Client ID:"), gbc);
         gbc.gridx = 1;
         clientIdField = new JTextField(15);
         clientIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -584,16 +587,16 @@ public class VCRTSGUI extends JFrame {
     
         // Job Description
         gbc.gridx = 0;
-        gbc.gridy = 2;
-        jobSubmissionPanel.add(createStyledBody("Job Description:"), gbc);
+        gbc.gridy = 3;
+        jobSubmissionPanel.add(createStyledBody("Job ID:"), gbc);
         gbc.gridx = 1;
-        JTextField jobDescriptionField = new JTextField(15);
-        jobDescriptionField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        jobSubmissionPanel.add(jobDescriptionField, gbc);
+        JTextField jobIDField = new JTextField(15);
+        jobIDField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        jobSubmissionPanel.add(jobIDField, gbc);
     
         // Job Duration
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         jobSubmissionPanel.add(createStyledBody("Job Duration (hours):"), gbc);
         gbc.gridx = 1;
         jobDurationField = new JTextField(15);
@@ -602,7 +605,7 @@ public class VCRTSGUI extends JFrame {
     
         // Job Deadline
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         jobSubmissionPanel.add(createStyledBody("Job Deadline:"), gbc);
         gbc.gridx = 1;
         UtilDateModel dateModel = new UtilDateModel();
@@ -617,7 +620,7 @@ public class VCRTSGUI extends JFrame {
     
         // Redundancy Level
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 6;
         jobSubmissionPanel.add(createStyledBody("Redundancy Level (Number of Cars):"), gbc);
         gbc.gridx = 1;
         JComboBox<String> redundancyComboBox = new JComboBox<>(new String[] { "1", "2", "3", "4", "5" });
@@ -626,14 +629,14 @@ public class VCRTSGUI extends JFrame {
     
         // Submit Button
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = 7;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         JButton submitJobButton = createStyledButton("Submit Job");
         submitJobButton.addActionListener(e -> {
             try {
                 String clientId = clientIdField.getText();
-                String jobDescription = jobDescriptionField.getText();
+                String jobDescription = jobIDField.getText();
                 int jobDuration = Integer.parseInt(jobDurationField.getText());
                 int redundancyLevel = Integer.parseInt((String) redundancyComboBox.getSelectedItem());
                 String jobDeadline = jobDeadlinePicker.getJFormattedTextField().getText();
@@ -645,6 +648,14 @@ public class VCRTSGUI extends JFrame {
     
                 String response = client.submitJob(clientId, jobDescription, jobDuration, redundancyLevel, jobDeadline);
                 JOptionPane.showMessageDialog(this, response);
+
+                //Clears the fields
+                clientIdField.setText("");
+                jobIDField.setText("");
+                jobDurationField.setText("");
+                redundancyComboBox.setSelectedIndex(0);
+                jobDeadlinePicker.getJFormattedTextField().setText("");
+
                 
                 // Refresh the submitted jobs panel after successful submission
                 if (response.contains("successful")) {
@@ -722,8 +733,6 @@ public class VCRTSGUI extends JFrame {
         // Create the vehicles panel
         registeredVehiclesPanel = new RegisteredVehiclesPanel(client, this);
 
-
-
         // Create a split pane to divide the registration form and vehicles list
         splitPane = new JSplitPane(
             JSplitPane.HORIZONTAL_SPLIT,
@@ -757,7 +766,7 @@ public class VCRTSGUI extends JFrame {
         // Username (auto-populated and uneditable)
         gbc.gridx = 0;
         gbc.gridy = 2;
-        panel.add(createStyledBody("User ID:"), gbc);
+        panel.add(createStyledBody("Generated User ID:"), gbc);
         ownerIdField = new JTextField();
         ownerIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         ownerIdField.setEditable(false);
@@ -767,20 +776,20 @@ public class VCRTSGUI extends JFrame {
         // Vehicle Model
         gbc.gridx = 0;
         gbc.gridy = 3;
-        panel.add(createStyledBody("Vehicle Model:"), gbc);
-        vehicleModelField = new JTextField(15);
-        vehicleModelField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        gbc.gridx = 1;
-        panel.add(vehicleModelField, gbc);
-
-        // Vehicle Brand
-        gbc.gridx = 0;
-        gbc.gridy = 4;
         panel.add(createStyledBody("Vehicle Brand:"), gbc);
         vehicleBrandField = new JTextField(15);
         vehicleBrandField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         gbc.gridx = 1;
         panel.add(vehicleBrandField, gbc);
+
+        // Vehicle Brand
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        panel.add(createStyledBody("Vehicle Model:"), gbc);
+        vehicleModelField = new JTextField(15);
+        vehicleModelField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        gbc.gridx = 1;
+        panel.add(vehicleModelField, gbc);
 
         // Plate Number
         gbc.gridx = 0;
@@ -884,7 +893,7 @@ public class VCRTSGUI extends JFrame {
     private void submitJob() {
         try {
             String clientId = clientIdField.getText();
-            String jobDescription = jobDescriptionField.getText();
+            String jobDescription = jobIDField.getText();
             int jobDuration = Integer.parseInt(jobDurationField.getText());
             int redundancyLevel = Integer.parseInt((String) redundancyComboBox.getSelectedItem());
             String jobDeadline = jobDeadlinePicker.getJFormattedTextField().getText(); // Get jobDeadline from the date
@@ -905,8 +914,8 @@ public class VCRTSGUI extends JFrame {
     private void registerVehicle() {
         try {
             String ownerId = ownerIdField.getText();
-            String vehicleModel = vehicleModelField.getText();
             String vehicleBrand = vehicleBrandField.getText();
+            String vehicleModel = vehicleModelField.getText();
             String plateNumber = plateNumberField.getText();
             String serialNumber = serialNumberField.getText();
             String vinNumber = vinNumberField.getText();
@@ -1002,6 +1011,10 @@ public class VCRTSGUI extends JFrame {
         lNameField.setText("");
         emailField.setText("");
         dobPicker.getJFormattedTextField().setText("");
+    }
+
+    private void clearJobSubmissionFields() {
+
     }
 
     private void displayVCCJobsAndTimes() {
