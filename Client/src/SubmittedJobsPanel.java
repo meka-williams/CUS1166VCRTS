@@ -105,8 +105,7 @@ public class SubmittedJobsPanel extends JPanel {
         headerPanel.setBackground(BACKGROUND_COLOR);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        JLabel jobLabel = new JLabel(String.format("Job ID: %s - %s",
-                job.getJobId(),
+        JLabel jobLabel = new JLabel(String.format("%s",
                 job.getDescription()));
         jobLabel.setFont(new Font("Serif", Font.BOLD, 18));
         jobLabel.setForeground(TEXT_COLOR);
@@ -118,7 +117,6 @@ public class SubmittedJobsPanel extends JPanel {
         detailsPanel.setBackground(BACKGROUND_COLOR);
         detailsPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        addDetailRow(detailsPanel, "Client ID: ", job.getClientId());
         addDetailRow(detailsPanel, "Status: ", job.getStatus());
         addDetailRow(detailsPanel, "Duration: ", job.getDuration() + " hours");
         addDetailRow(detailsPanel, "Redundancy Level: ", String.valueOf(job.getRedundancyLevel()));
@@ -187,7 +185,7 @@ public class SubmittedJobsPanel extends JPanel {
                         String description = extractValue(line, "Description:");
                         int duration = Integer.parseInt(extractValue(line, "Duration:").replace(" hours", ""));
                         String status = "Submitted"; // Default status
-                        String deadline = "Not specified"; // Default deadline
+                        String deadline = extractValue(line, "Deadline"); 
                         int redundancyLevel = 1; // Default redundancy level
                         String completionTime = null;
 

@@ -156,7 +156,7 @@ public class VCController {
         String vinNumber = parts[6];
         String residencyDate = parts[7]; // Expected format: yyyy-MM-dd
 
-        String query = "INSERT INTO CarRentals (ownerId, model, brand, plateNumber, serialNumber, vinNumber, residencyTime) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO CarRentals (ownerId, model, brand, plateNumber, serialNumber, vinNumber, residencyTime, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement statement = connection.prepareStatement(query)) {
 

@@ -8,5 +8,6 @@ use vcrts;
     plateNumber VARCHAR(20),
     serialNumber VARCHAR(50),
     vinNumber VARCHAR(50),
-    residencyTime TIMESTAMP
+    residencyTime DATE,
+    timestamp TIMESTAMP
 ); 
