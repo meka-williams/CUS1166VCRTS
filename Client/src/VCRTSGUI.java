@@ -29,6 +29,7 @@ public class VCRTSGUI extends JFrame {
     private JPanel mainPanel, loginPanel, signupPanel, clientPanel, ownerPanel, mainPagePanel, jobContainer;
     private RegisteredVehiclesPanel registeredVehiclesPanel;
     JSplitPane splitPane;
+    private SubmittedJobsPanel submittedJobsPanel;
     private CardLayout cardLayout;
     private String accountType;
     private String currentClientId;
@@ -178,7 +179,7 @@ public class VCRTSGUI extends JFrame {
                 setSize(550, 600); // Medium window for login/signup
                 break;
             case "Client":
-            	setSize(800, 600);
+            	setSize(900, 600);
             	break;
             case "Owner":
             	setSize(900, 600);
@@ -527,83 +528,83 @@ public class VCRTSGUI extends JFrame {
     }
 
     private void createClientPanel() {
-        clientPanel = new JPanel(new GridBagLayout());
+        // Main client panel with BorderLayout
+        clientPanel = new JPanel(new BorderLayout());
         clientPanel.setBackground(backgroundColor);
-        clientPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    
+        // Create the job submission form panel
+        JPanel jobSubmissionPanel = new JPanel(new GridBagLayout());
+        jobSubmissionPanel.setBackground(backgroundColor);
+        jobSubmissionPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
-
-        // Logout button in the top-left corner
+    
+        // Create header panel with logout button
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(backgroundColor);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    
         JButton logOutButton = createLogOutButton();
-        logOutButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
-
-        JPanel logOutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        logOutPanel.setBackground(backgroundColor);
-        logOutPanel.add(logOutButton);
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2; // Span the logout panel across the entire top row
-        gbc.anchor = GridBagConstraints.NORTHWEST; // Align logout panel to the top-left
-        clientPanel.add(logOutPanel, gbc);
-
-        // Welcome message positioned below the logout button
-        JLabel welcomeMessage = createStyledHeader("Submit Job Request");
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 2; // Span the welcome message across two columns
-        gbc.anchor = GridBagConstraints.CENTER; // Center-align the welcome message
-        clientPanel.add(welcomeMessage, gbc);
-
-        // Username Field
+        logOutButton.addActionListener(e -> {
+            cardLayout.show(mainPanel, "Login");
+            resizeForPanel("Login");
+        });
+        headerPanel.add(logOutButton, BorderLayout.WEST);
+    
+        JLabel submitJobHeader = createStyledHeader("Submit Job Request");
+        headerPanel.add(submitJobHeader, BorderLayout.CENTER);
+        
+        // Add header to main panel
+        clientPanel.add(headerPanel, BorderLayout.NORTH);
+    
+        // Add form fields to jobSubmissionPanel
         gbc.gridwidth = 1;
         gbc.gridx = 0;
-        gbc.gridy = 2;
-        clientPanel.add(createStyledBody("Username:"), gbc);
-
+        gbc.gridy = 0;
+    
+        // Username field
+        jobSubmissionPanel.add(createStyledBody("Username:"), gbc);
+        gbc.gridx = 1;
         usernameDisplayFieldJob = new JTextField();
         usernameDisplayFieldJob.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         usernameDisplayFieldJob.setEditable(false);
-        gbc.gridx = 1;
-        clientPanel.add(usernameDisplayFieldJob, gbc);
-
-        // Client ID (auto-populated and uneditable)
+        jobSubmissionPanel.add(usernameDisplayFieldJob, gbc);
+    
+        // Client ID
         gbc.gridx = 0;
-        gbc.gridy = 3;
-        clientPanel.add(createStyledBody("Client ID:"), gbc);
-
+        gbc.gridy = 1;
+        jobSubmissionPanel.add(createStyledBody("Client ID:"), gbc);
+        gbc.gridx = 1;
         clientIdField = new JTextField(15);
         clientIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         clientIdField.setEditable(false);
-        gbc.gridx = 1;
-        clientPanel.add(clientIdField, gbc);
-
-        // Job Description Field
+        jobSubmissionPanel.add(clientIdField, gbc);
+    
+        // Job Description
         gbc.gridx = 0;
-        gbc.gridy = 4;
-        clientPanel.add(createStyledBody("Job Description:"), gbc);
-
+        gbc.gridy = 2;
+        jobSubmissionPanel.add(createStyledBody("Job Description:"), gbc);
+        gbc.gridx = 1;
         JTextField jobDescriptionField = new JTextField(15);
         jobDescriptionField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        gbc.gridx = 1;
-        clientPanel.add(jobDescriptionField, gbc);
-
-        // Job Duration Field (in hours)
+        jobSubmissionPanel.add(jobDescriptionField, gbc);
+    
+        // Job Duration
         gbc.gridx = 0;
-        gbc.gridy = 5;
-        clientPanel.add(createStyledBody("Job Duration (hours):"), gbc);
-
+        gbc.gridy = 3;
+        jobSubmissionPanel.add(createStyledBody("Job Duration (hours):"), gbc);
+        gbc.gridx = 1;
         jobDurationField = new JTextField(15);
         jobDurationField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        gbc.gridx = 1;
-        clientPanel.add(jobDurationField, gbc);
-
-        // Job Deadline (date picker)
+        jobSubmissionPanel.add(jobDurationField, gbc);
+    
+        // Job Deadline
         gbc.gridx = 0;
-        gbc.gridy = 6;
-        clientPanel.add(createStyledBody("Job Deadline:"), gbc);
-
+        gbc.gridy = 4;
+        jobSubmissionPanel.add(createStyledBody("Job Deadline:"), gbc);
+        gbc.gridx = 1;
         UtilDateModel dateModel = new UtilDateModel();
         Properties properties = new Properties();
         properties.put("text.today", "Today");
@@ -612,27 +613,22 @@ public class VCRTSGUI extends JFrame {
         JDatePanelImpl datePanel = new JDatePanelImpl(dateModel, properties);
         jobDeadlinePicker = new JDatePickerImpl(datePanel, new DateComponentFormatter());
         jobDeadlinePicker.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        gbc.gridx = 1;
-        clientPanel.add(jobDeadlinePicker, gbc);
-
-        // Redundancy Level Selection (Number of Cars)
+        jobSubmissionPanel.add(jobDeadlinePicker, gbc);
+    
+        // Redundancy Level
         gbc.gridx = 0;
-        gbc.gridy = 7;
-        clientPanel.add(createStyledBody("Redundancy Level (Number of Cars):"), gbc);
-
+        gbc.gridy = 5;
+        jobSubmissionPanel.add(createStyledBody("Redundancy Level (Number of Cars):"), gbc);
+        gbc.gridx = 1;
         JComboBox<String> redundancyComboBox = new JComboBox<>(new String[] { "1", "2", "3", "4", "5" });
         redundancyComboBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        gbc.gridx = 1;
-        clientPanel.add(redundancyComboBox, gbc);
-
-        // Buttons panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        buttonPanel.setBackground(backgroundColor);
-
-        // Submit Job Button
+        jobSubmissionPanel.add(redundancyComboBox, gbc);
+    
+        // Submit Button
         gbc.gridx = 0;
-        gbc.gridy = 8;
-        gbc.gridwidth = 2; // Span buttons panel across two columns
+        gbc.gridy = 6;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
         JButton submitJobButton = createStyledButton("Submit Job");
         submitJobButton.addActionListener(e -> {
             try {
@@ -641,28 +637,42 @@ public class VCRTSGUI extends JFrame {
                 int jobDuration = Integer.parseInt(jobDurationField.getText());
                 int redundancyLevel = Integer.parseInt((String) redundancyComboBox.getSelectedItem());
                 String jobDeadline = jobDeadlinePicker.getJFormattedTextField().getText();
-
+    
                 if (clientId.isEmpty() || jobDescription.isEmpty() || jobDeadline.isEmpty()) {
                     JOptionPane.showMessageDialog(this, "Please fill in all fields.");
                     return;
                 }
-
+    
                 String response = client.submitJob(clientId, jobDescription, jobDuration, redundancyLevel, jobDeadline);
                 JOptionPane.showMessageDialog(this, response);
+                
+                // Refresh the submitted jobs panel after successful submission
+                if (response.contains("successful")) {
+                    submittedJobsPanel.refreshJobs();
+                }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Please enter valid numbers for job duration and redundancy level.");
             }
         });
-
-        JButton displayJobsButton = createStyledButton("Display Jobs & Completion Times");
-        displayJobsButton.addActionListener(e -> displayVCCJobsAndTimes());
-        buttonPanel.add(submitJobButton);
-        buttonPanel.add(displayJobsButton);
-        clientPanel.add(buttonPanel, gbc);
-
+        jobSubmissionPanel.add(submitJobButton, gbc);
+    
+        // Create the submitted jobs panel
+        submittedJobsPanel = new SubmittedJobsPanel(client, this);
+    
+        // Create split pane
+        JSplitPane splitPane = new JSplitPane(
+            JSplitPane.HORIZONTAL_SPLIT,
+            new JScrollPane(jobSubmissionPanel),
+            submittedJobsPanel
+        );
+        splitPane.setDividerLocation(500);
+    
+        // Add split pane to the main panel
+        clientPanel.add(splitPane, BorderLayout.CENTER);
+    
+        // Add the client panel to the main panel
         mainPanel.add(clientPanel, "Client");
     }
-
 
 
 
@@ -849,7 +859,9 @@ public class VCRTSGUI extends JFrame {
     	            cardLayout.show(mainPanel, "Client");
     	            resizeForPanel("Client");
     	            usernameDisplayFieldJob.setText(usernameField.getText());
-    	          
+                    if (submittedJobsPanel != null) {
+                        submittedJobsPanel.refreshJobs();
+                    }
     	        } else if ("CarOwner".equals(accountType)) {
     	            cardLayout.show(mainPanel, "Owner");
     	            ownerIdField.setText(currentClientId); // Populate the username field for CarOwner

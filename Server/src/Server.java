@@ -186,9 +186,32 @@ public class Server implements Runnable {
         }
     }
 
-
-
-    
+    private String handleLogin(String message) {
+        try {
+            System.out.println("\nDebug: Server handling login request: " + message);
+            
+            String[] parts = message.split(" ");
+            if (parts.length != 3) {
+                System.out.println("Debug: Invalid login format. Expected 3 parts, got " + parts.length);
+                return "Error: Invalid login format";
+            }
+            
+            String username = parts[1].trim();
+            String password = parts[2].trim();
+            
+            System.out.println("Debug: Attempting login for user: " + username);
+            
+            // Call UserManager's login method
+            String loginResult = userManager.loginUser(message);
+            System.out.println("Debug: UserManager returned: " + loginResult);
+            
+            return loginResult;
+        } catch (Exception e) {
+            System.out.println("Debug: Server exception during login: " + e.getMessage());
+            e.printStackTrace();
+            return "Error: Server error - " + e.getMessage();
+        }
+    }
     
     private String promptAndHandleJobSubmission(String message) {
         boolean approved = serverGUI.showConfirmDialog("Approve job submission request?\nDetails: " + message);
