@@ -1,12 +1,10 @@
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.*;
 public class RegisteredVehiclesPanel extends JPanel {
     private List<Vehicle> vehicles;
     private JPanel vehiclesList;
