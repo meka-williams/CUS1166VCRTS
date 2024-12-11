@@ -148,10 +148,8 @@ public class RegisteredVehiclesPanel extends JPanel {
         JLabel labelComponent = new JLabel(label);
         labelComponent.setFont(DETAIL_FONT);
         labelComponent.setForeground(TEXT_COLOR);
-
-        String displayValue = label.trim().equals("Residency Time:") ? value + " months" : value;
-
-        JLabel valueComponent = new JLabel(displayValue);
+        
+        JLabel valueComponent = new JLabel(value);
         valueComponent.setFont(DETAIL_FONT);
         valueComponent.setForeground(TEXT_COLOR);
 
@@ -255,16 +253,17 @@ public class RegisteredVehiclesPanel extends JPanel {
                     String plateNumber = parts[3].split(":")[1].trim();
                     String serialNumber = parts[4].split(":")[1].trim();
                     String vinNumber = parts[5].split(":")[1].trim();
+
+                    // Simplified residency time parsing
                     String residencyTimeStr = parts[6].split(":")[1].trim();
-                    // Convert residency time string to integer
                     int residencyTime;
                     try {
-                        
-                        residencyTimeStr = residencyTimeStr.replaceAll("[^0-9]", "");
-                        residencyTime = Integer.parseInt(residencyTimeStr);
+
+                        String numericValue = residencyTimeStr.replaceAll("[^0-9]", "");
+                        residencyTime = Integer.parseInt(numericValue);
                     } catch (NumberFormatException e) {
                         System.err.println("Error parsing residency time: " + residencyTimeStr);
-                        residencyTime = 0; 
+                        residencyTime = 0;
                     }
 
                     Vehicle vehicle = new Vehicle(
