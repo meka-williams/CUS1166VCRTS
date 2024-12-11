@@ -255,11 +255,17 @@ public class RegisteredVehiclesPanel extends JPanel {
                     String plateNumber = parts[3].split(":")[1].trim();
                     String serialNumber = parts[4].split(":")[1].trim();
                     String vinNumber = parts[5].split(":")[1].trim();
-                    String residencyTimeStr = parts[6].split("-")[1].trim();
-
-                    // Remove any non-numeric characters and "months" text if present
-                    residencyTimeStr = residencyTimeStr.replaceAll("[^0-9]", "").trim();
-                    int residencyTime = Integer.parseInt(residencyTimeStr);
+                    String residencyTimeStr = parts[6].split(":")[1].trim();
+                    // Convert residency time string to integer
+                    int residencyTime;
+                    try {
+                        
+                        residencyTimeStr = residencyTimeStr.replaceAll("[^0-9]", "");
+                        residencyTime = Integer.parseInt(residencyTimeStr);
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing residency time: " + residencyTimeStr);
+                        residencyTime = 0; 
+                    }
 
                     Vehicle vehicle = new Vehicle(
                             carId,

@@ -17,8 +17,8 @@ import java.sql.Date;
 public class UserManager {
     private Map<String, String[]> users;
     private static final String DB_URL = "jdbc:mysql://localhost:3306/vcrts";
-    private static final String DB_USER = "Group 5";
-    private static final String DB_PASSWORD = "@SoftwareEngineering2024";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "Chloe2004";
 
     public UserManager() {
         users = new HashMap<>();
@@ -160,7 +160,7 @@ public class UserManager {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement statement = connection.prepareStatement(query)) {
 
-            statement.setString(1, "\"" + username + "\""); // Add quotes to match the stored format
+            statement.setString(1, username ); // Add quotes to match the stored format
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) {
