@@ -96,7 +96,7 @@ public class ServerGUI extends JFrame {
         panel.setBackground(backgroundColor);
         panel.setBorder(BorderFactory.createTitledBorder("Registered Vehicles"));
 
-        String[] columns = {"VIN", "Owner ID", "Status", "Model", "Brand", "Plate Number", "Serial Number", "Residency Time"};
+        String[] columns = {"VIN", "Owner ID", "Status", "Model", "Brand", "Plate Number", "Serial Number", "Residency Date"};
         vehiclesTableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
