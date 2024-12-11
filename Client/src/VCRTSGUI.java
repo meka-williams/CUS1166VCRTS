@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Properties;
 
 public class VCRTSGUI extends JFrame {
@@ -915,42 +916,35 @@ public class VCRTSGUI extends JFrame {
             String plateNumber = plateNumberField.getText();
             String serialNumber = serialNumberField.getText();
             String vinNumber = vinNumberField.getText();
-
+    
             // Get and parse the residency date
             String residencyDateStr = residencyDatePicker.getJFormattedTextField().getText();
             LocalDate parsedDate;
-
+    
             try {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy");
                 parsedDate = LocalDate.parse(residencyDateStr, formatter);
-
                 LocalDate today = LocalDate.now();
+    
                 if (parsedDate.isBefore(today)) {
                     JOptionPane.showMessageDialog(this, "Residency date cannot be in the past.");
                     return;
                 }
-
-                // Extract the month of the residency start date
-                String residencyMonth = parsedDate.getMonth().toString(); // Full uppercase month name
-                residencyMonth = residencyMonth.charAt(0) + residencyMonth.substring(1).toLowerCase(); // Capitalize
-                                                                                                       // first letter
-
+    
+                // Calculate residency time in months
+                long residencyMonths = ChronoUnit.MONTHS.between(today, parsedDate);
+                // Add 1 to include the current month if there are remaining days
+                if (ChronoUnit.DAYS.between(today, parsedDate) > 0) {
+                    residencyMonths++;
+                }
+    
                 // Format the date for database storage (yyyy-MM-dd)
                 String formattedResidencyDate = parsedDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
-
-                // Debug output
-                System.out.println("Selected date: " + residencyDateStr);
-                System.out.println("Parsed date: " + parsedDate);
-                System.out.println("Today's date: " + today);
-                System.out.println("Residency Month: " + residencyMonth);
-
+    
                 // Send car registration details to the server
                 String response = client.notifyCarReady(ownerId, vehicleModel, vehicleBrand,
                         plateNumber, serialNumber, vinNumber, formattedResidencyDate);
-
-                // Debug output
-                System.out.println("Server response: " + response);
-
+    
                 if (response.contains("successful")) {
                     // Create new vehicle with status "Available"
                     Vehicle newVehicle = new Vehicle(
@@ -962,19 +956,14 @@ public class VCRTSGUI extends JFrame {
                             plateNumber,
                             serialNumber,
                             vinNumber,
-                            residencyMonth // Store the residency month instead of days
+                            (int) residencyMonths  // Now passing months instead of days
                     );
-
-                    // Debug output
-                    System.out.println("Adding vehicle to panel: " + newVehicle);
-
-                    // Add to panel
+    
                     registeredVehiclesPanel.addVehicle(newVehicle);
                     registeredVehiclesPanel.revalidate();
                     registeredVehiclesPanel.repaint();
-                    // Clear the form fields
                     clearRegistrationFields();
-
+    
                     JOptionPane.showMessageDialog(this, "Vehicle registered successfully!");
                 } else {
                     JOptionPane.showMessageDialog(this,
@@ -982,7 +971,7 @@ public class VCRTSGUI extends JFrame {
                             "Registration Error",
                             JOptionPane.ERROR_MESSAGE);
                 }
-
+    
             } catch (DateTimeParseException e) {
                 JOptionPane.showMessageDialog(this,
                         "Invalid date format. Please use the format 'MMM d, yyyy' (e.g., Dec 11, 2024).",
@@ -991,7 +980,7 @@ public class VCRTSGUI extends JFrame {
                 e.printStackTrace();
                 return;
             }
-
+    
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,
@@ -1002,7 +991,6 @@ public class VCRTSGUI extends JFrame {
     }
 
     private int generateVehicleId() {
-        // Simple ID generation - you might want to make this more sophisticated
         return (int) (Math.random() * 10000);
     }
 
