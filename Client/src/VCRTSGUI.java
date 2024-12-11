@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Properties;
 
 public class VCRTSGUI extends JFrame {
@@ -853,138 +854,158 @@ public class VCRTSGUI extends JFrame {
     	        String[] parts = response.split(",");
     	        if (parts.length >= 3) {
     	            accountType = parts[1].trim(); // Extract account type
-    	            currentClientId = parts[2].trim(); // Extract userId
-    	            clientIdField.setText(currentClientId); // Set the clientIdField to the userId
-    	            ownerIdField.setText(currentClientId);
-    	            
-    	        } else {
-    	            JOptionPane.showMessageDialog(this, "Invalid response from server.");
-    	            return;
-    	        }
+                    currentClientId = parts[2].trim(); // Extract userId
+                    clientIdField.setText(currentClientId); // Set the clientIdField to the userId
+                    ownerIdField.setText(currentClientId);
 
-    	        // Redirect based on account type
-    	        if ("JobSubmitter".equals(accountType)) {
-    	            cardLayout.show(mainPanel, "Client");
-    	            resizeForPanel("Client");
-    	            usernameDisplayFieldJob.setText(usernameField.getText());
+                } else {
+                    JOptionPane.showMessageDialog(this, "Invalid response from server.");
+                    return;
+                }
+
+                // Redirect based on account type
+                if ("JobSubmitter".equals(accountType)) {
+                    cardLayout.show(mainPanel, "Client");
+                    resizeForPanel("Client");
+                    usernameDisplayFieldJob.setText(usernameField.getText());
                     if (submittedJobsPanel != null) {
                         submittedJobsPanel.refreshJobs();
                     }
-    	        } else if ("CarOwner".equals(accountType)) {
-    	            cardLayout.show(mainPanel, "Owner");
-    	            ownerIdField.setText(currentClientId); // Populate the username field for CarOwner
-    	            resizeForPanel("Owner");
-    	            usernameDisplayField.setText(usernameField.getText());
-    	            
-    	        } else if ("VCCController".equals(accountType)) {
-    	            cardLayout.show(mainPanel, "VCCController"); // Show VCC Controller panel
-    	            resizeForPanel("VCCController");
-    	        }
-    	        JOptionPane.showMessageDialog(this, "Login successful as " + accountType);
+                } else if ("CarOwner".equals(accountType)) {
+                    cardLayout.show(mainPanel, "Owner");
+                    ownerIdField.setText(currentClientId); // Populate the username field for CarOwner
+                    resizeForPanel("Owner");
+                    usernameDisplayField.setText(usernameField.getText());
+
+                } else if ("VCCController".equals(accountType)) {
+                    cardLayout.show(mainPanel, "VCCController"); // Show VCC Controller panel
+                    resizeForPanel("VCCController");
+                }
+                JOptionPane.showMessageDialog(this, "Login successful as " + accountType);
                 clearLoginFields();
-    	    } else {
-    	        JOptionPane.showMessageDialog(this, "Invalid credentials. Please try again.");
-    	    }
-    	}
-
-
-
-    private void submitJob() {
-        try {
-            String clientId = clientIdField.getText();
-            String jobDescription = jobIDField.getText();
-            int jobDuration = Integer.parseInt(jobDurationField.getText());
-            int redundancyLevel = Integer.parseInt((String) redundancyComboBox.getSelectedItem());
-            String jobDeadline = jobDeadlinePicker.getJFormattedTextField().getText(); // Get jobDeadline from the date
-                                                                                       // picker
-
-            if (clientId.isEmpty() || jobDescription.isEmpty() || jobDeadline.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please fill in all fields.");
-                return;
+            } else {
+                JOptionPane.showMessageDialog(this, "Invalid credentials. Please try again.");
             }
-
-            String response = client.submitJob(clientId, jobDescription, jobDuration, redundancyLevel, jobDeadline);
-            JOptionPane.showMessageDialog(this, response);
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Please enter valid numbers for job duration and redundancy level.");
         }
-    }
 
-    private void registerVehicle() {
-        try {
-            String ownerId = ownerIdField.getText();
-            String vehicleBrand = vehicleBrandField.getText();
-            String vehicleModel = vehicleModelField.getText();
-            String plateNumber = plateNumberField.getText();
-            String serialNumber = serialNumberField.getText();
-            String vinNumber = vinNumberField.getText();
-
-            // Format residency date and calculate residency time
-            String residencyDate = residencyDatePicker.getJFormattedTextField().getText();
-            int residencyTime;
+        private void submitJob() {
             try {
-                LocalDate parsedDate = LocalDate.parse(residencyDate, DateTimeFormatter.ofPattern("MMM d, yyyy"));
-                residencyDate = parsedDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
-                LocalDate today = LocalDate.now();
-                if (parsedDate.isBefore(today)) {
-                    JOptionPane.showMessageDialog(this, "Residency date cannot be in the past.");
+                String clientId = clientIdField.getText();
+                String jobDescription = jobIDField.getText();
+                int jobDuration = Integer.parseInt(jobDurationField.getText());
+                int redundancyLevel = Integer.parseInt((String) redundancyComboBox.getSelectedItem());
+                String jobDeadline = jobDeadlinePicker.getJFormattedTextField().getText(); // Get jobDeadline from the
+                                                                                           // date
+                                                                                           // picker
+
+                if (clientId.isEmpty() || jobDescription.isEmpty() || jobDeadline.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Please fill in all fields.");
                     return;
                 }
-                residencyTime = (int) java.time.temporal.ChronoUnit.DAYS.between(today, parsedDate);
-            } catch (DateTimeParseException e) {
-                JOptionPane.showMessageDialog(this, "Invalid date format. Please use 'MMM d, yyyy'.");
-                return;
-            }
 
-            // Send car registration details to the server
-            String response = client.notifyCarReady(ownerId, vehicleModel, vehicleBrand, plateNumber, serialNumber,
-                    vinNumber, residencyDate);
-
-            // Debug print
-            System.out.println("Server response: " + response);
-
-            // If registration was successful, add the vehicle to the side panel
-            if (response.contains("successful")) {
-                // Create new vehicle with status "Available"
-                Vehicle newVehicle = new Vehicle(
-                        generateVehicleId(), // Generate a unique ID for the vehicle
-                        "Available", // Initial status
-                        ownerId,
-                        vehicleModel,
-                        vehicleBrand,
-                        plateNumber,
-                        serialNumber,
-                        vinNumber,
-                        residencyTime // Calculated residency time in days
-                );
-
-                // Debug print
-                System.out.println("Adding vehicle to panel: " + newVehicle);
-
-                // Add to panel
-                registeredVehiclesPanel.addVehicle(newVehicle);
-                registeredVehiclesPanel.revalidate();
-                registeredVehiclesPanel.repaint();
-
-                // Clear the form fields
-                clearRegistrationFields();
-
-                JOptionPane.showMessageDialog(this, "Vehicle registered successfully!");
-            } else {
+                String response = client.submitJob(clientId, jobDescription, jobDuration, redundancyLevel, jobDeadline);
+                JOptionPane.showMessageDialog(this, response);
+            } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this,
-                        "Failed to register vehicle: " + response,
-                        "Registration Error",
+                        "Please enter valid numbers for job duration and redundancy level.");
+            }
+        }
+
+        private void registerVehicle() {
+            try {
+                String ownerId = ownerIdField.getText();
+                String vehicleBrand = vehicleBrandField.getText();
+                String vehicleModel = vehicleModelField.getText();
+                String plateNumber = plateNumberField.getText();
+                String serialNumber = serialNumberField.getText();
+                String vinNumber = vinNumberField.getText();
+
+                // Get and parse the residency date
+                String residencyDateStr = residencyDatePicker.getJFormattedTextField().getText();
+                int residencyTime;
+                LocalDate parsedDate;
+
+                try {
+                   
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy");
+                    parsedDate = LocalDate.parse(residencyDateStr, formatter);
+
+                   
+                    LocalDate today = LocalDate.now();
+                    if (parsedDate.isBefore(today)) {
+                        JOptionPane.showMessageDialog(this, "Residency date cannot be in the past.");
+                        return;
+                    }
+
+                    // Calculate exact number of days between dates
+                    residencyTime = (int) ChronoUnit.DAYS.between(today, parsedDate);
+
+                    // Format the date for database storage (yyyy-MM-dd)
+                    String formattedResidencyDate = parsedDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+                    // Debug output
+                    System.out.println("Selected date: " + residencyDateStr);
+                    System.out.println("Parsed date: " + parsedDate);
+                    System.out.println("Today's date: " + today);
+                    System.out.println("Calculated residency time: " + residencyTime + " days");
+
+                    // Send car registration details to the server
+                    String response = client.notifyCarReady(ownerId, vehicleModel, vehicleBrand,
+                            plateNumber, serialNumber, vinNumber, formattedResidencyDate);
+
+                    // Debug output
+                    System.out.println("Server response: " + response);
+
+                    if (response.contains("successful")) {
+                        // Create new vehicle with status "Available"
+                        Vehicle newVehicle = new Vehicle(
+                                generateVehicleId(),
+                                "Available",
+                                ownerId,
+                                vehicleModel,
+                                vehicleBrand,
+                                plateNumber,
+                                serialNumber,
+                                vinNumber,
+                                residencyTime // Now contains the correct number of days
+                        );
+
+                        // Debug output
+                        System.out.println("Adding vehicle to panel: " + newVehicle);
+
+                        // Add to panel
+                        registeredVehiclesPanel.addVehicle(newVehicle);
+                        registeredVehiclesPanel.revalidate();
+                        registeredVehiclesPanel.repaint();
+
+                        // Clear the form fields
+                        clearRegistrationFields();
+
+                        JOptionPane.showMessageDialog(this, "Vehicle registered successfully!");
+                    } else {
+                        JOptionPane.showMessageDialog(this,
+                                "Failed to register vehicle: " + response,
+                                "Registration Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+
+                } catch (DateTimeParseException e) {
+                    JOptionPane.showMessageDialog(this,
+                            "Invalid date format. Please use the format 'MMM d, yyyy' (e.g., Dec 11, 2024).",
+                            "Date Format Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    e.printStackTrace();
+                    return;
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this,
+                        "Error registering vehicle: " + e.getMessage(),
+                        "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this,
-                    "Error registering vehicle: " + e.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
         }
-    }
-
 
     private int generateVehicleId() {
         // Simple ID generation - you might want to make this more sophisticated
