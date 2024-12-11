@@ -1,7 +1,7 @@
 {
     "java.project.sourcePaths": [
-        "Server/src",
-        "Client/src"
+        "server/src",
+        "client/src"
     ],
     "java.project.outputPath": "bin",
     "java.project.refrencedLibraries": [
