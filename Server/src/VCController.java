@@ -42,36 +42,40 @@ public class VCController {
             System.err.println("Error loading jobs from database: " + e.getMessage());
         }
     }
-    public List<String[]> getVehiclesByOwnerId(String ownerId) {
-        List<String[]> vehicles = new ArrayList<>();
-        String query = "SELECT carId, ownerId, model, brand, plateNumber, serialNumber, vinNumber, residencyTime FROM CarRentals WHERE ownerId = ?";
+    public String getVehiclesByOwnerId(String ownerId) {
+        StringBuilder response = new StringBuilder("Vehicles for Owner ID: " + ownerId + ":\n");
+        String query = "SELECT * FROM CarRentals WHERE ownerId = ?";
+        
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement statement = connection.prepareStatement(query)) {
-
+            
             statement.setString(1, ownerId);
             ResultSet resultSet = statement.executeQuery();
-
+            
             while (resultSet.next()) {
-                String[] vehicle = new String[] {
-                    resultSet.getString("carId"),         // Car ID
-                    resultSet.getString("ownerId"),       // Owner ID
-                    resultSet.getString("model"),         // Model
-                    resultSet.getString("brand"),         // Brand
-                    resultSet.getString("plateNumber"),   // Plate Number
-                    resultSet.getString("serialNumber"),  // Serial Number
-                    resultSet.getString("vinNumber"),     // VIN
-                    resultSet.getString("residencyTime")  // Residency Time
-                };
-                vehicles.add(vehicle);
+                response.append(String.format("Car ID: %s, Model: %s, Brand: %s, Plate Number: %s, Serial Number: %s, VIN: %s, Residency Time: %s\n",
+                    resultSet.getString("carId"),
+                    resultSet.getString("model"),
+                    resultSet.getString("brand"),
+                    resultSet.getString("plateNumber"),
+                    resultSet.getString("serialNumber"),
+                    resultSet.getString("vinNumber"),
+                    resultSet.getString("residencyTime")
+                ));
             }
+    
+            // Debug log
+            System.out.println("Generated response for owner " + ownerId + ": " + response.toString());
+            
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("Error fetching vehicles for owner ID: " + e.getMessage());
+            System.err.println("Error fetching vehicles: " + e.getMessage());
+            return "Error fetching vehicles: Database error";
         }
-        return vehicles;
+        
+        return response.toString();
     }
-
-
+    
     
     public List<CarRentals> getVehiclesReady() {
         return new ArrayList<>(vehiclesReady); // Return a copy to avoid modification

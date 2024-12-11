@@ -159,32 +159,25 @@ public class Server implements Runnable {
             if (parts.length != 2) {
                 return "Invalid GET_CARS request format. Usage: GET_CARS <ownerId>";
             }
-
+    
             String ownerId = parts[1].trim();
-            List<String[]> vehicles = vcController.getVehiclesByOwnerId(ownerId);
-
-            if (vehicles.isEmpty()) {
+            // Get the formatted string response directly from VCController
+            String response = vcController.getVehiclesByOwnerId(ownerId);
+            
+            // Check if response is empty or indicates no vehicles
+            if (response == null || response.trim().isEmpty() || 
+                response.equals("Vehicles for Owner ID: " + ownerId + ":\n")) {
                 return "No vehicles found for owner ID: " + ownerId;
             }
-
-            StringBuilder response = new StringBuilder("Vehicles for Owner ID: " + ownerId + ":\n");
-            for (String[] vehicle : vehicles) {
-                response.append("Car ID: ").append(vehicle[0])
-                        .append(", Model: ").append(vehicle[2])
-                        .append(", Brand: ").append(vehicle[3])
-                        .append(", Plate Number: ").append(vehicle[4])
-                        .append(", Serial Number: ").append(vehicle[5])
-                        .append(", VIN: ").append(vehicle[6])
-                        .append(", Residency Time: ").append(vehicle[7])
-                        .append("\n");
-            }
-
-            return response.toString();
+    
+            return response;
+    
         } catch (Exception e) {
             e.printStackTrace();
             return "Error fetching vehicles: " + e.getMessage();
         }
     }
+    
 
     private String handleLogin(String message) {
         try {

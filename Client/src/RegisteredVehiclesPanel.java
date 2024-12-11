@@ -171,95 +171,111 @@ public class RegisteredVehiclesPanel extends JPanel {
     }
 
     private void refreshVehicles() {
-    	
-        String ownerId = parentGUI.getOwnerId(); // Fetch owner ID dynamically
+        String ownerId = parentGUI.getOwnerId();
         if (ownerId == null || ownerId.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Owner ID is not available. Please log in first.");
+            JOptionPane.showMessageDialog(this,
+                    "Owner ID is not available. Please log in first.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        String response = client.sendRequest("GET_CARS " + ownerId);
-        vehicles = parseVehiclesFromResponse(response);
-        updateVehiclesList();
+        try {
+            String response = client.sendRequest("GET_CARS " + ownerId);
+            System.out.println("Server Response: " + response); // Debug log
+
+            if (response != null && !response.trim().isEmpty()) {
+                vehicles = parseVehiclesFromResponse(response);
+                updateVehiclesList();
+            } else {
+                vehicles.clear();
+                updateVehiclesList();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error refreshing vehicles: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void confirmAndRemoveVehicle(Vehicle vehicle) {
-    	vehicle.setOwnerID(parentGUI.getOwnerId());
-    	int result = JOptionPane.showConfirmDialog(
-            this,
-            "Are you sure you want to remove this vehicle?\n" +
-            "Brand: " + vehicle.getBrand() + "\n" +
-            "Model: " + vehicle.getModel() + "\n" +
-            "VIN: " + vehicle.getVinNum(),
-            "Confirm Vehicle Removal",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.WARNING_MESSAGE
-        );
+        vehicle.setOwnerID(parentGUI.getOwnerId());
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to remove this vehicle?\n" +
+                        "Brand: " + vehicle.getBrand() + "\n" +
+                        "Model: " + vehicle.getModel() + "\n" +
+                        "VIN: " + vehicle.getVinNum(),
+                "Confirm Vehicle Removal",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
 
         if (result == JOptionPane.YES_OPTION) {
             String response = client.removeVehicle(vehicle.getOwnerID(), vehicle.getVinNum());
-            
+
             if (response != null && response.contains("successful")) {
                 vehicles.remove(vehicle);
                 updateVehiclesList();
                 JOptionPane.showMessageDialog(this, "Vehicle removed successfully");
             } else {
-                JOptionPane.showMessageDialog(this, 
-                    "Failed to remove vehicle. Please try again.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        "Failed to remove vehicle. Please try again.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-
-
     private List<Vehicle> parseVehiclesFromResponse(String response) {
         List<Vehicle> vehicleList = new ArrayList<>();
-        if (response != null && !response.isEmpty()) {
-            // Split the response into lines
-            String[] lines = response.split("\n");
+        if (response == null || response.trim().isEmpty()) {
+            return vehicleList;
+        }
 
-            // Start processing from the second line (skip the header)
-            for (int i = 1; i < lines.length; i++) {
-                String line = lines[i].trim();
-                if (line.isEmpty()) continue;
-
-                try {
-                    // Extract fields from the line
-                    String[] parts = line.split(", ");
-
-                    // Extract Car ID
-                    int carId = Integer.parseInt(parts[0].split(": ")[1].trim());
-
-                    // Extract other fields
-                    String model = parts[1].split(": ")[1].trim();
-                    String brand = parts[2].split(": ")[1].trim();
-                    String plateNumber = parts[3].split(": ")[1].trim();
-                    String serialNumber = parts[4].split(": ")[1].trim();
-                    String vinNum = parts[5].split(": ")[1].trim();
-                    String residencyDateTimeString = parts[6].split(": ")[1].trim(); // Full date-time string
-
-                    // Parse the residency date and calculate days from today
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                    LocalDateTime residencyDateTime = LocalDateTime.parse(residencyDateTimeString, formatter);
-                    LocalDateTime today = LocalDateTime.now();
-                    int daysDifference = (int) ChronoUnit.DAYS.between(today, residencyDateTime);
-
-                    // Create a new vehicle and add it to the list
-                    Vehicle vehicle = new Vehicle(carId, "Available", null, model, brand, plateNumber, serialNumber, vinNum, daysDifference);
-                    vehicleList.add(vehicle);
-                } catch (Exception e) {
-                    // Log and ignore any malformed line
-                    System.err.println("Failed to parse line: " + line + ". Error: " + e.getMessage());
+        String[] lines = response.split("\n");
+        for (String line : lines) {
+            try {
+                if (line.trim().isEmpty() || line.startsWith("Vehicles for Owner")) {
+                    continue;
                 }
+
+                // Parse the comma-separated values
+                String[] parts = line.split(",");
+                if (parts.length >= 7) {
+                    // Extract Car ID from the first part
+                    String carIdStr = parts[0].split(":")[1].trim();
+                    int carId = Integer.parseInt(carIdStr);
+
+                    // Extract other fields, removing the field labels
+                    String model = parts[1].split(":")[1].trim();
+                    String brand = parts[2].split(":")[1].trim();
+                    String plateNumber = parts[3].split(":")[1].trim();
+                    String serialNumber = parts[4].split(":")[1].trim();
+                    String vinNumber = parts[5].split(":")[1].trim();
+                    String residencyTimeStr = parts[6].split(":")[1].trim();
+                    int residencyTime = Integer.parseInt(residencyTimeStr);
+
+                    Vehicle vehicle = new Vehicle(
+                            carId,
+                            "Available",
+                            parentGUI.getOwnerId(), // Get from parent panel
+                            model,
+                            brand,
+                            plateNumber,
+                            serialNumber,
+                            vinNumber,
+                            residencyTime);
+                    vehicleList.add(vehicle);
+                }
+            } catch (Exception e) {
+                System.err.println("Error parsing vehicle line: " + line);
+                e.printStackTrace();
             }
         }
         return vehicleList;
     }
-
-
-
 
     public void addVehicle(Vehicle vehicle) {
         if (vehicle != null && !vehicles.contains(vehicle)) {
