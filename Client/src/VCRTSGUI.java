@@ -650,7 +650,6 @@ public class VCRTSGUI extends JFrame {
                 JOptionPane.showMessageDialog(this, response);
 
                 //Clears the fields
-                clientIdField.setText("");
                 jobIDField.setText("");
                 jobDurationField.setText("");
                 redundancyComboBox.setSelectedIndex(0);

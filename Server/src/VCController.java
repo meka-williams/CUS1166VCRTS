@@ -257,6 +257,7 @@ public class VCController {
         }
     }
     public String displayJobsAndCompletionTimes() {
+    
 
         StringBuilder jobInfo = new StringBuilder("All Assigned Jobs and Completion Times:\n");
         int cumulativeTime = 0;

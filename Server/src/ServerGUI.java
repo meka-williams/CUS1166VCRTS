@@ -1,5 +1,7 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.xml.stream.FactoryConfigurationError;
+
 import java.awt.*;
 import java.util.List;
 
@@ -112,13 +114,10 @@ public class ServerGUI extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(backgroundColor);
         JButton refreshButton = createStyledButton("Refresh");
-        JButton markCompleteButton = createStyledButton("Mark Complete");
 
         refreshButton.addActionListener(e -> refreshVehicleTable());
-        markCompleteButton.addActionListener(e -> markSelectedVehicleComplete(vehiclesTable));
 
         buttonPanel.add(refreshButton);
-        buttonPanel.add(markCompleteButton);
 
         panel.add(new JScrollPane(vehiclesTable), BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);
@@ -149,13 +148,13 @@ public class ServerGUI extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(backgroundColor);
         JButton refreshButton = createStyledButton("Refresh");
-        JButton completeButton = createStyledButton("Mark Complete");
+        JButton computeCompletionButton = createStyledButton("Compute Completion Time");
 
         refreshButton.addActionListener(e -> refreshJobRequestsTable());
-        completeButton.addActionListener(e -> markSelectedJobComplete(jobsTable));
+        computeCompletionButton.addActionListener(e -> computeCompletionTime());
 
         buttonPanel.add(refreshButton);
-        buttonPanel.add(completeButton);
+        buttonPanel.add(computeCompletionButton);
 
         panel.add(new JScrollPane(jobsTable), BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);
@@ -262,6 +261,12 @@ public class ServerGUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Please select a vehicle to mark as complete.");
         }
         
+    }
+
+    private void computeCompletionTime() {
+        JFrame frame = new JFrame();
+        String jobInfo = server.getVCController().displayJobsAndCompletionTimes();
+        JOptionPane.showMessageDialog(frame, jobInfo, "VCC Job Queue and Completion Times", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private JButton createStyledButton(String text) {
