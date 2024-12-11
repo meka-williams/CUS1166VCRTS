@@ -1,12 +1,10 @@
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.*;
 public class RegisteredVehiclesPanel extends JPanel {
     private List<Vehicle> vehicles;
     private JPanel vehiclesList;
@@ -244,7 +242,10 @@ public class RegisteredVehiclesPanel extends JPanel {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                     LocalDateTime residencyDateTime = LocalDateTime.parse(residencyDateTimeString, formatter);
                     LocalDateTime today = LocalDateTime.now();
-                    int daysDifference = (int) ChronoUnit.DAYS.between(today, residencyDateTime);
+                    int daysDifference = (int) ChronoUnit.DAYS.between(residencyDateTime, today);
+
+                    // Makes sure residency time is not negative
+                    daysDifference = Math.max(daysDifference, 0);
 
                     // Create a new vehicle and add it to the list
                     Vehicle vehicle = new Vehicle(carId, "Available", null, model, brand, plateNumber, serialNumber, vinNum, daysDifference);
