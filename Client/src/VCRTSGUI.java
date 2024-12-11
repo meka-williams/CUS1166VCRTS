@@ -709,8 +709,6 @@ public class VCRTSGUI extends JFrame {
         });
         logOutPanel.add(logOutButton);
 
-        // Create a styled header for "Car Registration"
-        
 
         // Create a top panel to hold both the logout button and the header
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -828,6 +826,8 @@ public class VCRTSGUI extends JFrame {
         p.put("text.today", "Today");
         p.put("text.month", "Month");
         p.put("text.year", "Year");
+
+        //Format for date component panel
 
         JDatePanelImpl datePanel = new JDatePanelImpl(model, p);
         residencyDatePicker = new JDatePickerImpl(datePanel, new DateComponentFormatter());
