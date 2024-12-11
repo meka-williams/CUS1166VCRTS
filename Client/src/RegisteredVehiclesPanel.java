@@ -5,19 +5,20 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
+
 public class RegisteredVehiclesPanel extends JPanel {
     private List<Vehicle> vehicles;
     private JPanel vehiclesList;
-    private Client client;  
+    private Client client;
     private VCRTSGUI parentGUI; // Reference to the parent GUI
-    private static final Color BACKGROUND_COLOR = new Color(240, 250, 255);  
-    private static final Color BUTTON_COLOR = new Color(44, 118, 220);     
-    private static final Color TEXT_COLOR = new Color(29, 42, 59);         
+    private static final Color BACKGROUND_COLOR = new Color(240, 250, 255);
+    private static final Color BUTTON_COLOR = new Color(44, 118, 220);
+    private static final Color TEXT_COLOR = new Color(29, 42, 59);
     private static final Font HEADER_FONT = new Font("Serif", Font.BOLD, 24);
     private static final Font DETAIL_FONT = new Font("Serif", Font.PLAIN, 16);
 
     public RegisteredVehiclesPanel(Client client, VCRTSGUI parentGUI) {
-        this.client = client;  // Use the passed Client instance
+        this.client = client; // Use the passed Client instance
         this.parentGUI = parentGUI; // Reference to the parent GUI
         this.vehicles = new ArrayList<>();
         setupPanel();
@@ -133,7 +134,7 @@ public class RegisteredVehiclesPanel extends JPanel {
         addDetailRow(detailsPanel, "Serial Number: ", vehicle.getSerialNumber());
         addDetailRow(detailsPanel, "VIN: ", vehicle.getVinNum());
         addDetailRow(detailsPanel, "Residency Time: ", String.valueOf(vehicle.getResidencyTime()));
-        
+
         panel.add(headerPanel, BorderLayout.NORTH);
         panel.add(detailsPanel, BorderLayout.CENTER);
 
@@ -148,7 +149,9 @@ public class RegisteredVehiclesPanel extends JPanel {
         labelComponent.setFont(DETAIL_FONT);
         labelComponent.setForeground(TEXT_COLOR);
 
-        JLabel valueComponent = new JLabel(value);
+        String displayValue = label.trim().equals("Residency Time:") ? value + " months" : value;
+
+        JLabel valueComponent = new JLabel(displayValue);
         valueComponent.setFont(DETAIL_FONT);
         valueComponent.setForeground(TEXT_COLOR);
 
@@ -253,12 +256,15 @@ public class RegisteredVehiclesPanel extends JPanel {
                     String serialNumber = parts[4].split(":")[1].trim();
                     String vinNumber = parts[5].split(":")[1].trim();
                     String residencyTimeStr = parts[6].split("-")[1].trim();
+
+                    // Remove any non-numeric characters and "months" text if present
+                    residencyTimeStr = residencyTimeStr.replaceAll("[^0-9]", "").trim();
                     int residencyTime = Integer.parseInt(residencyTimeStr);
 
                     Vehicle vehicle = new Vehicle(
                             carId,
                             "Available",
-                            parentGUI.getOwnerId(), // Get from parent panel
+                            parentGUI.getOwnerId(),
                             model,
                             brand,
                             plateNumber,
