@@ -1,9 +1,9 @@
 use vcrts;
 
 CREATE TABLE jobrequests (
-    jobId VARCHAR(36) PRIMARY KEY,
+    generatedJobId VARCHAR(36) PRIMARY KEY,
     clientId VARCHAR(36),
-    jobDescription TEXT,
+    jobId TEXT,
     duration INT,
     redundancyLevel INT,
     jobDeadline DATE,

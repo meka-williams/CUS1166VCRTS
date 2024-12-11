@@ -27,9 +27,9 @@ public class VCController {
 
             while (resultSet.next()) {
                 JobRequest job = new JobRequest(
-                    resultSet.getString("jobId"),
+                    resultSet.getString("generatedJobId"),
                     resultSet.getString("clientId"),
-                    resultSet.getString("jobDescription"),
+                    resultSet.getString("jobId"),
                     resultSet.getInt("duration"),
                     resultSet.getInt("redundancyLevel"),
                     resultSet.getString("jobDeadline"),
@@ -125,7 +125,7 @@ public class VCController {
         JobRequest job = new JobRequest(clientId, jobDescription, duration, redundancyLevel, jobDeadline);
 
         // Log job into the database
-        String query = "INSERT INTO JobRequests (jobId, clientId, jobDescription, duration, redundancyLevel, jobDeadline, timestamp) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+        String query = "INSERT INTO JobRequests (generatedJobId, clientId, jobId, duration, redundancyLevel, jobDeadline, timestamp) VALUES (?, ?, ?, ?, ?, ?, NOW())";
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement statement = connection.prepareStatement(query)) {
 
@@ -271,9 +271,9 @@ public class VCController {
             
                 cumulativeTime += job.getDuration();
                 jobInfo.append(String.format(
-                    "Job ID: %s, Client ID: %s, Description: %s, Duration: %d hours, Completion Time: %d hours\n",
+                    "Job ID: %s, Client ID: %s, Description: %s, Duration: %d hours, Deadline: %s, Completion Time: %d hours\n",
                     job.getJobId(), job.getClientId(), job.getJobDescription(),
-                    job.getDuration(), cumulativeTime
+                    job.getDuration(), job.getJobDeadline(), cumulativeTime
                 ));
             
         }

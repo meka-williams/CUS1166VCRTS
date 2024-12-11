@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -133,7 +134,7 @@ public class RegisteredVehiclesPanel extends JPanel {
         addDetailRow(detailsPanel, "Plate Number: ", vehicle.getPlateNumber());
         addDetailRow(detailsPanel, "Serial Number: ", vehicle.getSerialNumber());
         addDetailRow(detailsPanel, "VIN: ", vehicle.getVinNum());
-        addDetailRow(detailsPanel, "Residency Time: ", String.valueOf(vehicle.getResidencyTime()));
+        //addDetailRow(detailsPanel, "Residency Date: ", String.valueOf(vehicle.getResidencyTime()));
 
         panel.add(headerPanel, BorderLayout.NORTH);
         panel.add(detailsPanel, BorderLayout.CENTER);

@@ -911,76 +911,69 @@ public class VCRTSGUI extends JFrame {
     private void registerVehicle() {
         try {
             String ownerId = ownerIdField.getText();
-            String vehicleBrand = vehicleBrandField.getText();
             String vehicleModel = vehicleModelField.getText();
+            String vehicleBrand = vehicleBrandField.getText();
             String plateNumber = plateNumberField.getText();
             String serialNumber = serialNumberField.getText();
             String vinNumber = vinNumberField.getText();
-    
-            // Get and parse the residency date
-            String residencyDateStr = residencyDatePicker.getJFormattedTextField().getText();
-            LocalDate parsedDate;
-    
+
+            // Format residency date and calculate residency time
+            String residencyDate = residencyDatePicker.getJFormattedTextField().getText();
+            int residencyTime;
             try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy");
-                parsedDate = LocalDate.parse(residencyDateStr, formatter);
+                LocalDate parsedDate = LocalDate.parse(residencyDate, DateTimeFormatter.ofPattern("MMM d, yyyy"));
+                residencyDate = parsedDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
                 LocalDate today = LocalDate.now();
-    
                 if (parsedDate.isBefore(today)) {
                     JOptionPane.showMessageDialog(this, "Residency date cannot be in the past.");
                     return;
                 }
-    
-                // Calculate residency time in months
-                long residencyMonths = ChronoUnit.MONTHS.between(today, parsedDate);
-                // Add 1 to include the current month if there are remaining days
-                if (ChronoUnit.DAYS.between(today, parsedDate) > 0) {
-                    residencyMonths++;
-                }
-    
-                // Format the date for database storage (yyyy-MM-dd)
-                String formattedResidencyDate = parsedDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
-    
-                // Send car registration details to the server
-                String response = client.notifyCarReady(ownerId, vehicleModel, vehicleBrand,
-                        plateNumber, serialNumber, vinNumber, formattedResidencyDate);
-    
-                if (response.contains("successful")) {
-                    // Create new vehicle with status "Available"
-                    Vehicle newVehicle = new Vehicle(
-                            generateVehicleId(),
-                            "Available",
-                            ownerId,
-                            vehicleModel,
-                            vehicleBrand,
-                            plateNumber,
-                            serialNumber,
-                            vinNumber,
-                            (int) residencyMonths  // Now passing months instead of days
-                    );
-    
-                    registeredVehiclesPanel.addVehicle(newVehicle);
-                    registeredVehiclesPanel.revalidate();
-                    registeredVehiclesPanel.repaint();
-                    clearRegistrationFields();
-    
-                    JOptionPane.showMessageDialog(this, "Vehicle registered successfully!");
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "Failed to register vehicle: " + response,
-                            "Registration Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-    
+                residencyTime = (int) java.time.temporal.ChronoUnit.DAYS.between(today, parsedDate);
             } catch (DateTimeParseException e) {
-                JOptionPane.showMessageDialog(this,
-                        "Invalid date format. Please use the format 'MMM d, yyyy' (e.g., Dec 11, 2024).",
-                        "Date Format Error",
-                        JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Invalid date format. Please use 'MMM d, yyyy'.");
                 return;
             }
-    
+
+            // Send car registration details to the server
+            String response = client.notifyCarReady(ownerId, vehicleModel, vehicleBrand, plateNumber, serialNumber,
+                    vinNumber, residencyDate);
+
+            // Debug print
+            System.out.println("Server response: " + response);
+
+            // If registration was successful, add the vehicle to the side panel
+            if (response.contains("successful")) {
+                // Create new vehicle with status "Available"
+                Vehicle newVehicle = new Vehicle(
+                        generateVehicleId(), // Generate a unique ID for the vehicle
+                        "Available", // Initial status
+                        ownerId,
+                        vehicleModel,
+                        vehicleBrand,
+                        plateNumber,
+                        serialNumber,
+                        vinNumber,
+                        residencyTime // Calculated residency time in days
+                );
+
+                // Debug print
+                System.out.println("Adding vehicle to panel: " + newVehicle);
+
+                // Add to panel
+                registeredVehiclesPanel.addVehicle(newVehicle);
+                registeredVehiclesPanel.revalidate();
+                registeredVehiclesPanel.repaint();
+
+                // Clear the form fields
+                clearRegistrationFields();
+
+                JOptionPane.showMessageDialog(this, "Vehicle registered successfully!");
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Failed to register vehicle: " + response,
+                        "Registration Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,

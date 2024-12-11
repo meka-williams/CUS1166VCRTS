@@ -119,8 +119,8 @@ public class SubmittedJobsPanel extends JPanel {
 
         addDetailRow(detailsPanel, "Status: ", job.getStatus());
         addDetailRow(detailsPanel, "Duration: ", job.getDuration() + " hours");
-        addDetailRow(detailsPanel, "Redundancy Level: ", String.valueOf(job.getRedundancyLevel()));
-        addDetailRow(detailsPanel, "Deadline: ", job.getDeadline());
+        //addDetailRow(detailsPanel, "Redundancy Level: ", String.valueOf(job.getRedundancyLevel()));
+        //addDetailRow(detailsPanel, "Deadline: ", job.getDeadline());
         if (job.getCompletionTime() != null && !job.getCompletionTime().isEmpty()) {
             addDetailRow(detailsPanel, "Completion Time: ", job.getCompletionTime());
         }
@@ -187,7 +187,7 @@ public class SubmittedJobsPanel extends JPanel {
                         String status = "Submitted"; // Default status
                         String deadline = extractValue(line, "Deadline"); 
                         int redundancyLevel = 1; // Default redundancy level
-                        String completionTime = null;
+                        String completionTime = extractValue(line, "Completion Time");
 
                         // Create job object and add to list
                         Job job = new Job(jobId, clientId, description, duration, 
