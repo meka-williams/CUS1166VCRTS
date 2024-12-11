@@ -131,7 +131,7 @@ public class ServerGUI extends JFrame {
         panel.setBackground(backgroundColor);
         panel.setBorder(BorderFactory.createTitledBorder("Job Requests"));
 
-        String[] columns = {"Job ID", "Client ID", "Description", "Duration", "Redundancy", "Deadline", "Timestamp"};
+        String[] columns = {"Generated Job ID", "Client ID", "Job ID", "Duration", "Redundancy", "Deadline", "Timestamp"};
         jobsTableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {

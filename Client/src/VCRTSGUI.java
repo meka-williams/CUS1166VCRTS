@@ -764,7 +764,7 @@ public class VCRTSGUI extends JFrame {
         // Username (auto-populated and uneditable)
         gbc.gridx = 0;
         gbc.gridy = 2;
-        panel.add(createStyledBody("Generated User ID:"), gbc);
+        panel.add(createStyledBody("Generated Owner ID:"), gbc);
         ownerIdField = new JTextField();
         ownerIdField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         ownerIdField.setEditable(false);
