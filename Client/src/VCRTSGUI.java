@@ -819,7 +819,7 @@ public class VCRTSGUI extends JFrame {
         // Residency Date
         gbc.gridx = 0;
         gbc.gridy = 8;
-        panel.add(createStyledBody("Residency Date:"), gbc);
+        panel.add(createStyledBody("Residency Time:"), gbc);
 
         UtilDateModel model = new UtilDateModel();
         Properties p = new Properties();
